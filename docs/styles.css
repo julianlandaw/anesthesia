@@ -110,15 +110,70 @@ button:hover {
 
 /* Mobile layout tweaks */
 @media screen and (max-width: 600px) {
-  .form label {
-    flex: 1 1 100%;
-  }
-
-  h1 {
-    font-size: 1.5rem;
+  .form input,
+  .form select {
+    font-size: 1.1rem;
+    padding: 10px;
   }
 
   button {
-    font-size: 1.1rem;
+    padding: 14px;
+    font-size: 1.2rem;
   }
+}
+
+.export-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.export-buttons button {
+  flex: 1;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  background: var(--button-bg);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.export-buttons button:hover {
+  background: var(--button-hover);
+}
+
+.accordion-section {
+  background: var(--output-bg);
+  margin-bottom: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.accordion-header {
+  background: var(--button-bg);
+  color: white;
+  padding: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 12px;
+}
+
+.accordion-content.open {
+  max-height: 800px; /* enough to show content */
+  padding: 12px;
+}
+
+.accordion-header span {
+  font-size: 1.5rem;
 }

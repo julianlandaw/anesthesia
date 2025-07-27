@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Medication Dosing Calculator</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -22,17 +23,22 @@
         </select>
       </label>
       <label for="age">Age (years):
-        <input type="number" id="age" />
+        <input type="number" id="age" value="40" />
       </label>
       <label for="height">Height (cm):
-        <input type="number" id="height" />
+        <input type="number" id="height" value="175" />
       </label>
       <label for="weight">Weight (kg):
-        <input type="number" id="weight" />
+        <input type="number" id="weight" value="80" />
       </label>
       <button type="button" onclick="calculate()">Calculate</button>
     </div>
-    <pre id="output"></pre>
+    <div id="results" class="accordion"></div>
+    <div class="export-buttons">
+      <button type="button" onclick="copyToClipboard()">Copy to Clipboard</button>
+      <button type="button" onclick="exportToPDF()">Export to PDF</button>
+      <button type="button" onclick="exportToCSV()">Export to CSV</button>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>

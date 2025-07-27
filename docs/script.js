@@ -23,78 +23,154 @@ function calculate() {
     : (9270 * TBW) / (8780 + 244 * BMI);
   const ageFactorRemi = age >= 80 ? 0.3 : age >= 65 ? 0.5 : age < 1 ? 1.5 : 1;
 
-  const output = `
---- Patient Metrics ---
-Sex: ${sex}
-Age: ${age} years
-Height: ${height.toFixed(1)} cm (${(height / 100).toFixed(2)} m)
-Weight (TBW): ${TBW.toFixed(1)} kg
-BMI: ${BMI.toFixed(1)}
-IBW: ${IBW.toFixed(1)} kg
-LBW: ${LBW.toFixed(1)} kg
-FFM: ${FFM.toFixed(1)} kg
+  // Clear previous results
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "";
+  let exportText = `Patient: ${sex}, Age ${age}, Height ${height} cm, Weight ${weight} kg\n\n`;
 
--- Muscle Relaxants --
-Succinylcholine IV (0.7-1 mg/kg TBW): 
-                    ${(0.7 * TBW).toFixed(1)}-${TBW.toFixed(1)} mg  
-                IM (2.5-4 mg/kg TBW): 
-                    ${(2.5 * TBW).toFixed(1)}-${(4 * TBW).toFixed(1)} mg
-Rocuronium    Intubating (0.6-1.2 mg/kg LBW): 
-               ${(LBW * 0.6).toFixed(1)}-${(LBW * 1.2).toFixed(1)} mg
-              Maintenance (0.06-0.6 mg/kg LBW): 
-               ${(LBW * 0.06).toFixed(1)}-${(LBW * 0.6).toFixed(1)} mg
-Cisatracurium Intubating (0.15-0.2 mg/kg LBW): 
-               ${(LBW * 0.15).toFixed(1)}-${(LBW * 0.2).toFixed(1)} mg
-              Maintenance (0.02-0.1 mg/kg LBW): 
-               ${(LBW * 0.02).toFixed(1)}-${(LBW * 0.1).toFixed(1)} mg
-Vecuronium    Intubating (0.08-0.1 mg/kg LBW): 
-               ${(LBW * 0.08).toFixed(1)}-${(LBW * 0.1).toFixed(1)} mg
-              Maintenance (0.01-0.05 mg/kg LBW): 
-               ${(LBW * 0.01).toFixed(1)}-${(LBW * 0.05).toFixed(1)} mg
+  function createSection(title, contentHTML, textBlock) {
+    const section = document.createElement("div");
+    section.className = "accordion-section";
+    const header = document.createElement("div");
+    header.className = "accordion-header";
+    header.innerHTML = `${title} <span>+</span>`;
+    section.appendChild(header);
 
--- Analgesics/Narcotics -- 
-Fentanyl Induction (0.7-2 mcg/kg TBW): ${(TBW * 0.7).toFixed(1)}-${(TBW * 2.0).toFixed(1)} mcg
-         Maintenance (1 mcg/kg IBW): ${(IBW * 1.0).toFixed(1)} mcg
-         Infusion (0.3-3 mcg/kg/hr IBW): ${(IBW * 0.3).toFixed(1)}-${(IBW * 3.0).toFixed(1)} mcg/hr
+    const content = document.createElement("div");
+    content.className = "accordion-content";
+    content.innerHTML = contentHTML;
+    section.appendChild(content);
 
-Remifentanil (LBW, age-adjusted): ${(LBW * 0.1 * ageFactorRemi).toFixed(1)} mcg/min
-${BMI > 39 ? `Remifentanil (FFM, BMI > 39): ${(FFM * 0.1 * ageFactorRemi).toFixed(1)} mcg/min\n` : ""}
+    header.addEventListener("click", () => {
+      content.classList.toggle("open");
+      header.querySelector("span").textContent = content.classList.contains("open") ? "−" : "+";
+    });
 
--- Anesthetics/Sedatives --
-Propofol Induction (2 mg/kg LBW, adj): ${(LBW * 2.0 * (age > 65 ? 0.75 : 1.0)).toFixed(1)} mg
-Propofol Maintenance (100 mcg/kg/min TBW, adj): ${(TBW * 100 * (age > 65 ? 0.75 : 1.0)).toFixed(1)} mcg/min
-Ketamine IV (1.5 mg/kg, adj): ${(TBW * 1.5 * (age > 65 ? 0.75 : 1.0)).toFixed(1)} mg
-Ketamine Subanesthetic (0.35 mg/kg, adj): ${(TBW * 0.35 * (age > 65 ? 0.75 : 1.0)).toFixed(1)} mg
+    resultsDiv.appendChild(section);
+    exportText += `\n${title}\n${textBlock}\n`;
+  }
 
--- Local Anesthetics -- 
-Lidocaine Max (Plain, 5 mg/kg LBW up to 300): ${Math.min(LBW * 5.0, 300).toFixed(1)} mg
-          Max (With Epi, 7 mg/kg LBW up to 500): ${Math.min(LBW * 7.0, 500).toFixed(1)} mg
-          Tumescent (With Epi, 55-65 mg/kg LBW): ${(LBW * 55).toFixed(1)}-${(LBW * 65).toFixed(1)} mg
-Bupivacaine Max (Plain, 2.5 mg/kg LBW): ${(LBW * 2.5).toFixed(1)} mg
-Bupivacaine Max (With Epi, 3 mg/kg LBW: ${(LBW * 3).toFixed(1)} mg
-Mepivacaine Max (Plain, 5 mg/kg LBW): ${(LBW * 5).toFixed(1)} mg
-Mepivacaine Max (With Epi, 7 mg/kg LBW: ${(LBW * 7).toFixed(1)} mg
-Ropivacaine Max (Plain, 3 mg/kg LBW): ${(LBW * 3).toFixed(1)} mg
-Ropivacaine Max (With Epi, 3.5 mg/kg LBW: ${(LBW * 3.5).toFixed(1)} mg
+  // Patient Metrics
+  createSection(
+    "Patient Metrics",
+    `
+      <p><strong>BMI:</strong> ${BMI.toFixed(1)}</p>
+      <p><strong>IBW:</strong> ${IBW.toFixed(1)} kg</p>
+      <p><strong>LBW:</strong> ${LBW.toFixed(1)} kg</p>
+      <p><strong>FFM:</strong> ${FFM.toFixed(1)} kg</p>
+    `,
+    `BMI: ${BMI.toFixed(1)}, IBW: ${IBW.toFixed(1)}, LBW: ${LBW.toFixed(1)}, FFM: ${FFM.toFixed(1)}`
+  );
 
--- Vasopressors and Inotropes -- 
-Phenylephrine Infusion (0.15-4 mcg/kg/min LBW): ${(0.15 * LBW).toFixed(1)}-${(4 * LBW).toFixed(1)} mcg/min
-              Push: 40-120 mcg 
-Ephedrine Push: 5-10 mg
-Norepinephrine Infusion (0.04-0.4 mcg/kg/min LBW): ${(0.04 * LBW).toFixed(1)}-${(0.4 * LBW).toFixed(1)} mcg/min
-Epinephrine Infusion (0.1-1 mcg/kg/min LBW): ${(0.1 * LBW).toFixed(1)}-${(1.0 * LBW).toFixed(1)} mcg/min
-            Push (Cardiac Arrest): 1 mg (< 1 mg if from LAST)
-            Max (0.07 mg/kg): ${(LBW * 0.07).toFixed(2)} mg
-Dobutamine Infusion (2-20 mcg/kg/min LBW): ${(2 * LBW).toFixed(1)}-${(20 * LBW).toFixed(1)} mcg/min
-Dopamine Infusion (1-20 mcg/kg/min LBW): ${(1 * LBW).toFixed(1)}-${(20 * LBW).toFixed(1)} mcg/min
-Milrinone Bolus (50 mcg/kg LBW): ${(50 * LBW / 1000).toFixed(1)} mg over 20 min
-          Infusion (0.5 mcg/kg/min LBW): ${(0.5 * LBW).toFixed(1)} mcg/min
-Vasopressin Infusion: 0.04 units/min fixed rate
-`;
+  // Muscle Relaxants
+  createSection(
+    "Muscle Relaxants",
+    `
+      <p>Succinylcholine (1 mg/kg TBW): <strong>${TBW.toFixed(1)} mg</strong></p>
+      <p>Rocuronium (0.6–1.2 mg/kg LBW): <strong>${(LBW * 0.6).toFixed(1)} – ${(LBW * 1.2).toFixed(1)} mg</strong></p>
+      <p>Cisatracurium (0.15 mg/kg LBW): <strong>${(LBW * 0.15).toFixed(1)} mg</strong></p>
+    `,
+    `Succinylcholine: ${TBW.toFixed(1)} mg | Rocuronium: ${(LBW * 0.6).toFixed(1)}–${(LBW * 1.2).toFixed(1)} mg | Cisatracurium: ${(LBW * 0.15).toFixed(1)} mg`
+  );
 
-  document.getElementById("output").textContent = output;
+  // Opioids
+  createSection(
+    "Opioids",
+    `
+      <p>Fentanyl Induction (2 mcg/kg TBW): <strong>${(TBW * 2).toFixed(1)} mcg</strong></p>
+      <p>Fentanyl Maintenance (1 mcg/kg IBW): <strong>${(IBW * 1).toFixed(1)} mcg</strong></p>
+      <p>Remifentanil (LBW, age-adjusted): <strong>${(LBW * 0.1 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>
+      ${BMI > 39 ? `<p>Remifentanil (FFM, BMI > 39): <strong>${(FFM * 0.1 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>` : ""}
+    `,
+    `Fentanyl: ${TBW.toFixed(1)} mcg induction, ${IBW.toFixed(1)} mcg maintenance | Remifentanil: ${(LBW * 0.1 * ageFactorRemi).toFixed(1)} mcg/min`
+  );
+
+  // Anesthetics
+  createSection(
+    "Anesthetics",
+    `
+      <p>Propofol Induction (2 mg/kg LBW): <strong>${(LBW * 2).toFixed(1)} mg</strong></p>
+      <p>Propofol Maintenance (100 mcg/kg/min TBW): <strong>${(TBW * 100).toFixed(1)} mcg/min</strong></p>
+      <p>Ketamine IV Induction (1.5 mg/kg TBW): <strong>${(TBW * 1.5).toFixed(1)} mg</strong></p>
+      <p>Ketamine Subanesthetic (0.35 mg/kg TBW): <strong>${(TBW * 0.35).toFixed(1)} mg</strong></p>
+    `,
+    `Propofol: ${(LBW * 2).toFixed(1)} mg induction, ${(TBW * 100).toFixed(1)} mcg/min maintenance | Ketamine: ${(TBW * 1.5).toFixed(1)} mg`
+  );
+
+  // Local Anesthetics
+  createSection(
+    "Local Anesthetics",
+    `
+      <p>Lidocaine Plain Max (4 mg/kg, max 300 mg): <strong>${Math.min(TBW * 4, 300).toFixed(1)} mg</strong></p>
+      <p>Lidocaine with Epi Max (7 mg/kg, max 500 mg): <strong>${Math.min(TBW * 7, 500).toFixed(1)} mg</strong></p>
+      <p>Bupivacaine Plain Max (2 mg/kg, max 175 mg): <strong>${Math.min(TBW * 2, 175).toFixed(1)} mg</strong></p>
+      <p>Bupivacaine with Epi Max (3 mg/kg, max 225 mg): <strong>${Math.min(TBW * 3, 225).toFixed(1)} mg</strong></p>
+    `,
+    `Lidocaine: ${Math.min(TBW * 4, 300).toFixed(1)} mg plain, ${Math.min(TBW * 7, 500).toFixed(1)} mg with epi | Bupivacaine: ${Math.min(TBW * 2, 175).toFixed(1)} mg plain, ${Math.min(TBW * 3, 225).toFixed(1)} mg with epi`
+  );
+
+  // Vasopressors
+  createSection(
+    "Vasopressors",
+    `<p>Epinephrine Max (0.07 mg/kg): <strong>${(TBW * 0.07).toFixed(2)} mg</strong></p>`,
+    `Epinephrine: ${(TBW * 0.07).toFixed(2)} mg`
+  );
+
+  window.exportTextCache = exportText;
 }
 
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
 }
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+}
+
+function copyToClipboard() {
+  if (!window.exportTextCache || !window.exportTextCache.trim()) {
+    alert("No results to copy. Please calculate first.");
+    return;
+  }
+  navigator.clipboard.writeText(window.exportTextCache)
+    .then(() => alert("Copied to clipboard!"));
+}
+
+function exportToCSV() {
+  if (!window.exportTextCache) return alert("No results to export.");
+  const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(window.exportTextCache.replace(/\n/g, "\r\n"));
+  const link = document.createElement("a");
+  link.href = csvContent;
+  link.download = "dosing-results.csv";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportToPDF() {
+  if (!window.exportTextCache) return alert("No results to export.");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
+  const margin = 40, pageHeight = doc.internal.pageSize.getHeight(), lineHeight = 14;
+  const splitText = doc.splitTextToSize(window.exportTextCache, doc.internal.pageSize.getWidth() - margin * 2);
+  let cursorY = margin;
+  splitText.forEach(line => {
+    if (cursorY + lineHeight > pageHeight - margin) { doc.addPage(); cursorY = margin; }
+    doc.text(line, margin, cursorY);
+    cursorY += lineHeight;
+  });
+  doc.save("dosing-results.pdf");
+}
+
+// Apply saved theme on load
+window.onload = function() {
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+    document.getElementById("darkToggle").checked = true;
+  }
+};

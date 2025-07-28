@@ -177,3 +177,70 @@ button:hover {
 .accordion-header span {
   font-size: 1.5rem;
 }
+
+.dose-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.dose-table th,
+.dose-table td {
+  border: 1px solid var(--input-border);
+  padding: 8px;
+  text-align: left;
+}
+
+.dose-table th {
+  background: var(--button-bg);
+  color: white;
+  font-weight: bold;
+}
+
+h2 {
+  margin-top: 20px;
+  color: var(--text-color);
+  font-size: 1.3rem;
+}
+
+.search-container {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+#searchBox {
+  width: 90%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--input-border);
+}
+
+.dose-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .search-container,
+  .export-buttons,
+  button,
+  #darkToggle {
+    display: none;
+  }
+
+  .dose-table th {
+    background: #000;
+    color: #fff;
+  }
+
+  .dose-table td {
+    font-size: 12px;
+  }
+}

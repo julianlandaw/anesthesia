@@ -26,104 +26,74 @@ function calculate() {
   // Clear previous results
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "";
+
   let exportText = `Patient: ${sex}, Age ${age}, Height ${height} cm, Weight ${weight} kg\n\n`;
 
-  function createSection(title, contentHTML, textBlock) {
-    const section = document.createElement("div");
-    section.className = "accordion-section";
-    const header = document.createElement("div");
-    header.className = "accordion-header";
-    header.innerHTML = `${title} <span>+</span>`;
-    section.appendChild(header);
+  function makeTable(title, rows) {
+      // Create HTML Table
+      let html = `<h2>${title}</h2><table class="dose-table"><thead><tr>
+        <th>Drug</th><th>Dose Range</th><th>Basis</th><th>Calculated</th></tr></thead><tbody>`;
+      rows.forEach(row => {
+        html += `<tr><td>${row.drug}</td><td>${row.range}</td><td>${row.basis}</td><td>${row.value}</td></tr>`;
+      });
+      html += "</tbody></table>";
+      resultsDiv.innerHTML += html;
+    
+      // Push data for export
+      window.exportDataCache.push({ title, rows });
+    }
 
-    const content = document.createElement("div");
-    content.className = "accordion-content";
-    content.innerHTML = contentHTML;
-    section.appendChild(content);
-
-    header.addEventListener("click", () => {
-      content.classList.toggle("open");
-      header.querySelector("span").textContent = content.classList.contains("open") ? "−" : "+";
-    });
-
-    resultsDiv.appendChild(section);
-    exportText += `\n${title}\n${textBlock}\n`;
-  }
+    window.exportDataCache = [];
 
   // Patient Metrics
-  createSection(
-    "Patient Metrics",
-    `
-      <p><strong>BMI:</strong> ${BMI.toFixed(1)} kg/m^2</p>
-      <p><strong>IBW:</strong> ${IBW.toFixed(1)} kg</p>
-      <p><strong>LBW:</strong> ${LBW.toFixed(1)} kg</p>
-      <p><strong>FFM:</strong> ${FFM.toFixed(1)} kg</p>
-    `,
-    `BMI: ${BMI.toFixed(1)}, IBW: ${IBW.toFixed(1)}, LBW: ${LBW.toFixed(1)}, FFM: ${FFM.toFixed(1)}`
-  );
+  makeTable("Patient Metrics", [
+    { drug: "BMI", range: "-", basis: "-", value: `${BMI.toFixed(1)} kg/m²` },
+    { drug: "IBW", range: "-", basis: "-", value: `${IBW.toFixed(1)} kg` },
+    { drug: "LBW", range: "-", basis: "-", value: `${LBW.toFixed(1)} kg` },
+    { drug: "FFM", range: "-", basis: "-", value: `${FFM.toFixed(1)} kg` }
+  ]);
 
   // Muscle Relaxants
-  createSection(
-    "Muscle Relaxants",
-    `
-      <p>Succinylcholine IV (0.7-1 mg/kg TBW): <strong>${(0.7*TBW).toFixed(1)} - ${TBW.toFixed(1)} mg</strong></p>
-      <p>Succinylcholine IM (2.5-4 mg/kg TBW): <strong>${(2.5*TBW).toFixed(1)} - ${(4*TBW).toFixed(1)} mg</strong></p>
-      <p>Rocuronium (0.6–1.2 mg/kg LBW): <strong>${(LBW * 0.6).toFixed(1)} – ${(LBW * 1.2).toFixed(1)} mg</strong></p>
-      <p>Cisatracurium (0.15-0.2 mg/kg LBW): <strong>${(LBW * 0.15).toFixed(1)} - ${(LBW * 0.2).toFixed(1)} mg</strong></p>
-      <p>Vecuronium (0.08-0.1 mg/kg LBW): <strong>${(LBW * 0.08).toFixed(1)} - ${(LBW * 0.1).toFixed(1)} mg</strong></p>
-      <p>Pancuronium (0.04-0.1 mg/kg LBW): <strong>${(LBW * 0.04).toFixed(1)} - ${(LBW * 0.1).toFixed(1)} mg</strong></p>
-    `,
-    `Succinylcholine: ${TBW.toFixed(1)} mg | Rocuronium: ${(LBW * 0.6).toFixed(1)}–${(LBW * 1.2).toFixed(1)} mg | Cisatracurium: ${(LBW * 0.15).toFixed(1)} mg`
-  );
+  makeTable("Muscle Relaxants", [
+    { drug: "Succinylcholine (IV)", range: "0.7–1 mg/kg", basis: "TBW", value: `${(0.7 * TBW).toFixed(1)}–${TBW.toFixed(1)} mg` },
+    { drug: "Succinylcholine (IM)", range: "2.5–4 mg/kg", basis: "TBW", value: `${(2.5 * TBW).toFixed(1)}–${(4 * TBW).toFixed(1)} mg` },
+    { drug: "Rocuronium", range: "0.6–1.2 mg/kg", basis: "LBW", value: `${(0.6 * LBW).toFixed(1)}–${(1.2 * LBW).toFixed(1)} mg` },
+    { drug: "Cisatracurium", range: "0.15–0.2 mg/kg", basis: "LBW", value: `${(LBW * 0.15).toFixed(1)}–${(LBW * 0.2).toFixed(1)} mg` },
+    { drug: "Vecuronium", range: "0.08–0.1 mg/kg", basis: "LBW", value: `${(LBW * 0.08).toFixed(1)}–${(LBW * 0.1).toFixed(1)} mg` },
+    { drug: "Pancuronium", range: "0.04–0.1 mg/kg", basis: "LBW", value: `${(LBW * 0.04).toFixed(1)}–${(LBW * 0.1).toFixed(1)} mg` }
+  ]);
 
   // Opioids
-  createSection(
-    "Opioids",
-    `
-      <p>Fentanyl Induction (0.7-2 mcg/kg TBW): <strong>${(TBW * 0.7).toFixed(1)} - ${(TBW * 2).toFixed(1)} mcg</strong></p>
-      <p>Fentanyl Maintenance (0.3-3 mcg/kg/hr IBW): <strong>${(IBW * 0.3).toFixed(1)} - ${(IBW * 3).toFixed(1)} mcg/hr</strong></p>
-      <p>Remifentanil (0.25-0.4 mcg/kg/hr LBW, age-adjusted): <strong>${(LBW * 0.25 * ageFactorRemi).toFixed(1)} - ${(LBW * 0.4 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>
-      ${BMI > 39 ? `<p>Remifentanil (FFM, BMI > 39): <strong>${(FFM * 0.1 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>` : ""}
-      <p>Sufentanil Induction (2-10 mcg/kg TBW): <strong>${(TBW * 2).toFixed(1)} - ${(TBW * 10).toFixed(1)} mcg</strong></p>
-      <p>Sufentanil Maintenance (0.1-0.5 mcg/kg/hr IBW): <strong>${(IBW * 0.1).toFixed(1)} - ${(IBW * 0.5).toFixed(1)} mcg/hr</strong></p>
-    `,
-    `Fentanyl: ${TBW.toFixed(1)} mcg induction, ${IBW.toFixed(1)} mcg maintenance | Remifentanil: ${(LBW * 0.1 * ageFactorRemi).toFixed(1)} mcg/min`
-  );
+  makeTable("Opioids", [
+    { drug: "Fentanyl (Induction)", range: "0.7–2 mcg/kg", basis: "TBW", value: `${(TBW * 0.7).toFixed(1)}–${(TBW * 2).toFixed(1)} mcg` },
+    { drug: "Fentanyl (Maintenance)", range: "0.3–3 mcg/kg/hr", basis: "IBW", value: `${(IBW * 0.3).toFixed(1)}–${(IBW * 3).toFixed(1)} mcg/hr` },
+    { drug: "Remifentanil", range: "0.25–0.4 mcg/kg/min", basis: "LBW", value: `${(LBW * 0.25 * ageFactorRemi).toFixed(1)}–${(LBW * 0.4 * ageFactorRemi).toFixed(1)} mcg/min` },
+    { drug: "Sufentanil (Induction)", range: "2–10 mcg/kg", basis: "TBW", value: `${(TBW * 2).toFixed(1)}–${(TBW * 10).toFixed(1)} mcg` },
+    { drug: "Sufentanil (Maintenance)", range: "0.1–0.5 mcg/kg/hr", basis: "IBW", value: `${(IBW * 0.1).toFixed(1)}–${(IBW * 0.5).toFixed(1)} mcg/hr` }
+  ]);
 
   // Anesthetics
-  createSection(
-    "Anesthetics",
-    `
-      <p>Propofol Induction (2-2.5 mg/kg LBW): <strong>${(LBW * 2).toFixed(1)} - ${(LBW * 2.5).toFixed(1)} mg</strong></p>
-      <p>Propofol Maintenance (20-150 mcg/kg/min TBW): <strong>${(TBW/1000 * 20).toFixed(1)} - ${(TBW/1000 * 150).toFixed(1)} mg/min</strong></p>
-      <p>Ketamine IV Induction (1-2.5 mg/kg TBW): <strong>${(TBW).toFixed(1)} - ${(TBW * 2.5).toFixed(1)} mg</strong></p>
-      <p>Ketamine Sedation (0.5-1 mg/kg TBW): <strong>${(TBW * 0.5).toFixed(1)} - ${(TBW).toFixed(1)} mg</strong></p>
-      <p>Etomidate Induction (0.1-0.4 mg/kg TBW): <strong>${(TBW * 0.1).toFixed(1)} - ${(TBW * 0.4).toFixed(1)} mg</strong></p>
-      <p>Etomidate Maintenance (5-20 mcg/kg/min TBW): <strong>${(TBW/1000 * 5).toFixed(1)} - ${(TBW/1000 * 20).toFixed(1)} mg/min</strong></p>
-      <p>Dexmedetomidine Induction (0.5-1 mcg/kg over 10 min IBW): <strong>${(IBW * 0.5).toFixed(1)} - ${(IBW).toFixed(1)} mcg</strong></p>
-      <p>Dexmedetomidine Maintenance (0.2-0.7 mcg/kg/hr IBW): <strong>${(IBW * 0.2).toFixed(1)} - ${(IBW * 0.7).toFixed(1)} mcg/hr</strong></p>
-    `,
-    `Propofol: ${(LBW * 2).toFixed(1)} mg induction, ${(TBW * 100).toFixed(1)} mcg/min maintenance | Ketamine: ${(TBW * 1.5).toFixed(1)} mg`
-  );
+  makeTable("Anesthetics", [
+    { drug: "Propofol (Induction)", range: "2–2.5 mg/kg", basis: "LBW", value: `${(LBW * 2).toFixed(1)}–${(LBW * 2.5).toFixed(1)} mg` },
+    { drug: "Propofol (Maintenance)", range: "20–150 mcg/kg/min", basis: "TBW", value: `${(TBW / 1000 * 20).toFixed(2)}–${(TBW / 1000 * 150).toFixed(2)} mg/min` },
+    { drug: "Ketamine (IV)", range: "1–2.5 mg/kg", basis: "TBW", value: `${TBW.toFixed(1)}–${(TBW * 2.5).toFixed(1)} mg` },
+    { drug: "Etomidate", range: "0.1–0.4 mg/kg", basis: "TBW", value: `${(TBW * 0.1).toFixed(1)}–${(TBW * 0.4).toFixed(1)} mg` },
+    { drug: "Dexmedetomidine (Induction)", range: "0.5–1 mcg/kg", basis: "IBW", value: `${(IBW * 0.5).toFixed(1)}–${(IBW).toFixed(1)} mcg` },
+    { drug: "Dexmedetomidine (Maintenance)", range: "0.2–0.7 mcg/kg/hr", basis: "IBW", value: `${(IBW * 0.2).toFixed(1)}–${(IBW * 0.7).toFixed(1)} mcg/hr` }
+  ]);
 
   // Local Anesthetics
-  createSection(
-    "Local Anesthetics",
-    `
-      <p>Lidocaine Plain Max (4 mg/kg, max 300 mg): <strong>${Math.min(TBW * 4, 300).toFixed(1)} mg</strong></p>
-      <p>Lidocaine with Epi Max (7 mg/kg, max 500 mg): <strong>${Math.min(TBW * 7, 500).toFixed(1)} mg</strong></p>
-      <p>Bupivacaine Plain Max (2 mg/kg, max 175 mg): <strong>${Math.min(TBW * 2, 175).toFixed(1)} mg</strong></p>
-      <p>Bupivacaine with Epi Max (3 mg/kg, max 225 mg): <strong>${Math.min(TBW * 3, 225).toFixed(1)} mg</strong></p>
-    `,
-    `Lidocaine: ${Math.min(TBW * 4, 300).toFixed(1)} mg plain, ${Math.min(TBW * 7, 500).toFixed(1)} mg with epi | Bupivacaine: ${Math.min(TBW * 2, 175).toFixed(1)} mg plain, ${Math.min(TBW * 3, 225).toFixed(1)} mg with epi`
-  );
+  makeTable("Local Anesthetics", [
+    { drug: "Lidocaine (Plain)", range: "4 mg/kg (max 300)", basis: "TBW", value: `${Math.min(TBW * 4, 300).toFixed(1)} mg` },
+    { drug: "Lidocaine (Epi)", range: "7 mg/kg (max 500)", basis: "TBW", value: `${Math.min(TBW * 7, 500).toFixed(1)} mg` },
+    { drug: "Bupivacaine (Plain)", range: "2 mg/kg (max 175)", basis: "TBW", value: `${Math.min(TBW * 2, 175).toFixed(1)} mg` },
+    { drug: "Bupivacaine (Epi)", range: "3 mg/kg (max 225)", basis: "TBW", value: `${Math.min(TBW * 3, 225).toFixed(1)} mg` }
+  ]);
 
   // Vasopressors
-  createSection(
-    "Vasopressors",
-    `<p>Epinephrine Max (0.07 mg/kg): <strong>${(TBW * 0.07).toFixed(2)} mg</strong></p>`,
-    `Epinephrine: ${(TBW * 0.07).toFixed(2)} mg`
-  );
+  makeTable("Vasopressors", [
+    { drug: "Epinephrine", range: "0.07 mg/kg", basis: "TBW", value: `${(TBW * 0.07).toFixed(2)} mg` }
+  ]);
 
   window.exportTextCache = exportText;
 }
@@ -151,35 +121,81 @@ function copyToClipboard() {
 }
 
 function exportToCSV() {
-  if (!window.exportTextCache) return alert("No results to export.");
-  const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(window.exportTextCache.replace(/\n/g, "\r\n"));
+  if (!window.exportDataCache) {
+    alert("No results to export. Please calculate first.");
+    return;
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "Category,Drug,Dose Range,Basis,Calculated\n";
+
+  window.exportDataCache.forEach(section => {
+    section.rows.forEach(row => {
+      csvContent += `${section.title},${row.drug},${row.range},${row.basis},${row.value}\n`;
+    });
+  });
+
+  const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
-  link.href = csvContent;
-  link.download = "dosing-results.csv";
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "dosing-report.csv");
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
 
 function exportToPDF() {
-  if (!window.exportTextCache) return alert("No results to export.");
+  if (!window.exportDataCache) {
+    alert("No results to export. Please calculate first.");
+    return;
+  }
+
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'letter' });
-  const margin = 40, pageHeight = doc.internal.pageSize.getHeight(), lineHeight = 14;
-  const splitText = doc.splitTextToSize(window.exportTextCache, doc.internal.pageSize.getWidth() - margin * 2);
-  let cursorY = margin;
-  splitText.forEach(line => {
-    if (cursorY + lineHeight > pageHeight - margin) { doc.addPage(); cursorY = margin; }
-    doc.text(line, margin, cursorY);
-    cursorY += lineHeight;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text("Medication Dosing Report", 14, 20);
+
+  window.exportDataCache.forEach(section => {
+    doc.setFontSize(12);
+    doc.text(section.title, 14, doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 30);
+    doc.autoTable({
+      head: [["Drug", "Dose Range", "Basis", "Calculated"]],
+      body: section.rows.map(row => [row.drug, row.range, row.basis, row.value]),
+      startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 35,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [0, 86, 179] } // blue header
+    });
   });
-  doc.save("dosing-results.pdf");
+
+  doc.save("dosing-report.pdf");
 }
 
-// Apply saved theme on load
-window.onload = function() {
-  if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
-    document.getElementById("darkToggle").checked = true;
-  }
-};
+function filterResults() {
+  const query = document.getElementById("searchBox").value.toLowerCase();
+  const tables = document.querySelectorAll("#results table");
+
+  tables.forEach(table => {
+    let visibleRows = 0;
+    const rows = table.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      if (text.includes(query)) {
+        row.style.display = "";
+        visibleRows++;
+      } else {
+        row.style.display = "none";
+      }
+    });
+
+    // Hide entire table if no rows match
+    const title = table.previousElementSibling; // The <h2> before the table
+    if (visibleRows === 0) {
+      table.style.display = "none";
+      if (title) title.style.display = "none";
+    } else {
+      table.style.display = "";
+      if (title) title.style.display = "";
+    }
+  });
+}

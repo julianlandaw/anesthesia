@@ -55,21 +55,22 @@ function calculate() {
 
   // Muscle Relaxants
   makeTable("Muscle Relaxants", [
-    { drug: "Succinylcholine (IV)", range: "0.7–1 mg/kg", basis: "TBW", value: `${(0.7 * TBW).toFixed(1)}–${TBW.toFixed(1)} mg` },
+    { drug: "Succinylcholine (IV)", range: "0.7–1.5 mg/kg", basis: "TBW", value: `${(0.7 * TBW).toFixed(1)}–${(TBW * 1.5).toFixed(1)} mg` },
     { drug: "Succinylcholine (IM)", range: "2.5–4 mg/kg", basis: "TBW", value: `${(2.5 * TBW).toFixed(1)}–${(4 * TBW).toFixed(1)} mg` },
-    { drug: "Rocuronium", range: "0.6–1.2 mg/kg", basis: "LBW", value: `${(0.6 * LBW).toFixed(1)}–${(1.2 * LBW).toFixed(1)} mg` },
-    { drug: "Cisatracurium", range: "0.15–0.2 mg/kg", basis: "LBW", value: `${(LBW * 0.15).toFixed(1)}–${(LBW * 0.2).toFixed(1)} mg` },
-    { drug: "Vecuronium", range: "0.08–0.1 mg/kg", basis: "LBW", value: `${(LBW * 0.08).toFixed(1)}–${(LBW * 0.1).toFixed(1)} mg` },
-    { drug: "Pancuronium", range: "0.04–0.1 mg/kg", basis: "LBW", value: `${(LBW * 0.04).toFixed(1)}–${(LBW * 0.1).toFixed(1)} mg` }
+    { drug: "Rocuronium", range: "0.6–1.2 mg/kg", basis: "IBW", value: `${(0.6 * IBW).toFixed(1)}–${(1.2 * IBW).toFixed(1)} mg` },
+    { drug: "Cisatracurium", range: "0.15–0.2 mg/kg", basis: "IBW", value: `${(IBW * 0.15).toFixed(1)}–${(IBW * 0.2).toFixed(1)} mg` },
+    { drug: "Vecuronium", range: "0.08–0.1 mg/kg", basis: "IBW", value: `${(IBW * 0.08).toFixed(1)}–${(IBW * 0.1).toFixed(1)} mg` },
+    { drug: "Pancuronium", range: "0.04–0.1 mg/kg", basis: "IBW", value: `${(IBW * 0.04).toFixed(1)}–${(IBW * 0.1).toFixed(1)} mg` }
   ]);
 
   // Opioids
   makeTable("Opioids", [
-    { drug: "Fentanyl (Induction)", range: "0.7–2 mcg/kg", basis: "TBW", value: `${(TBW * 0.7).toFixed(1)}–${(TBW * 2).toFixed(1)} mcg` },
-    { drug: "Fentanyl (Maintenance)", range: "0.3–3 mcg/kg/hr", basis: "IBW", value: `${(IBW * 0.3).toFixed(1)}–${(IBW * 3).toFixed(1)} mcg/hr` },
-    { drug: "Remifentanil", range: "0.25–0.4 mcg/kg/min", basis: "LBW", value: `${(LBW * 0.25 * ageFactorRemi).toFixed(1)}–${(LBW * 0.4 * ageFactorRemi).toFixed(1)} mcg/min` },
-    { drug: "Sufentanil (Induction)", range: "2–10 mcg/kg", basis: "TBW", value: `${(TBW * 2).toFixed(1)}–${(TBW * 10).toFixed(1)} mcg` },
-    { drug: "Sufentanil (Maintenance)", range: "0.1–0.5 mcg/kg/hr", basis: "IBW", value: `${(IBW * 0.1).toFixed(1)}–${(IBW * 0.5).toFixed(1)} mcg/hr` }
+    { drug: "Fentanyl (Induction)", range: "0.7–2 mcg/kg", basis: "LBW", value: `${(LBW * 0.7).toFixed(1)}–${(LBW * 2).toFixed(1)} mcg` },
+    { drug: "Fentanyl (Maintenance)", range: "0.3–3 mcg/kg/hr", basis: "LBW", value: `${(LBW * 0.3).toFixed(1)}–${(LBW * 3).toFixed(1)} mcg/hr` },
+    { drug: "Remifentanil (Induction)", range: "1 mcg/kg", basis: "LBW", value: `${(LBW).toFixed(1)} mcg` },
+    { drug: "Remifentanil (Maintenance", range: "0.25–0.4 mcg/kg/min", basis: "LBW (age adj)", value: `${(LBW * 0.25 * ageFactorRemi).toFixed(1)}–${(LBW * 0.4 * ageFactorRemi).toFixed(1)} mcg/min` },
+    { drug: "Sufentanil (Induction)", range: "2–10 mcg/kg", basis: "LBW", value: `${(LBW * 2).toFixed(1)}–${(LBW * 10).toFixed(1)} mcg` },
+    { drug: "Sufentanil (Maintenance)", range: "0.1–0.5 mcg/kg/hr", basis: "LBW", value: `${(LBW * 0.1).toFixed(1)}–${(LBW * 0.5).toFixed(1)} mcg/hr` }
   ]);
 
   // Anesthetics
@@ -84,22 +85,27 @@ function calculate() {
 
   // Local Anesthetics
   makeTable("Local Anesthetics", [
-    { drug: "Lidocaine (Plain)", range: "4 mg/kg (max 300)", basis: "TBW", value: `${Math.min(TBW * 4, 300).toFixed(1)} mg` },
-    { drug: "Lidocaine (Epi)", range: "7 mg/kg (max 500)", basis: "TBW", value: `${Math.min(TBW * 7, 500).toFixed(1)} mg` },
-    { drug: "Bupivacaine (Plain)", range: "2 mg/kg (max 175)", basis: "TBW", value: `${Math.min(TBW * 2, 175).toFixed(1)} mg` },
-    { drug: "Bupivacaine (Epi)", range: "3 mg/kg (max 225)", basis: "TBW", value: `${Math.min(TBW * 3, 225).toFixed(1)} mg` }
+    { drug: "Lidocaine (Plain)", range: "5 mg/kg", basis: "TBW", value: `${(TBW * 5).toFixed(1)} mg` },
+    { drug: "Lidocaine (Epi)", range: "7 mg/kg", basis: "TBW", value: `${(TBW * 7).toFixed(1)} mg` },
+    { drug: "Bupivacaine (Plain)", range: "2.5 mg/kg", basis: "TBW", value: `${(TBW * 2.5).toFixed(1)} mg` },
+    { drug: "Bupivacaine (Epi)", range: "3 mg/kg", basis: "TBW", value: `${(TBW * 3).toFixed(1)} mg` }
   ]);
 
   // Vasopressors
   makeTable("Vasopressors", [
-    { drug: "Epinephrine", range: "0.07 mg/kg", basis: "TBW", value: `${(TBW * 0.07).toFixed(2)} mg` }
+    { drug: "Phenylephrine (Bolus)", range: "--", basis: "--", value: "40-120 mcg" },
+    { drug: "Phenylephrine (Infusion)", range: "0.15-4 mcg/kg/min", basis: "TBW", value: `${(TBW * 0.15).toFixed(1)}-${(TBW * 0.4).toFixed(1)} mcg/min` },
+    { drug: "Ephedrine (Bolus)", range: "--", basis: "--", value: "5-10 mg" },
+    { drug: "Epinephrine (Infusion)", range: "0.1-1 mcg/kg/min", basis: "TBW", value: `${(TBW * 0.1).toFixed(1)}-${(TBW).toFixed(1)} mcg/min` },
+    { drug: "Epinephrine (Bolus, Arrest)", range: "--", basis: "--", value: "1 mg" },
+    { drug: "Dobutamine (Infusion)", range: "2-20 mcg/kg/min", basis: "TBW", value: `${(TBW * 2).toFixed(1)}-${(TBW * 20).toFixed(1)} mcg/min` },
+    { drug: "Dopamine (Infusion)", range: "1-20 mcg/kg/min", basis: "TBW", value: `${(TBW).toFixed(1)}-${(TBW * 20).toFixed(1)} mcg/min` },
+    { drug: "Milrinone (Load)", range: "50 mcg/kg", basis: "TBW", value: `${(TBW * 50).toFixed(1)} mcg over 20 min` },
+    { drug: "Milrinone (Infusion)", range: "0.5 mcg/kg/min", basis: "TBW", value: `${(TBW * 0.5).toFixed(1)} mcg/min` },
+    { drug: "Vasopressin", range: "--", basis: "--", value: "0.04 units/min fixed" },
   ]);
 
   window.exportTextCache = exportText;
-}
-
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
 }
 
 function toggleDarkMode() {
@@ -111,13 +117,34 @@ function toggleDarkMode() {
   }
 }
 
+// Apply saved theme on load
+window.onload = function() {
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+    document.getElementById("darkToggle").checked = true;
+  }
+};
+
 function copyToClipboard() {
-  if (!window.exportTextCache || !window.exportTextCache.trim()) {
+  if (!window.exportDataCache) {
     alert("No results to copy. Please calculate first.");
     return;
   }
-  navigator.clipboard.writeText(window.exportTextCache)
-    .then(() => alert("Copied to clipboard!"));
+
+  let textOutput = "Medication Dosing Report\n\n";
+
+  window.exportDataCache.forEach(section => {
+    textOutput += section.title + "\n";
+    textOutput += "Drug\tDose Range\tBasis\tCalculated\n"; // Tab-separated
+    section.rows.forEach(row => {
+      textOutput += `${row.drug}\t${row.range}\t${row.basis}\t${row.value}\n`;
+    });
+    textOutput += "\n";
+  });
+
+  navigator.clipboard.writeText(textOutput)
+    .then(() => alert("Report copied to clipboard!"))
+    .catch(err => alert("Failed to copy: " + err));
 }
 
 function exportToCSV() {

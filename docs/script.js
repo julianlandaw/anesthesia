@@ -54,7 +54,7 @@ function calculate() {
   createSection(
     "Patient Metrics",
     `
-      <p><strong>BMI:</strong> ${BMI.toFixed(1)}</p>
+      <p><strong>BMI:</strong> ${BMI.toFixed(1)} kg/m^2</p>
       <p><strong>IBW:</strong> ${IBW.toFixed(1)} kg</p>
       <p><strong>LBW:</strong> ${LBW.toFixed(1)} kg</p>
       <p><strong>FFM:</strong> ${FFM.toFixed(1)} kg</p>
@@ -66,9 +66,12 @@ function calculate() {
   createSection(
     "Muscle Relaxants",
     `
-      <p>Succinylcholine (1 mg/kg TBW): <strong>${TBW.toFixed(1)} mg</strong></p>
+      <p>Succinylcholine IV (0.7-1 mg/kg TBW): <strong>${(0.7*TBW).toFixed(1)} - ${TBW.toFixed(1)} mg</strong></p>
+      <p>Succinylcholine IM (2.5-4 mg/kg TBW): <strong>${(2.5*TBW).toFixed(1)} - ${(4*TBW).toFixed(1)} mg</strong></p>
       <p>Rocuronium (0.6–1.2 mg/kg LBW): <strong>${(LBW * 0.6).toFixed(1)} – ${(LBW * 1.2).toFixed(1)} mg</strong></p>
-      <p>Cisatracurium (0.15 mg/kg LBW): <strong>${(LBW * 0.15).toFixed(1)} mg</strong></p>
+      <p>Cisatracurium (0.15-0.2 mg/kg LBW): <strong>${(LBW * 0.15).toFixed(1)} - ${(LBW * 0.2).toFixed(1)} mg</strong></p>
+      <p>Vecuronium (0.08-0.1 mg/kg LBW): <strong>${(LBW * 0.08).toFixed(1)} - ${(LBW * 0.1).toFixed(1)} mg</strong></p>
+      <p>Pancuronium (0.04-0.1 mg/kg LBW): <strong>${(LBW * 0.04).toFixed(1)} - ${(LBW * 0.1).toFixed(1)} mg</strong></p>
     `,
     `Succinylcholine: ${TBW.toFixed(1)} mg | Rocuronium: ${(LBW * 0.6).toFixed(1)}–${(LBW * 1.2).toFixed(1)} mg | Cisatracurium: ${(LBW * 0.15).toFixed(1)} mg`
   );
@@ -77,10 +80,12 @@ function calculate() {
   createSection(
     "Opioids",
     `
-      <p>Fentanyl Induction (2 mcg/kg TBW): <strong>${(TBW * 2).toFixed(1)} mcg</strong></p>
-      <p>Fentanyl Maintenance (1 mcg/kg IBW): <strong>${(IBW * 1).toFixed(1)} mcg</strong></p>
-      <p>Remifentanil (LBW, age-adjusted): <strong>${(LBW * 0.1 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>
+      <p>Fentanyl Induction (0.7-2 mcg/kg TBW): <strong>${(TBW * 0.7).toFixed(1)} - ${(TBW * 2).toFixed(1)} mcg</strong></p>
+      <p>Fentanyl Maintenance (0.3-3 mcg/kg/hr IBW): <strong>${(IBW * 0.3).toFixed(1)} - ${(IBW * 3).toFixed(1)} mcg/hr</strong></p>
+      <p>Remifentanil (0.25-0.4 mcg/kg/hr LBW, age-adjusted): <strong>${(LBW * 0.25 * ageFactorRemi).toFixed(1)} - ${(LBW * 0.4 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>
       ${BMI > 39 ? `<p>Remifentanil (FFM, BMI > 39): <strong>${(FFM * 0.1 * ageFactorRemi).toFixed(1)} mcg/min</strong></p>` : ""}
+      <p>Sufentanil Induction (2-10 mcg/kg TBW): <strong>${(TBW * 2).toFixed(1)} - ${(TBW * 10).toFixed(1)} mcg</strong></p>
+      <p>Sufentanil Maintenance (0.1-0.5 mcg/kg/hr IBW): <strong>${(IBW * 0.1).toFixed(1)} - ${(IBW * 0.5).toFixed(1)} mcg/hr</strong></p>
     `,
     `Fentanyl: ${TBW.toFixed(1)} mcg induction, ${IBW.toFixed(1)} mcg maintenance | Remifentanil: ${(LBW * 0.1 * ageFactorRemi).toFixed(1)} mcg/min`
   );
@@ -89,10 +94,14 @@ function calculate() {
   createSection(
     "Anesthetics",
     `
-      <p>Propofol Induction (2 mg/kg LBW): <strong>${(LBW * 2).toFixed(1)} mg</strong></p>
-      <p>Propofol Maintenance (100 mcg/kg/min TBW): <strong>${(TBW * 100).toFixed(1)} mcg/min</strong></p>
-      <p>Ketamine IV Induction (1.5 mg/kg TBW): <strong>${(TBW * 1.5).toFixed(1)} mg</strong></p>
-      <p>Ketamine Subanesthetic (0.35 mg/kg TBW): <strong>${(TBW * 0.35).toFixed(1)} mg</strong></p>
+      <p>Propofol Induction (2-2.5 mg/kg LBW): <strong>${(LBW * 2).toFixed(1)} - ${(LBW * 2.5).toFixed(1)} mg</strong></p>
+      <p>Propofol Maintenance (20-150 mcg/kg/min TBW): <strong>${(TBW/1000 * 20).toFixed(1)} - ${(TBW/1000 * 150).toFixed(1)} mg/min</strong></p>
+      <p>Ketamine IV Induction (1-2.5 mg/kg TBW): <strong>${(TBW).toFixed(1)} - ${(TBW * 2.5).toFixed(1)} mg</strong></p>
+      <p>Ketamine Sedation (0.5-1 mg/kg TBW): <strong>${(TBW * 0.5).toFixed(1)} - ${(TBW).toFixed(1)} mg</strong></p>
+      <p>Etomidate Induction (0.1-0.4 mg/kg TBW): <strong>${(TBW * 0.1).toFixed(1)} - ${(TBW * 0.4).toFixed(1)} mg</strong></p>
+      <p>Etomidate Maintenance (5-20 mcg/kg/min TBW): <strong>${(TBW/1000 * 5).toFixed(1)} - ${(TBW/1000 * 20).toFixed(1)} mg/min</strong></p>
+      <p>Dexmedetomidine Induction (0.5-1 mcg/kg over 10 min IBW): <strong>${(IBW * 0.5).toFixed(1)} - ${(IBW).toFixed(1)} mcg</strong></p>
+      <p>Dexmedetomidine Maintenance (0.2-0.7 mcg/kg/hr IBW): <strong>${(IBW * 0.2).toFixed(1)} - ${(IBW * 0.7).toFixed(1)} mcg/hr</strong></p>
     `,
     `Propofol: ${(LBW * 2).toFixed(1)} mg induction, ${(TBW * 100).toFixed(1)} mcg/min maintenance | Ketamine: ${(TBW * 1.5).toFixed(1)} mg`
   );

@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Vent Settings Assistant</title>
+  <meta name="description" content="Adult-focused ventilator helper: PBW, tidal volume targets, and minute ventilation estimates." />
+
+  <!-- Apply saved theme before paint -->
+  <script>
+    (function () {
+      const t = localStorage.getItem('theme'); // "dark" | "light" | "system" | null
+      if (t === 'dark' || t === 'light') {
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.style.colorScheme = t;
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.style.colorScheme = '';
+      }
+    })();
+  </script>
+
+  <style>
+    /* =============== THEME TOKENS =============== */
+    :root{
+      --bg: #0b1220;
+      --surface: rgba(255,255,255,.06);
+      --surface-2: rgba(255,255,255,.09);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --border: rgba(255,255,255,.12);
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
+      --accent: #7c5cff;
+      --accent-2:#16c2a1;
+      --warn:#ffcc66;
+      --danger:#ff6b6b;
+      --ok:#6ee7b7;
+      --radius: 18px;
+      --radius-sm: 14px;
+      --max: 1050px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    :root[data-theme="light"]{
+      --bg:#f6f7fb;
+      --surface: rgba(17,24,39,.05);
+      --surface-2: rgba(17,24,39,.08);
+      --text: rgba(17,24,39,.92);
+      --muted: rgba(17,24,39,.7);
+      --border: rgba(17,24,39,.12);
+      --shadow: 0 12px 30px rgba(17,24,39,.10);
+      --accent:#5b5cff;
+      --accent-2:#0fb49a;
+      --warn:#c07a00;
+      --danger:#c2410c;
+      --ok:#047857;
+    }
+    @media (prefers-color-scheme: light){
+      :root:not([data-theme]){
+        --bg:#f6f7fb;
+        --surface: rgba(17,24,39,.05);
+        --surface-2: rgba(17,24,39,.08);
+        --text: rgba(17,24,39,.92);
+        --muted: rgba(17,24,39,.7);
+        --border: rgba(17,24,39,.12);
+        --shadow: 0 12px 30px rgba(17,24,39,.10);
+        --accent:#5b5cff;
+        --accent-2:#0fb49a;
+        --warn:#c07a00;
+        --danger:#c2410c;
+        --ok:#047857;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(900px 400px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
+        radial-gradient(900px 400px at 90% 0%, rgba(22,194,161,.28), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.15), transparent 60%),
+        var(--bg);
+      line-height: 1.35;
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:var(--max); margin:0 auto; padding:22px 16px 44px;}
+
+    /* Header */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .left{
+      display:flex; align-items:center; gap:10px;
+      min-width: 220px;
+    }
+    .logo{
+      width:38px; height:38px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      display:grid; place-items:center;
+      flex:0 0 auto;
+    }
+    .logo svg{opacity:.95}
+    .titles h1{font-size:15px; margin:0; letter-spacing:.2px}
+    .titles p{margin:2px 0 0; font-size:12px; color:var(--muted)}
+
+    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 12px;
+      cursor:pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      display:flex; align-items:center; gap:8px;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.06)}
+    .btn:active{transform: translateY(1px)}
+    .btn[data-mode]::after{
+      content: attr(data-mode);
+      margin-left: 2px;
+      font-size: 12px;
+      line-height: 1;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+    }
+    .ghost{
+      border:1px solid var(--border);
+      background:transparent;
+      color: var(--muted);
+    }
+    .ghost:hover{color: var(--text)}
+    .linkpill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      padding: 9px 12px;
+      border-radius:999px;
+      color: var(--muted);
+      display:flex; align-items:center; gap:8px;
+    }
+    .linkpill:hover{color: var(--text); background: rgba(255,255,255,.06)}
+
+    /* Layout blocks */
+    .hero{
+      margin-top:14px;
+      padding:18px 18px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+    }
+    .hero h2{margin:0; font-size: 18px;}
+    .hero p{margin:8px 0 0; color: var(--muted); max-width: 78ch; font-size: 13.5px;}
+    .note{
+      margin-top:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .panel{
+      grid-column: span 6;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .panel.full{grid-column: span 12;}
+    @media (max-width: 900px){
+      .panel{grid-column: span 12;}
+      .left{min-width:unset}
+    }
+
+    .panel h3{
+      margin:0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .25px;
+      color: var(--muted);
+    }
+
+    /* Form */
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .row.three{grid-template-columns: 1fr 1fr 1fr;}
+    @media (max-width: 680px){
+      .row, .row.three{grid-template-columns: 1fr;}
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    input, select{
+      width:100%;
+      padding: 10px 11px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      outline: none;
+    }
+    input::placeholder{color: var(--muted)}
+    input:focus, select:focus{
+      border-color: rgba(124,92,255,.45);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.12);
+    }
+
+    .inline{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .inline > *{flex:1}
+    .help{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Results */
+    .results{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .metric{
+      grid-column: span 6;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      position:relative;
+      overflow:hidden;
+    }
+    .metric.full{grid-column: span 12;}
+    .metric h4{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+    .metric .value{
+      margin-top:6px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .metric .sub{
+      margin-top:4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-top: 10px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+    }
+    .badge.ok{border-color: rgba(22,194,161,.35); color: var(--text)}
+    .badge.warn{border-color: rgba(255,204,102,.35); color: var(--text)}
+    .badge.danger{border-color: rgba(255,107,107,.35); color: var(--text)}
+
+    /* Slider block */
+    .sliderwrap{
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    input[type="range"]{
+      width:100%;
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+    }
+    .slidergrid{
+      display:grid;
+      grid-template-columns: 1fr 140px;
+      gap: 10px;
+      align-items:center;
+      margin-top: 6px;
+    }
+    @media (max-width: 680px){
+      .slidergrid{grid-template-columns: 1fr;}
+    }
+
+    .hr{
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    details{
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.02);
+      padding: 10px 12px;
+    }
+    summary{
+      cursor:pointer;
+      color: var(--muted);
+      font-size: 12.5px;
+      list-style: none;
+    }
+    summary::-webkit-details-marker{display:none;}
+    details p{
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .footer{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      padding: 0 2px;
+    }
+
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.55);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      backdrop-filter: blur(10px);
+    }
+    :root[data-theme="light"] .toast{
+      background: rgba(17,24,39,.75);
+      border-color: rgba(255,255,255,.12);
+    }
+    .toast.show{opacity:1;}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="left">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M6 14c0-4.5 3.6-8 8-8h3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6 14c0 3.3 2.7 6 6 6h5" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+            <path d="M16.5 6.5h3v3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6" cy="14" r="2" fill="white" opacity=".95"/>
+          </svg>
+        </div>
+        <div class="titles">
+          <h1>Vent Settings Assistant</h1>
+          <p>PBW, tidal volume targets, and minute ventilation (adult-focused)</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="linkpill" href="index.html" title="Back to Toolkit Home">← Home</a>
+        <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
+        <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
+          <span aria-hidden="true">🖥️</span> Theme
+        </button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h2>Set lung-protective ventilation quickly with PBW-based TV targets</h2>
+      <p>
+        Enter sex and height to calculate <b>PBW</b>, then select a strategy to get a recommended <b>tidal volume range</b>.
+        Adjust RR to estimate <b>minute ventilation</b>. Use the copy button to generate a short charting note.
+      </p>
+      <div class="note">
+        <b>Decision-support only.</b> Verify with patient-specific factors (lung compliance, dead space, ARDS status, acid-base goals),
+        and local protocols. Always monitor pressures/volumes clinically.
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- Inputs -->
+      <section class="panel" aria-label="Inputs">
+        <h3>Inputs</h3>
+
+        <div class="row">
+          <div>
+            <label for="sex">Sex</label>
+            <select id="sex">
+              <option value="" selected>Choose…</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="strategy">TV Strategy (mL/kg PBW)</label>
+            <select id="strategy">
+              <option value="standard" selected>Standard: 6–8</option>
+              <option value="protective">Lung-protective: 4–6</option>
+              <option value="custom">Custom band…</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Height</label>
+            <div class="inline">
+              <input id="height" type="number" inputmode="decimal" placeholder="e.g., 175" min="80" max="250" step="0.1" />
+              <select id="heightUnit" aria-label="Height unit">
+                <option value="cm" selected>cm</option>
+                <option value="in">in</option>
+              </select>
+            </div>
+            <div class="help">If using inches, enter total inches (e.g., 70 for 5'10").</div>
+          </div>
+
+          <div>
+            <label for="rr">Respiratory rate (RR)</label>
+            <input id="rr" type="number" inputmode="numeric" placeholder="e.g., 14" min="4" max="40" step="1" value="14" />
+            <div class="help">Used to estimate minute ventilation (MV).</div>
+          </div>
+        </div>
+
+        <div class="row three">
+          <div>
+            <label for="peep">PEEP (optional)</label>
+            <input id="peep" type="number" inputmode="decimal" placeholder="e.g., 5" min="0" max="30" step="1" />
+          </div>
+          <div>
+            <label for="fio2">FiO₂ (optional)</label>
+            <input id="fio2" type="number" inputmode="decimal" placeholder="e.g., 0.5" min="0.21" max="1" step="0.01" />
+            <div class="help">Enter fraction (0.21–1.0).</div>
+          </div>
+          <div>
+            <label for="mode">Mode (optional)</label>
+            <select id="mode">
+              <option value="" selected>—</option>
+              <option value="VC">VC</option>
+              <option value="PC">PC</option>
+              <option value="PSV">PSV</option>
+              <option value="SIMV">SIMV</option>
+            </select>
+          </div>
+        </div>
+
+        <details>
+          <summary>Custom TV band (optional)</summary>
+          <p style="margin-top:10px;">
+            If you select <b>Custom band</b>, set your preferred TV range (mL/kg PBW) here.
+          </p>
+          <div class="row">
+            <div>
+              <label for="customMin">Custom min (mL/kg PBW)</label>
+              <input id="customMin" type="number" inputmode="decimal" min="2" max="12" step="0.5" value="6" />
+            </div>
+            <div>
+              <label for="customMax">Custom max (mL/kg PBW)</label>
+              <input id="customMax" type="number" inputmode="decimal" min="2" max="12" step="0.5" value="8" />
+            </div>
+          </div>
+          <p>Tip: A common “standard adult” band is 6–8; lung-protective is 4–6.</p>
+        </details>
+
+        <div class="hr"></div>
+
+        <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">
+          📋 Copy summary
+        </button>
+
+        <details>
+          <summary>Formulas used</summary>
+          <p>
+            <b>PBW</b> (kg): Male = 50 + 0.91×(height_cm − 152.4); Female = 45.5 + 0.91×(height_cm − 152.4).<br/>
+            <b>TV range</b> (mL): PBW×(mL/kg).<br/>
+            <b>Minute ventilation</b> (L/min): (TV_mL × RR)/1000.
+          </p>
+        </details>
+      </section>
+
+      <!-- Outputs -->
+      <section class="panel" aria-label="Results">
+        <h3>Results</h3>
+
+        <div class="results">
+          <div class="metric">
+            <h4>Predicted body weight (PBW)</h4>
+            <div class="value" id="pbwOut">—</div>
+            <div class="sub" id="heightCmOut">Height: —</div>
+          </div>
+
+          <div class="metric">
+            <h4>Recommended TV range</h4>
+            <div class="value" id="tvRangeOut">—</div>
+            <div class="sub" id="tvBandOut">Band: —</div>
+          </div>
+
+          <div class="metric full">
+            <h4>Selected tidal volume (TV)</h4>
+            <div class="value" id="tvOut">—</div>
+
+            <div class="sliderwrap">
+              <div class="help" id="sliderHelp">Enter sex + height to enable TV selection.</div>
+              <div class="slidergrid">
+                <input id="tvSlider" type="range" min="200" max="700" step="10" value="420" disabled />
+                <input id="tvManual" type="number" inputmode="numeric" min="50" max="2000" step="10" placeholder="TV (mL)" disabled />
+              </div>
+              <div class="help" id="tvPerKgOut">—</div>
+              <div class="badge" id="tvBadge">Awaiting inputs…</div>
+            </div>
+          </div>
+
+          <div class="metric">
+            <h4>Minute ventilation (MV)</h4>
+            <div class="value" id="mvOut">—</div>
+            <div class="sub">MV = TV × RR</div>
+          </div>
+
+          <div class="metric">
+            <h4>Quick note</h4>
+            <div class="sub" id="quickNote">
+              Use TV in mL/kg PBW, then titrate RR/PEEP/FiO₂ clinically and monitor pressures.
+            </div>
+            <div class="badge" id="contextBadge">—</div>
+          </div>
+
+          <div class="metric full">
+            <h4>Copy preview</h4>
+            <div class="sub" id="copyPreview">Fill inputs to generate a one-line summary.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel full" aria-label="Tips">
+        <h3>Adult practice tips (non-prescriptive)</h3>
+        <p style="margin:0;color:var(--muted);font-size:13px;max-width:95ch;">
+          • Consider lung-protective strategy for most general anesthetics (especially high-risk lungs).<br/>
+          • Reassess if high airway pressures, poor compliance, significant dead space, or acid-base goals require deviation.<br/>
+          • In obesity/recruitment issues, PEEP titration and positioning matter; avoid over-distension.<br/>
+          • Always confirm actual delivered TV (especially in PC/PS modes) and monitor plateau/driving pressures when relevant.
+        </p>
+      </section>
+    </div>
+
+    <div class="footer">
+      <div>© <span id="year"></span> Vent Settings Assistant • Local-only HTML</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="linkpill" href="index.html">← Back to Home</a>
+        <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
+
+  <script>
+    // =============================
+    // THEME: Dark -> Light -> System
+    // =============================
+    const themeBtn = document.getElementById('themeBtn');
+
+    function getSavedTheme(){
+      const t = localStorage.getItem('theme');
+      return (t === 'dark' || t === 'light' || t === 'system') ? t : 'system';
+    }
+    function updateThemeButton(mode){
+      const icon = (mode === 'dark') ? '🌙' : (mode === 'light') ? '☀️' : '🖥️';
+      const label = (mode === 'dark') ? 'Dark' : (mode === 'light') ? 'Light' : 'System';
+      themeBtn.querySelector('span').textContent = icon;
+      themeBtn.setAttribute('data-mode', label);
+      themeBtn.title = `Theme: ${label} (click to change)`;
+      themeBtn.setAttribute('aria-label', `Theme: ${label}. Click to switch theme.`);
+    }
+    function applyTheme(mode){
+      if (mode === 'dark' || mode === 'light') {
+        document.documentElement.setAttribute('data-theme', mode);
+        document.documentElement.style.colorScheme = mode;
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.style.colorScheme = '';
+      }
+      localStorage.setItem('theme', mode);
+      updateThemeButton(mode);
+    }
+    updateThemeButton(getSavedTheme());
+    themeBtn?.addEventListener('click', () => {
+      const current = getSavedTheme();
+      const next = (current === 'dark') ? 'light' : (current === 'light') ? 'system' : 'dark';
+      applyTheme(next);
+    });
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      mq.addEventListener?.('change', () => {
+        if (getSavedTheme() === 'system') updateThemeButton('system');
+      });
+    }
+
+    // =============================
+    // VENT CALCULATIONS
+    // =============================
+    const els = {
+      sex: document.getElementById('sex'),
+      strategy: document.getElementById('strategy'),
+      height: document.getElementById('height'),
+      heightUnit: document.getElementById('heightUnit'),
+      rr: document.getElementById('rr'),
+      peep: document.getElementById('peep'),
+      fio2: document.getElementById('fio2'),
+      mode: document.getElementById('mode'),
+      customMin: document.getElementById('customMin'),
+      customMax: document.getElementById('customMax'),
+
+      pbwOut: document.getElementById('pbwOut'),
+      heightCmOut: document.getElementById('heightCmOut'),
+      tvRangeOut: document.getElementById('tvRangeOut'),
+      tvBandOut: document.getElementById('tvBandOut'),
+
+      tvOut: document.getElementById('tvOut'),
+      tvSlider: document.getElementById('tvSlider'),
+      tvManual: document.getElementById('tvManual'),
+      sliderHelp: document.getElementById('sliderHelp'),
+      tvPerKgOut: document.getElementById('tvPerKgOut'),
+      tvBadge: document.getElementById('tvBadge'),
+      mvOut: document.getElementById('mvOut'),
+      contextBadge: document.getElementById('contextBadge'),
+      copyPreview: document.getElementById('copyPreview'),
+
+      copyBtn: document.getElementById('copyBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      toast: document.getElementById('toast')
+    };
+
+    function clamp(n, lo, hi){ return Math.min(hi, Math.max(lo, n)); }
+    function round1(x){ return Math.round(x * 10) / 10; }
+    function round0(x){ return Math.round(x); }
+    function isNum(x){ return Number.isFinite(x); }
+
+    function parseNum(el){
+      const v = parseFloat(el.value);
+      return Number.isFinite(v) ? v : NaN;
+    }
+
+    function heightToCm(h, unit){
+      if (!isNum(h)) return NaN;
+      return (unit === 'in') ? (h * 2.54) : h;
+    }
+
+    function pbwKg(sex, heightCm){
+      if (!sex || !isNum(heightCm)) return NaN;
+      const base = (sex === 'male') ? 50 : 45.5;
+      return base + 0.91 * (heightCm - 152.4);
+    }
+
+    function getBand(){
+      const strat = els.strategy.value;
+      if (strat === 'standard') return {min: 6, max: 8, label: 'Standard 6–8 mL/kg PBW'};
+      if (strat === 'protective') return {min: 4, max: 6, label: 'Lung-protective 4–6 mL/kg PBW'};
+      // custom
+      let mn = parseNum(els.customMin);
+      let mx = parseNum(els.customMax);
+      if (!isNum(mn)) mn = 6;
+      if (!isNum(mx)) mx = 8;
+      if (mx < mn) [mn, mx] = [mx, mn];
+      mn = clamp(mn, 2, 12);
+      mx = clamp(mx, 2, 12);
+      return {min: mn, max: mx, label: `Custom ${mn}–${mx} mL/kg PBW`};
+    }
+
+    function setTvControlsEnabled(enabled){
+      els.tvSlider.disabled = !enabled;
+      els.tvManual.disabled = !enabled;
+    }
+
+    function updateTvControls(pbw, band){
+      const tvMin = pbw * band.min;
+      const tvMax = pbw * band.max;
+
+      // Set slider bounds (rounded to tens for usability)
+      const sMin = Math.max(50, Math.floor(tvMin / 10) * 10);
+      const sMax = Math.max(sMin + 50, Math.ceil(tvMax / 10) * 10);
+
+      els.tvSlider.min = sMin;
+      els.tvSlider.max = sMax;
+      els.tvSlider.step = 10;
+
+      // If current slider value out of range, set to midpoint
+      const current = parseFloat(els.tvSlider.value);
+      const mid = Math.round(((tvMin + tvMax) / 2) / 10) * 10;
+
+      const next = (Number.isFinite(current) && current >= sMin && current <= sMax) ? current : mid;
+      els.tvSlider.value = next;
+      els.tvManual.value = next;
+
+      els.sliderHelp.textContent = `TV slider range: ${sMin}–${sMax} mL (recommended ${round0(tvMin)}–${round0(tvMax)} mL).`;
+    }
+
+    function tvBadgeFor(mlPerKg){
+      // Provide gentle “range” feedback; not prescriptive.
+      // Color guidance:
+      // 4–8: generally “in common lung-protective/standard adult bands”
+      // <4 or >10: more concerning
+      if (!isNum(mlPerKg)) return {cls: '', text: 'Awaiting inputs…'};
+      if (mlPerKg < 4) return {cls: 'danger', text: 'Low TV ( <4 mL/kg PBW ) — verify context'};
+      if (mlPerKg < 6) return {cls: 'ok', text: 'Lung-protective range (4–6)'}; // “ok”
+      if (mlPerKg <= 8) return {cls: 'ok', text: 'Common standard range (6–8)'}; // “ok”
+      if (mlPerKg <= 10) return {cls: 'warn', text: 'High TV (>8) — consider lung mechanics'};
+      return {cls: 'danger', text: 'Very high TV (>10) — verify and reassess'};
+    }
+
+    function formatFiO2(v){
+      if (!isNum(v)) return '';
+      // If user typed 50 instead of 0.5, gently interpret >1 as percent
+      if (v > 1) return (v/100).toFixed(2);
+      return v.toFixed(2);
+    }
+
+    function buildSummary({mode, sex, heightCm, pbw, tv, rr, mv, peep, fio2, bandLabel}){
+      const parts = [];
+      parts.push('Vent:');
+      if (mode) parts.push(`${mode}`);
+      parts.push(`PBW ${round1(pbw)} kg`);
+      parts.push(`TV ${round0(tv)} mL (${round1(tv/pbw)} mL/kg PBW)`);
+      parts.push(`RR ${round0(rr)}`);
+      parts.push(`MV ${round1(mv)} L/min`);
+      if (isNum(peep)) parts.push(`PEEP ${round0(peep)}`);
+      if (isNum(fio2)) parts.push(`FiO₂ ${formatFiO2(fio2)}`);
+      parts.push(`[${bandLabel}]`);
+      return parts.join(' • ');
+    }
+
+    function showToast(msg){
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
+    }
+
+    function recalc(){
+      const sex = els.sex.value;
+      const h = parseNum(els.height);
+      const unit = els.heightUnit.value;
+      const heightCm = heightToCm(h, unit);
+
+      const rr = parseNum(els.rr);
+      const peep = parseNum(els.peep);
+      let fio2 = parseNum(els.fio2);
+      if (isNum(fio2) && fio2 > 1) fio2 = fio2 / 100; // interpret percent entry
+      const mode = els.mode.value;
+
+      const band = getBand();
+
+      // Validate required inputs
+      const hasCore = (sex === 'male' || sex === 'female') && isNum(heightCm);
+
+      if (!hasCore){
+        els.pbwOut.textContent = '—';
+        els.heightCmOut.textContent = 'Height: —';
+        els.tvRangeOut.textContent = '—';
+        els.tvBandOut.textContent = 'Band: —';
+        els.tvOut.textContent = '—';
+        els.tvPerKgOut.textContent = '—';
+        els.mvOut.textContent = '—';
+        els.copyPreview.textContent = 'Fill inputs to generate a one-line summary.';
+        els.contextBadge.textContent = '—';
+        els.contextBadge.className = 'badge';
+        els.tvBadge.textContent = 'Awaiting inputs…';
+        els.tvBadge.className = 'badge';
+        setTvControlsEnabled(false);
+        els.sliderHelp.textContent = 'Enter sex + height to enable TV selection.';
+        return;
+      }
+
+      // PBW
+      const pbw = pbwKg(sex, heightCm);
+
+      els.pbwOut.textContent = `${round1(pbw)} kg`;
+      els.heightCmOut.textContent = `Height: ${round1(heightCm)} cm`;
+
+      // TV range
+      const tvMin = pbw * band.min;
+      const tvMax = pbw * band.max;
+
+      els.tvRangeOut.textContent = `${round0(tvMin)}–${round0(tvMax)} mL`;
+      els.tvBandOut.textContent = `Band: ${band.label}`;
+
+      // Enable and update TV controls
+      setTvControlsEnabled(true);
+      updateTvControls(pbw, band);
+
+      // Determine TV from manual/slider
+      let tv = parseNum(els.tvManual);
+      if (!isNum(tv)) tv = parseFloat(els.tvSlider.value);
+
+      // Keep both in sync; clamp to slider bounds
+      const sMin = parseFloat(els.tvSlider.min);
+      const sMax = parseFloat(els.tvSlider.max);
+      tv = clamp(tv, sMin, sMax);
+      els.tvSlider.value = tv;
+      els.tvManual.value = tv;
+
+      // Outputs
+      els.tvOut.textContent = `${round0(tv)} mL`;
+
+      const mlPerKg = tv / pbw;
+      els.tvPerKgOut.textContent = `≈ ${round1(mlPerKg)} mL/kg PBW`;
+
+      // Badge on TV
+      const b = tvBadgeFor(mlPerKg);
+      els.tvBadge.className = `badge ${b.cls || ''}`.trim();
+      els.tvBadge.textContent = b.text;
+
+      // MV
+      const mv = (isNum(rr) ? (tv * rr) / 1000 : NaN);
+      els.mvOut.textContent = isNum(mv) ? `${round1(mv)} L/min` : '—';
+
+      // Context badge (gentle prompts)
+      let cText = 'Monitor pressures/volumes; titrate clinically.';
+      let cCls = '';
+      if (isNum(mv) && mv < 4) { cText = 'Low MV — verify CO₂ goal / dead space.'; cCls = 'warn'; }
+      if (isNum(mv) && mv > 12) { cText = 'High MV — verify need / risk of air trapping.'; cCls = 'warn'; }
+      els.contextBadge.className = `badge ${cCls}`.trim();
+      els.contextBadge.textContent = cText;
+
+      // Copy preview
+      const summary = buildSummary({
+        mode, sex, heightCm, pbw, tv,
+        rr: isNum(rr) ? rr : 0,
+        mv: isNum(mv) ? mv : 0,
+        peep: isNum(peep) ? peep : NaN,
+        fio2: isNum(fio2) ? fio2 : NaN,
+        bandLabel: band.label
+      });
+      els.copyPreview.textContent = summary;
+      recalc._summary = summary;
+    }
+
+    // Sync slider -> manual and manual -> slider
+    els.tvSlider.addEventListener('input', () => {
+      els.tvManual.value = els.tvSlider.value;
+      recalc();
+    });
+    els.tvManual.addEventListener('input', () => {
+      // Don't force recalc if disabled
+      recalc();
+    });
+
+    // Recalc on any relevant input
+    ['change','input'].forEach(evt => {
+      els.sex.addEventListener(evt, recalc);
+      els.strategy.addEventListener(evt, recalc);
+      els.height.addEventListener(evt, recalc);
+      els.heightUnit.addEventListener(evt, recalc);
+      els.rr.addEventListener(evt, recalc);
+      els.peep.addEventListener(evt, recalc);
+      els.fio2.addEventListener(evt, recalc);
+      els.mode.addEventListener(evt, recalc);
+      els.customMin.addEventListener(evt, recalc);
+      els.customMax.addEventListener(evt, recalc);
+    });
+
+    // Copy summary
+    els.copyBtn.addEventListener('click', async () => {
+      const text = recalc._summary || els.copyPreview.textContent || '';
+      if (!text || text.includes('Fill inputs')) {
+        showToast('Nothing to copy yet.');
+        return;
+      }
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast('Copied summary to clipboard');
+      } catch (e){
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copied (fallback)');
+      }
+    });
+
+    // Reset
+    els.resetBtn.addEventListener('click', () => {
+      els.sex.value = '';
+      els.strategy.value = 'standard';
+      els.height.value = '';
+      els.heightUnit.value = 'cm';
+      els.rr.value = 14;
+      els.peep.value = '';
+      els.fio2.value = '';
+      els.mode.value = '';
+      els.customMin.value = 6;
+      els.customMax.value = 8;
+      els.tvSlider.value = 420;
+      els.tvManual.value = '';
+      recalc();
+      els.height.focus();
+    });
+
+    // Footer helpers
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('scrollTop').addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+
+    // Initial compute
+    recalc();
+  </script>
+</body>
+</html>

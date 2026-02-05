@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Cardiac Risk Helper (RCRI + METs)</title>
+  <meta name="description" content="Adult perioperative cardiac risk helper: RCRI + functional capacity prompts (decision-support only)." />
+
+  <!-- Apply saved theme before paint -->
+  <script>
+    (function () {
+      const t = localStorage.getItem('theme'); // "dark" | "light" | "system" | null
+      if (t === 'dark' || t === 'light') {
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.style.colorScheme = t;
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.style.colorScheme = '';
+      }
+    })();
+  </script>
+
+  <style>
+    /* =============== THEME TOKENS =============== */
+    :root{
+      --bg: #0b1220;
+      --surface: rgba(255,255,255,.06);
+      --surface-2: rgba(255,255,255,.09);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --border: rgba(255,255,255,.12);
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
+      --accent: #7c5cff;
+      --accent-2:#16c2a1;
+      --warn:#ffcc66;
+      --danger:#ff6b6b;
+      --ok:#6ee7b7;
+      --radius: 18px;
+      --radius-sm: 14px;
+      --max: 1100px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    :root[data-theme="light"]{
+      --bg:#f6f7fb;
+      --surface: rgba(17,24,39,.05);
+      --surface-2: rgba(17,24,39,.08);
+      --text: rgba(17,24,39,.92);
+      --muted: rgba(17,24,39,.7);
+      --border: rgba(17,24,39,.12);
+      --shadow: 0 12px 30px rgba(17,24,39,.10);
+      --accent:#5b5cff;
+      --accent-2:#0fb49a;
+      --warn:#c07a00;
+      --danger:#c2410c;
+      --ok:#047857;
+    }
+    @media (prefers-color-scheme: light){
+      :root:not([data-theme]){
+        --bg:#f6f7fb;
+        --surface: rgba(17,24,39,.05);
+        --surface-2: rgba(17,24,39,.08);
+        --text: rgba(17,24,39,.92);
+        --muted: rgba(17,24,39,.7);
+        --border: rgba(17,24,39,.12);
+        --shadow: 0 12px 30px rgba(17,24,39,.10);
+        --accent:#5b5cff;
+        --accent-2:#0fb49a;
+        --warn:#c07a00;
+        --danger:#c2410c;
+        --ok:#047857;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(900px 400px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
+        radial-gradient(900px 400px at 90% 0%, rgba(22,194,161,.28), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.15), transparent 60%),
+        var(--bg);
+      line-height: 1.35;
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:var(--max); margin:0 auto; padding:22px 16px 44px;}
+
+    /* Header */
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .left{display:flex; align-items:center; gap:10px; min-width: 220px;}
+    .logo{
+      width:38px; height:38px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 18px rgba(0,0,0,.18);
+      display:grid; place-items:center;
+      flex:0 0 auto;
+    }
+    .titles h1{font-size:15px; margin:0; letter-spacing:.2px}
+    .titles p{margin:2px 0 0; font-size:12px; color:var(--muted)}
+    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 12px;
+      cursor:pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      display:flex; align-items:center; gap:8px;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.06)}
+    .btn:active{transform: translateY(1px)}
+    .btn[data-mode]::after{
+      content: attr(data-mode);
+      margin-left: 2px;
+      font-size: 12px;
+      line-height: 1;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+    }
+    .ghost{
+      border:1px solid var(--border);
+      background:transparent;
+      color: var(--muted);
+    }
+    .ghost:hover{color: var(--text)}
+    .linkpill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      padding: 9px 12px;
+      border-radius:999px;
+      color: var(--muted);
+      display:flex; align-items:center; gap:8px;
+    }
+    .linkpill:hover{color: var(--text); background: rgba(255,255,255,.06)}
+
+    /* Hero */
+    .hero{
+      margin-top:14px;
+      padding:18px 18px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+    }
+    .hero h2{margin:0; font-size: 18px;}
+    .hero p{margin:8px 0 0; color: var(--muted); max-width: 95ch; font-size: 13.5px;}
+    .note{
+      margin-top:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    /* Layout */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .panel{
+      grid-column: span 6;
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .panel.full{grid-column: span 12;}
+    @media (max-width: 900px){
+      .panel{grid-column: span 12;}
+      .left{min-width:unset}
+    }
+    .panel h3{
+      margin:0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .25px;
+      color: var(--muted);
+    }
+
+    /* Inputs */
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    @media (max-width: 680px){
+      .row{grid-template-columns: 1fr;}
+    }
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    input[type="text"], select{
+      width:100%;
+      padding: 10px 11px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--text);
+      outline: none;
+    }
+    input::placeholder{color: var(--muted)}
+    input:focus, select:focus{
+      border-color: rgba(124,92,255,.45);
+      box-shadow: 0 0 0 3px rgba(124,92,255,.12);
+    }
+
+    .check{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      margin-top: 10px;
+    }
+    .check input{margin-top: 3px;}
+    .check .t{
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 700;
+    }
+    .check .d{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+
+    /* Results */
+    .results{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .metric{
+      grid-column: span 6;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      position:relative;
+      overflow:hidden;
+    }
+    .metric.full{grid-column: span 12;}
+    .metric h4{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+    .metric .value{
+      margin-top:6px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .metric .sub{
+      margin-top:4px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      white-space: pre-line;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-top: 10px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      width: fit-content;
+    }
+    .badge.ok{border-color: rgba(22,194,161,.35); color: var(--text)}
+    .badge.warn{border-color: rgba(255,204,102,.35); color: var(--text)}
+    .badge.danger{border-color: rgba(255,107,107,.35); color: var(--text)}
+
+    .banner{
+      margin-top: 10px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .banner strong{font-weight: 800;}
+    .banner.danger{
+      border-color: rgba(255,107,107,.35);
+      background: linear-gradient(180deg, rgba(255,107,107,.10), rgba(255,255,255,.02));
+    }
+    .banner.warn{
+      border-color: rgba(255,204,102,.35);
+      background: linear-gradient(180deg, rgba(255,204,102,.10), rgba(255,255,255,.02));
+    }
+
+    details{
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.02);
+      padding: 10px 12px;
+    }
+    summary{
+      cursor:pointer;
+      color: var(--muted);
+      font-size: 12.5px;
+      list-style: none;
+    }
+    summary::-webkit-details-marker{display:none;}
+    details p, details li{
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+    ul{margin: 6px 0 0 18px; padding:0;}
+
+    .hr{
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    .footer{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      padding: 0 2px;
+    }
+
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.55);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease;
+      backdrop-filter: blur(10px);
+    }
+    :root[data-theme="light"] .toast{
+      background: rgba(17,24,39,.75);
+      border-color: rgba(255,255,255,.12);
+    }
+    .toast.show{opacity:1;}
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="left">
+        <div class="logo" aria-hidden="true">
+          <!-- Heart icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 21s-7-4.35-9.5-8.75C.7 9.1 2.2 6 5.7 5.4c2-.35 3.7.55 4.7 1.95 1-1.4 2.7-2.3 4.7-1.95 3.5.6 5 3.7 3.2 6.85C19 16.65 12 21 12 21Z"
+              stroke="white" stroke-width="2" stroke-linejoin="round" opacity=".95"/>
+          </svg>
+        </div>
+        <div class="titles">
+          <h1>Cardiac Risk Helper</h1>
+          <p>Adult perioperative prompts: RCRI + functional capacity + surgery risk</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="linkpill" href="index.html">← Home</a>
+        <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
+        <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
+          <span aria-hidden="true">🖥️</span> Theme
+        </button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h2>Fast structured pre-op cardiac risk snapshot</h2>
+      <p>
+        Use this as a quick, consistent way to summarize <b>surgical risk</b>, <b>functional capacity</b>,
+        and <b>RCRI</b>, and to flag <b>active cardiac condition red flags</b>.
+        Output is phrased as prompts (decision-support only).
+      </p>
+      <div class="note">
+        <b>Decision-support only.</b> This tool does not replace clinical judgment, specialty evaluation,
+        or your institution’s protocols. Timing of surgery, urgency, symptoms, and patient trajectory matter.
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- Inputs: Context -->
+      <section class="panel" aria-label="Case context">
+        <h3>Case context</h3>
+
+        <div class="row">
+          <div>
+            <label for="urgency">Urgency</label>
+            <select id="urgency">
+              <option value="elective" selected>Elective</option>
+              <option value="urgent">Urgent</option>
+              <option value="emergent">Emergent</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="surgRisk">Surgical risk category</label>
+            <select id="surgRisk">
+              <option value="low" selected>Low risk</option>
+              <option value="intermediate">Intermediate risk</option>
+              <option value="high">High risk</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="mets">Functional capacity (METs)</label>
+            <select id="mets">
+              <option value="good" selected>≥ 4 METs (good / adequate)</option>
+              <option value="poor">&lt; 4 METs (poor)</option>
+              <option value="unknown">Unknown / cannot assess</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="notes">Notes (optional)</label>
+            <input id="notes" type="text" placeholder="e.g., COPD baseline, recent cath, device, timing constraints…" />
+          </div>
+        </div>
+
+        <details>
+          <summary>Examples of ≥4 METs activities</summary>
+          <ul>
+            <li>Climbing a flight of stairs without stopping</li>
+            <li>Walking up a hill, brisk walking</li>
+            <li>Heavy housework (scrubbing floors, moving furniture)</li>
+          </ul>
+        </details>
+
+        <div class="hr"></div>
+
+        <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">📋 Copy summary</button>
+      </section>
+
+      <!-- Inputs: Risk indices -->
+      <section class="panel" aria-label="RCRI and red flags">
+        <h3>RCRI (Revised Cardiac Risk Index)</h3>
+
+        <div class="check">
+          <input type="checkbox" id="rcriHighRiskSurg" />
+          <div>
+            <div class="t">High-risk surgery</div>
+            <div class="d">Major intraperitoneal, intrathoracic, or suprainguinal vascular (institution definitions vary).</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rcriIHD" />
+          <div>
+            <div class="t">Ischemic heart disease</div>
+            <div class="d">History of MI, positive stress test, angina, or prior coronary intervention.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rcriCHF" />
+          <div>
+            <div class="t">Heart failure</div>
+            <div class="d">History of HF or pulmonary edema; reduced EF or symptomatic HF.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rcriCVA" />
+          <div>
+            <div class="t">Cerebrovascular disease</div>
+            <div class="d">History of stroke or TIA.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rcriInsulin" />
+          <div>
+            <div class="t">Diabetes treated with insulin</div>
+            <div class="d">Insulin use as a marker for higher-risk diabetes.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rcriCr" />
+          <div>
+            <div class="t">Creatinine &gt; 2.0 mg/dL (or significant renal insufficiency)</div>
+            <div class="d">Use local definitions if different.</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h3 style="margin-top:0;">Active cardiac condition red flags</h3>
+
+        <div class="check">
+          <input type="checkbox" id="rfACS" />
+          <div>
+            <div class="t">Unstable angina / suspected ACS</div>
+            <div class="d">New/worsening chest pain, ischemic symptoms, or concern for acute coronary syndrome.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rfDecompHF" />
+          <div>
+            <div class="t">Decompensated heart failure</div>
+            <div class="d">Pulmonary edema, escalating diuretics, new orthopnea/PND, or significant volume overload.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rfArrhythmia" />
+          <div>
+            <div class="t">Significant arrhythmia</div>
+            <div class="d">Symptomatic brady/tachyarrhythmia, high-grade AV block, or poorly controlled rate.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rfValve" />
+          <div>
+            <div class="t">Severe valvular disease symptoms</div>
+            <div class="d">Syncope/angina/dyspnea with known severe AS, severe MS, etc.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Outputs -->
+      <section class="panel full" aria-label="Results">
+        <h3>Results</h3>
+
+        <div id="redFlagBanner" class="banner" style="display:none;"></div>
+
+        <div class="results">
+          <div class="metric">
+            <h4>RCRI score</h4>
+            <div class="value" id="rcriScoreOut">—</div>
+            <div class="sub" id="rcriSub">—</div>
+          </div>
+
+          <div class="metric">
+            <h4>Overall snapshot</h4>
+            <div class="value" id="snapshotOut">—</div>
+            <div class="sub" id="snapshotSub">—</div>
+          </div>
+
+          <div class="metric full">
+            <h4>What to consider next (prompts)</h4>
+            <div class="value" id="nextOut">—</div>
+            <div class="sub" id="nextSub">—</div>
+            <div class="badge" id="nextBadge">Awaiting inputs…</div>
+          </div>
+
+          <div class="metric full">
+            <h4>Copy preview</h4>
+            <div class="sub" id="copyPreview">Adjust inputs to generate a one-line summary.</div>
+          </div>
+        </div>
+
+        <details>
+          <summary>How this tool is intended to be used</summary>
+          <ul>
+            <li><b>RCRI</b> is one risk index; it does not capture everything (frailty, pulmonary HTN, severe valvular lesions, etc.).</li>
+            <li><b>Functional capacity</b> and <b>surgical risk</b> often drive the “do we need more info?” question.</li>
+            <li><b>Red flags</b> should prompt heightened attention; urgency matters.</li>
+            <li>Use your institution’s pathway for ECG, echo, biomarkers, stress testing, and cardiology input.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section class="panel full" aria-label="Notes">
+        <h3>Bedside notes (non-prescriptive)</h3>
+        <p style="margin:0;color:var(--muted);font-size:13px;max-width:105ch;">
+          • If the patient has time-sensitive surgery, risk stratification may focus on stabilization/optimization rather than delays.<br/>
+          • Consider baseline ECG for intermediate/high-risk surgery or known cardiac disease per local practice pathways.<br/>
+          • Continue chronic beta-blockers; avoid initiating high-dose beta-blockade immediately pre-op without a plan (institution-dependent).<br/>
+          • Tailor anesthetic plan, hemodynamic goals, and postoperative monitoring based on risk profile and trajectory.
+        </p>
+      </section>
+    </div>
+
+    <div class="footer">
+      <div>© <span id="year"></span> Cardiac Risk Helper • Local-only HTML</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="linkpill" href="index.html">← Back to Home</a>
+        <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
+
+  <script>
+    // =============================
+    // THEME: Dark -> Light -> System
+    // =============================
+    const themeBtn = document.getElementById('themeBtn');
+
+    function getSavedTheme(){
+      const t = localStorage.getItem('theme');
+      return (t === 'dark' || t === 'light' || t === 'system') ? t : 'system';
+    }
+    function updateThemeButton(mode){
+      const icon = (mode === 'dark') ? '🌙' : (mode === 'light') ? '☀️' : '🖥️';
+      const label = (mode === 'dark') ? 'Dark' : (mode === 'light') ? 'Light' : 'System';
+      themeBtn.querySelector('span').textContent = icon;
+      themeBtn.setAttribute('data-mode', label);
+      themeBtn.title = `Theme: ${label} (click to change)`;
+      themeBtn.setAttribute('aria-label', `Theme: ${label}. Click to switch theme.`);
+    }
+    function applyTheme(mode){
+      if (mode === 'dark' || mode === 'light') {
+        document.documentElement.setAttribute('data-theme', mode);
+        document.documentElement.style.colorScheme = mode;
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.style.colorScheme = '';
+      }
+      localStorage.setItem('theme', mode);
+      updateThemeButton(mode);
+    }
+    updateThemeButton(getSavedTheme());
+    themeBtn?.addEventListener('click', () => {
+      const current = getSavedTheme();
+      const next = (current === 'dark') ? 'light' : (current === 'light') ? 'system' : 'dark';
+      applyTheme(next);
+    });
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      mq.addEventListener?.('change', () => {
+        if (getSavedTheme() === 'system') updateThemeButton('system');
+      });
+    }
+
+    // =============================
+    // CARDIAC RISK LOGIC
+    // =============================
+    const els = {
+      urgency: document.getElementById('urgency'),
+      surgRisk: document.getElementById('surgRisk'),
+      mets: document.getElementById('mets'),
+      notes: document.getElementById('notes'),
+
+      rcriHighRiskSurg: document.getElementById('rcriHighRiskSurg'),
+      rcriIHD: document.getElementById('rcriIHD'),
+      rcriCHF: document.getElementById('rcriCHF'),
+      rcriCVA: document.getElementById('rcriCVA'),
+      rcriInsulin: document.getElementById('rcriInsulin'),
+      rcriCr: document.getElementById('rcriCr'),
+
+      rfACS: document.getElementById('rfACS'),
+      rfDecompHF: document.getElementById('rfDecompHF'),
+      rfArrhythmia: document.getElementById('rfArrhythmia'),
+      rfValve: document.getElementById('rfValve'),
+
+      redFlagBanner: document.getElementById('redFlagBanner'),
+
+      rcriScoreOut: document.getElementById('rcriScoreOut'),
+      rcriSub: document.getElementById('rcriSub'),
+      snapshotOut: document.getElementById('snapshotOut'),
+      snapshotSub: document.getElementById('snapshotSub'),
+      nextOut: document.getElementById('nextOut'),
+      nextSub: document.getElementById('nextSub'),
+      nextBadge: document.getElementById('nextBadge'),
+
+      copyPreview: document.getElementById('copyPreview'),
+      copyBtn: document.getElementById('copyBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+
+      toast: document.getElementById('toast'),
+      scrollTop: document.getElementById('scrollTop')
+    };
+
+    function showToast(msg){
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
+    }
+
+    function rcriScore(){
+      return [
+        els.rcriHighRiskSurg.checked,
+        els.rcriIHD.checked,
+        els.rcriCHF.checked,
+        els.rcriCVA.checked,
+        els.rcriInsulin.checked,
+        els.rcriCr.checked
+      ].filter(Boolean).length;
+    }
+
+    function rcriCategory(score){
+      // Keep qualitative to avoid implying a precise prediction.
+      if (score === 0) return {label:'Low', sub:'RCRI 0: lower periop cardiac risk (qualitative).'};
+      if (score === 1) return {label:'Mildly elevated', sub:'RCRI 1: modestly higher risk vs baseline.'};
+      if (score === 2) return {label:'Moderate', sub:'RCRI 2: meaningfully higher risk; consider additional context.'};
+      return {label:'High', sub:'RCRI ≥3: higher risk; planning/monitoring considerations often increase.'};
+    }
+
+    function hasRedFlags(){
+      return [els.rfACS, els.rfDecompHF, els.rfArrhythmia, els.rfValve].some(x => x.checked);
+    }
+
+    function surgRiskText(v){
+      if (v === 'low') return 'Low surgical risk';
+      if (v === 'intermediate') return 'Intermediate surgical risk';
+      return 'High surgical risk';
+    }
+
+    function metsText(v){
+      if (v === 'good') return '≥4 METs';
+      if (v === 'poor') return '<4 METs';
+      return 'METs unknown';
+    }
+
+    function guidance({urgency, surgRisk, mets, score, red}){
+      // Non-prescriptive prompt logic:
+      // 1) Red flags dominate for elective; for urgent/emergent, focus on stabilization and plan
+      // 2) Low surgery risk usually minimal testing prompts
+      // 3) Intermediate/high + poor/unknown METs + RCRI >=1 => consider more evaluation per pathway
+      let title = '—', sub = '—', cls = '';
+
+      const elective = urgency === 'elective';
+
+      if (red){
+        if (elective){
+          title = 'Red flags present — consider evaluation/stabilization before elective surgery';
+          sub = 'Active cardiac-condition features can outweigh risk scores. Consider cardiology input or targeted evaluation per local pathways.';
+          cls = 'danger';
+        } else {
+          title = 'Red flags present — time-sensitive case: prioritize stabilization & monitoring plan';
+          sub = 'For urgent/emergent surgery, focus on immediate stabilization, hemodynamic goals, and postoperative monitoring level per local protocols.';
+          cls = 'danger';
+        }
+        return {title, sub, cls};
+      }
+
+      if (surgRisk === 'low'){
+        title = 'Low-risk surgery — further cardiac testing often not needed (if stable)';
+        sub = 'Optimize baseline conditions and proceed with routine monitoring unless symptoms or clinical trajectory suggest otherwise.';
+        cls = 'ok';
+        return {title, sub, cls};
+      }
+
+      // Intermediate/high risk
+      if (mets === 'good' && score <= 1){
+        title = 'Adequate functional capacity with low–mild RCRI — often proceed with planned surgery';
+        sub = 'Consider baseline ECG/other testing per institutional pathway and patient history; tailor monitoring to comorbidities.';
+        cls = 'ok';
+        return {title, sub, cls};
+      }
+
+      if (mets === 'good' && score >= 2){
+        title = 'Adequate METs but higher RCRI — consider additional planning';
+        sub = 'Consider whether testing or cardiology input would change management (e.g., meds, monitoring, postoperative disposition).';
+        cls = 'warn';
+        return {title, sub, cls};
+      }
+
+      // Poor or unknown METs
+      if (mets !== 'good' && surgRisk === 'high'){
+        title = 'High-risk surgery + poor/unknown METs — consider further assessment if it would change management';
+        sub = 'Consider evaluation per local pathways (ECG, echo if indicated, biomarkers, stress testing, cardiology) depending on symptoms and time available.';
+        cls = 'warn';
+        return {title, sub, cls};
+      }
+
+      // Intermediate risk + poor/unknown METs
+      if (mets !== 'good' && score >= 1){
+        title = 'Intermediate/high risk context — consider evaluation based on symptoms, time, and pathway';
+        sub = 'If poor/unknown METs and RCRI ≥1, consider whether additional information would change periop management or disposition.';
+        cls = 'warn';
+        return {title, sub, cls};
+      }
+
+      // Default
+      title = 'Use clinical context — risk tools are only one part of the picture';
+      sub = 'Consider symptoms, trajectory, urgency, and institutional pathway to decide whether additional evaluation is helpful.';
+      cls = 'warn';
+      return {title, sub, cls};
+    }
+
+    function buildSummary(){
+      const urgency = els.urgency.value;
+      const surgRisk = els.surgRisk.value;
+      const mets = els.mets.value;
+      const score = rcriScore();
+      const red = hasRedFlags();
+      const cat = rcriCategory(score);
+
+      const parts = [];
+      parts.push(`Cardiac risk: ${urgency}, ${surgRiskText(surgRisk)}, METs ${metsText(mets)}.`);
+      parts.push(`RCRI ${score}/6 (${cat.label}).`);
+      parts.push(`Red flags: ${red ? 'YES' : 'no'}.`);
+
+      const g = guidance({urgency, surgRisk, mets, score, red});
+      if (g.title && g.title !== '—') parts.push(`Prompt: ${g.title}.`);
+
+      const notes = (els.notes.value || '').trim();
+      if (notes) parts.push(`Notes: ${notes}`);
+
+      return parts.join(' ');
+    }
+
+    function recalc(){
+      const urgency = els.urgency.value;
+      const surgRisk = els.surgRisk.value;
+      const mets = els.mets.value;
+
+      const score = rcriScore();
+      const cat = rcriCategory(score);
+      const red = hasRedFlags();
+
+      // Red flag banner
+      if (red){
+        els.redFlagBanner.style.display = '';
+        els.redFlagBanner.className = 'banner danger';
+        els.redFlagBanner.innerHTML =
+          `<strong>Active cardiac-condition red flags selected.</strong><br/>
+           This should prompt heightened attention and consideration of stabilization/evaluation and monitoring strategy, especially for elective cases.`;
+      } else {
+        els.redFlagBanner.style.display = 'none';
+      }
+
+      // RCRI outputs
+      els.rcriScoreOut.textContent = `${score} / 6`;
+      els.rcriSub.textContent = cat.sub;
+
+      // Snapshot
+      els.snapshotOut.textContent = `${surgRiskText(surgRisk)} • ${metsText(mets)}`;
+      els.snapshotSub.textContent =
+        `Urgency: ${urgency.charAt(0).toUpperCase() + urgency.slice(1)}\n` +
+        `RCRI category: ${cat.label}${red ? '\nRed flags: present' : ''}`;
+
+      // Guidance
+      const g = guidance({urgency, surgRisk, mets, score, red});
+      els.nextOut.textContent = g.title;
+      els.nextSub.textContent = g.sub;
+      els.nextBadge.className = `badge ${g.cls || ''}`.trim();
+      els.nextBadge.textContent =
+        g.cls === 'ok' ? 'Snapshot: lower concern' :
+        g.cls === 'warn' ? 'Snapshot: consider further assessment' :
+        g.cls === 'danger' ? 'Snapshot: red flags / high concern' :
+        'Awaiting inputs…';
+
+      // Copy preview
+      const summary = buildSummary();
+      els.copyPreview.textContent = summary;
+      recalc._summary = summary;
+    }
+
+    // Wire events
+    const inputs = [
+      els.urgency, els.surgRisk, els.mets, els.notes,
+      els.rcriHighRiskSurg, els.rcriIHD, els.rcriCHF, els.rcriCVA, els.rcriInsulin, els.rcriCr,
+      els.rfACS, els.rfDecompHF, els.rfArrhythmia, els.rfValve
+    ];
+    inputs.forEach(el => {
+      el.addEventListener('change', recalc);
+      el.addEventListener('input', recalc);
+    });
+
+    // Copy summary
+    els.copyBtn.addEventListener('click', async () => {
+      const text = recalc._summary || els.copyPreview.textContent || '';
+      if (!text){
+        showToast('Nothing to copy yet.');
+        return;
+      }
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast('Copied summary to clipboard');
+      } catch (e){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Copied (fallback)');
+      }
+    });
+
+    // Reset
+    els.resetBtn.addEventListener('click', () => {
+      els.urgency.value = 'elective';
+      els.surgRisk.value = 'low';
+      els.mets.value = 'good';
+      els.notes.value = '';
+
+      [
+        els.rcriHighRiskSurg, els.rcriIHD, els.rcriCHF, els.rcriCVA, els.rcriInsulin, els.rcriCr,
+        els.rfACS, els.rfDecompHF, els.rfArrhythmia, els.rfValve
+      ].forEach(cb => cb.checked = false);
+
+      recalc();
+      showToast('Reset');
+    });
+
+    // Footer helpers
+    document.getElementById('year').textContent = new Date().getFullYear();
+    els.scrollTop.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+
+    // Init
+    recalc();
+  </script>
+</body>
+</html>
+``

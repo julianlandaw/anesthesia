@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preoperative Medication & Fasting Guidelines (Anesthesia Department)</title>
+  <style>
+    :root{
+      --ink:#111827;
+      --muted:#4b5563;
+      --accent:#1d4ed8;
+      --bg:#ffffff;
+      --panel:#f3f4f6;
+      --warn:#b45309;
+      --danger:#b91c1c;
+      --ok:#065f46;
+      --border:#e5e7eb;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    body{font-family:var(--sans); color:var(--ink); background:var(--bg); margin:0;}
+    header{padding:28px 20px; border-bottom:1px solid var(--border);}
+    header h1{margin:0 0 6px 0; font-size:22px;}
+    header .meta{color:var(--muted); font-size:13px; display:flex; gap:14px; flex-wrap:wrap;}
+    main{max-width:1040px; margin:0 auto; padding:20px;}
+    nav.toc{background:var(--panel); padding:14px 16px; border:1px solid var(--border); border-radius:10px;}
+    nav.toc h2{margin:0 0 8px 0; font-size:14px;}
+    nav.toc ul{margin:0; padding-left:18px;}
+    nav.toc li{margin:6px 0;}
+    a{color:var(--accent); text-decoration:none;}
+    a:hover{text-decoration:underline;}
+
+    section{margin-top:22px;}
+    h2{font-size:18px; margin:22px 0 10px 0;}
+    h3{font-size:15px; margin:16px 0 8px 0;}
+    p{line-height:1.55; margin:10px 0;}
+
+    .callout{border:1px solid var(--border); border-left:4px solid var(--accent); background:#f8fafc; padding:12px 14px; border-radius:10px; margin:10px 0;}
+    .callout.warn{border-left-color:var(--warn);}
+    .callout.danger{border-left-color:var(--danger);}
+    .callout.ok{border-left-color:var(--ok);}
+
+    .grid{display:grid; grid-template-columns:1fr; gap:12px;}
+    @media (min-width: 920px){
+      .grid.two{grid-template-columns: 1fr 1fr;}
+    }
+
+    .card{border:1px solid var(--border); border-radius:10px; padding:12px 14px; background:#fff;}
+    .card h4{margin:0 0 8px 0; font-size:14px;}
+
+    ul, ol{line-height:1.5;}
+    li{margin:6px 0;}
+
+    code, pre{font-family:var(--mono);}
+    pre{background:#0b1020; color:#e5e7eb; padding:12px; border-radius:10px; overflow:auto;}
+
+    .badge{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); background:#fff; margin-left:6px; color:var(--muted);}
+    .badge.hold{border-color:#fecaca; background:#fff1f2; color:#991b1b;}
+    .badge.cont{border-color:#bbf7d0; background:#f0fdf4; color:#065f46;}
+    .badge.caution{border-color:#fde68a; background:#fffbeb; color:#92400e;}
+
+    .footer{margin:26px 0 40px 0; padding-top:14px; border-top:1px solid var(--border); color:var(--muted); font-size:12px;}
+
+    /* Print */
+    @media print{
+      nav.toc{display:none;}
+      a{text-decoration:none; color:inherit;}
+      .card, .callout{break-inside:avoid;}
+      header{border-bottom:0;}
+      main{max-width:none;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Preoperative Medication & Fasting Guidelines <span class="badge">Anesthesia Department</span></h1>
+  <div class="meta">
+    <div><strong>Version:</strong> 1.0 (template)</div>
+    <div><strong>Effective date:</strong> 2026-02-02</div>
+    <div><strong>Owner:</strong> Dept. of Anesthesiology</div>
+    <div><strong>Applies to:</strong> Elective procedures requiring anesthesia/sedation</div>
+  </div>
+</header>
+<main>
+
+  <nav class="toc" aria-label="Table of contents">
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="#purpose">1. Purpose, scope, and principles</a></li>
+      <li><a href="#fasting">2. Fasting & diet restrictions (incl. GLP-1)</a></li>
+      <li><a href="#meds">3. Medication management overview</a></li>
+      <li><a href="#continue">4. Medications: generally CONTINUE</a></li>
+      <li><a href="#hold">5. Medications: generally HOLD / ADJUST</a></li>
+      <li><a href="#glp1">6. GLP-1 receptor agonists: risk stratification</a></li>
+      <li><a href="#diabetes">7. Diabetes medication protocol (summary)</a></li>
+      <li><a href="#antithrom">8. Antithrombotics (anticoagulants/antiplatelets)</a></li>
+      <li><a href="#neuraxial">9. Neuraxial / regional anesthesia considerations</a></li>
+      <li><a href="#dayof">10. Day-of-surgery checklist</a></li>
+      <li><a href="#refs">11. References</a></li>
+      <li><a href="#appendix">Appendix: quick reference lists</a></li>
+    </ul>
+  </nav>
+
+  <section id="purpose">
+    <h2>1) Purpose, scope, and principles</h2>
+    <p>
+      These guidelines provide <strong>default</strong> preoperative instructions on fasting/diet and medication management for adult elective surgery.
+      They are designed for anesthesia-led preoperative evaluation and are intended to reduce aspiration risk, perioperative hypoglycemia/hyperglycemia,
+      medication withdrawal, and preventable complications (e.g., euglycemic DKA with SGLT2 inhibitors).
+    </p>
+    <div class="callout warn">
+      <strong>Principle:</strong> “Definitely hold/continue” is rare. When thrombotic risk, adrenal suppression, transplant immunosuppression,
+      mechanical valves, recent coronary stent/ACS, brittle diabetes, or severe heart failure are present, <strong>coordinate with the managing specialty</strong>.
+    </div>
+    <p>
+      These recommendations align with major society guidance on preoperative fasting, perioperative diabetes medication safety,
+      and perioperative management of antithrombotic therapy. <span class="badge">See References</span>
+    </p>
+  </section>
+
+  <section id="fasting">
+    <h2>2) Fasting & diet restrictions (including GLP‑1 considerations)</h2>
+    <div class="grid two">
+      <div class="card">
+        <h4>Standard fasting (adults, elective)</h4>
+        <ul>
+          <li><strong>Clear liquids:</strong> allowed until <strong>2 hours</strong> before anesthesia/sedation start time.</li>
+          <li><strong>Light meal (toast, non-fat):</strong> minimum fasting <strong>6 hours</strong>.</li>
+          <li><strong>Fatty meal / meat / fried foods:</strong> minimum fasting <strong>8 hours</strong>.</li>
+        </ul>
+        <p style="margin-top:8px; color:var(--muted); font-size:13px;">
+          Clear liquids include water, pulp-free juice, clear tea/coffee (no milk/cream), electrolyte drinks.
+        </p>
+        <p style="margin-top:8px; font-size:13px; color:var(--muted);">
+          Source: ASA preoperative fasting guidelines. <a href="#refs">[1]</a>
+        </p>
+      </div>
+
+      <div class="card">
+        <h4>When to apply stricter diet instructions</h4>
+        <ul>
+          <li>Known or suspected delayed gastric emptying (gastroparesis, obstruction).</li>
+          <li>Active nausea/vomiting or severe reflux not controlled.</li>
+          <li>High-risk GLP‑1 RA patients (see Section 6).</li>
+          <li>Emergency surgery: manage as “full stomach.”</li>
+        </ul>
+        <p style="margin-top:8px; font-size:13px; color:var(--muted);">
+          Sources: ASA fasting guidance and multi-society GLP‑1 perioperative guidance. <a href="#refs">[1,2]</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <strong>GLP‑1 day-before clear liquids?</strong> <br/>
+      <strong>Not routinely.</strong> Most patients on GLP‑1 receptor agonists can follow standard fasting.
+      Consider a <strong>24-hour liquid-only diet</strong> <em>only</em> for higher-risk patients (dose escalation, significant GI symptoms, suspected gastroparesis)
+      and/or apply aspiration-risk mitigation (Section 6). <a href="#refs">[2]</a>
+    </div>
+  </section>
+
+  <section id="meds">
+    <h2>3) Medication management overview</h2>
+    <div class="grid two">
+      <div class="card">
+        <h4>Categories used in this document</h4>
+        <ul>
+          <li><span class="badge cont">CONTINUE</span> — usually continue through day of surgery (DOS).</li>
+          <li><span class="badge hold">HOLD</span> — usually hold/stop preoperatively with a typical interval.</li>
+          <li><span class="badge caution">ADJUST</span> — dose reduction or schedule change rather than stopping.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Operational approach</h4>
+        <ol>
+          <li>Identify meds with <strong>withdrawal risk</strong> (beta blockers, clonidine, anticonvulsants, steroids).</li>
+          <li>Identify meds with <strong>fasting/hypoglycemia risk</strong> (insulin secretagogues, insulin).</li>
+          <li>Identify meds with <strong>aspiration risk</strong> (GLP‑1 RA high-risk features).</li>
+          <li>Identify meds with <strong>bleeding/thrombosis tradeoffs</strong> (antithrombotics).</li>
+          <li>Document plan + last dose time in preop note.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="continue">
+    <h2>4) Medications generally CONTINUED</h2>
+    <div class="callout">
+      <strong>Default:</strong> take morning doses with a <strong>sip of water</strong> unless otherwise specified.
+      For time-sensitive meds (Parkinson’s, anticonvulsants), plan perioperative administration (PACU/ward).
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Cardiovascular</h4>
+        <ul>
+          <li><strong>Beta blockers</strong> (avoid withdrawal and periop tachycardia). <a href="#refs">[6]</a> <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Calcium channel blockers</strong>. <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Statins</strong>. <a href="#refs">[6]</a> <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Clonidine</strong> (avoid rebound HTN). <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Nitrates</strong> (individualize if hypotension risk). <span class="badge cont">CONTINUE</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Respiratory</h4>
+        <ul>
+          <li><strong>Inhalers</strong> (ICS/LABA/LAMA), <strong>albuterol</strong>, nebulizers. <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Montelukast</strong>. <span class="badge cont">CONTINUE</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Neurologic / psychiatric</h4>
+        <ul>
+          <li><strong>Anticonvulsants</strong> (avoid seizures). <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Parkinson medications</strong> (time-sensitive; coordinate dosing). <span class="badge cont">CONTINUE</span></li>
+          <li><strong>SSRIs/SNRIs</strong> — usually continue; consider bleeding/interaction risks case-by-case. <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Chronic benzodiazepines</strong> — usually continue (avoid withdrawal). <span class="badge cont">CONTINUE</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Endocrine & other</h4>
+        <ul>
+          <li><strong>Levothyroxine</strong>. <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Chronic corticosteroids</strong> — continue; evaluate need for stress-dose coverage if adrenal suppression risk. <a href="#refs">[7]</a> <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Chronic opioids</strong> — continue baseline regimen; plan periop analgesia. <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Acetaminophen</strong>. <span class="badge cont">CONTINUE</span></li>
+          <li><strong>Transplant immunosuppressants</strong> — do not stop without transplant team. <span class="badge cont">CONTINUE</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="hold">
+    <h2>5) Medications generally HELD / ADJUSTED</h2>
+
+    <div class="callout danger">
+      <strong>High-priority “hold”:</strong> <br/>
+      <ul>
+        <li><strong>SGLT2 inhibitors</strong> — hold preop to reduce <strong>euglycemic DKA</strong> risk. <a href="#refs">[3,4]</a></li>
+      </ul>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Diabetes medications (summary)</h4>
+        <ul>
+          <li><strong>SGLT2 inhibitors:</strong> stop <strong>≥3 days</strong> preop (often <strong>4 days</strong> for ertugliflozin). <a href="#refs">[3,4]</a> <span class="badge hold">HOLD</span></li>
+          <li><strong>Sulfonylureas:</strong> hold on <strong>DOS</strong> (hypoglycemia risk while NPO). <span class="badge hold">HOLD</span></li>
+          <li><strong>Metformin:</strong> hold on <strong>DOS</strong>; consider earlier hold with renal dysfunction or major surgery. <a href="#refs">[5]</a> <span class="badge hold">HOLD</span></li>
+          <li><strong>Insulin:</strong> <em>adjust</em> rather than stop (Section 7). <span class="badge caution">ADJUST</span></li>
+          <li><strong>GLP‑1 RAs:</strong> usually continue; apply risk-based mitigation (Section 6). <a href="#refs">[2]</a> <span class="badge caution">RISK-BASED</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Antihypertensives prone to intraop hypotension</h4>
+        <ul>
+          <li><strong>ACE inhibitors / ARBs:</strong> commonly hold on <strong>DOS</strong> (lower risk of refractory hypotension). Individualize in select HF patients. <a href="#refs">[6]</a> <span class="badge hold">HOLD DOS</span></li>
+          <li><strong>Diuretics:</strong> commonly hold on <strong>DOS</strong> to reduce hypovolemia/electrolyte derangements; consider continuing if decompensated HF/volume overload. <span class="badge hold">HOLD DOS</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>NSAIDs & supplements</h4>
+        <ul>
+          <li><strong>NSAIDs:</strong> stop interval depends on agent and surgical bleeding risk (often 3–7 days). <span class="badge caution">SURGEON-DEPENDENT</span></li>
+          <li><strong>Herbal supplements:</strong> stop <strong>1–2 weeks</strong> preop when feasible due to bleeding/sedation/drug interactions. <a href="#refs">[8]</a> <span class="badge hold">HOLD</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Other common holds</h4>
+        <ul>
+          <li><strong>Phentermine</strong> and stimulant weight-loss agents: consider stopping <strong>≥4–7 days</strong> preop (hemodynamic concerns). <span class="badge hold">HOLD</span></li>
+          <li><strong>PDE-5 inhibitors</strong> (e.g., sildenafil): consider holding on DOS in patients at risk for hypotension or if nitrate use is anticipated. <span class="badge caution">CASE-BY-CASE</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>Antithrombotics:</strong> Do not stop anticoagulants/antiplatelets without documenting the <em>indication</em> (e.g., AF, VTE, recent stent) and the procedure bleeding risk.
+      Default stop times vary by drug, renal function, and neuraxial plans. See Section 8.
+    </div>
+  </section>
+
+  <section id="glp1">
+    <h2>6) GLP‑1 receptor agonists (GLP‑1 RA): risk stratification & diet plan</h2>
+    <p>
+      GLP‑1 RAs can delay gastric emptying and may increase risk of residual gastric contents in select patients.
+      Current multi-society guidance supports <strong>continuation for most patients</strong> undergoing elective procedures, with additional precautions for higher-risk patients.
+      <a href="#refs">[2]</a>
+    </p>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>LOW-RISK GLP‑1 RA patients <span class="badge cont">CONTINUE</span></h4>
+        <ul>
+          <li>Stable maintenance dose (not in dose-escalation phase)</li>
+          <li>No significant GI symptoms (no persistent nausea/vomiting, severe bloating, early satiety)</li>
+          <li>No known gastroparesis or major motility disorder</li>
+        </ul>
+        <p><strong>Plan:</strong> continue GLP‑1 RA; standard fasting (Section 2). <a href="#refs">[2]</a></p>
+      </div>
+
+      <div class="card">
+        <h4>HIGH-RISK GLP‑1 RA patients <span class="badge caution">MITIGATE</span></h4>
+        <ul>
+          <li>Dose escalation phase or recent dose increase</li>
+          <li>Moderate–severe GI symptoms (nausea/vomiting, abdominal pain, significant bloating/early satiety)</li>
+          <li>Known/suspected gastroparesis, or other causes of delayed emptying</li>
+          <li>Prior regurgitation/aspiration concerns</li>
+        </ul>
+        <p><strong>Plan options (departmental):</strong></p>
+        <ol>
+          <li><strong>Liquid-only diet for 24 hours</strong> preop (department may specify <em>clear liquids only</em> for highest risk). <a href="#refs">[2]</a></li>
+          <li>Consider aspiration precautions and/or anesthesia technique modifications.</li>
+          <li>If severe symptoms or active escalation and case is elective, consider postponement.</li>
+          <li>Optional: point-of-care gastric ultrasound if available and expertise exists.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Document:</strong> agent name (daily vs weekly), last dose date/time, presence/absence of GI symptoms, and assigned risk tier.
+    </div>
+  </section>
+
+  <section id="diabetes">
+    <h2>7) Diabetes medication protocol (adult elective cases)</h2>
+    <p>
+      Goals: avoid hypoglycemia while NPO and reduce severe hyperglycemia/ketosis.
+      This section provides anesthesia-facing defaults; coordinate with Endocrinology for insulin pumps, brittle diabetes, pregnancy, or prolonged fasting.
+      <a href="#refs">[5]</a>
+    </p>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Oral / non-insulin injectables</h4>
+        <ul>
+          <li><strong>SGLT2 inhibitors:</strong> stop ≥3 days preop (4 days for ertugliflozin). <a href="#refs">[3,4]</a></li>
+          <li><strong>Sulfonylureas:</strong> hold DOS.</li>
+          <li><strong>Metformin:</strong> hold DOS; earlier if renal dysfunction/major surgery/contrast. <a href="#refs">[5]</a></li>
+          <li><strong>DPP-4 inhibitors:</strong> commonly hold DOS or continue; institutional preference.</li>
+          <li><strong>GLP‑1 RAs:</strong> see Section 6 (risk-based; usually continue). <a href="#refs">[2]</a></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Insulin (typical defaults; individualize)</h4>
+        <ul>
+          <li><strong>Basal insulin (glargine/detemir/degludec):</strong> give <strong>50–80%</strong> of usual dose the evening before or morning of surgery depending on case timing and glycemic control. <a href="#refs">[5]</a></li>
+          <li><strong>NPH:</strong> often <strong>~50%</strong> of usual morning dose on DOS. <a href="#refs">[5]</a></li>
+          <li><strong>Rapid/short-acting (meal bolus):</strong> hold while NPO; use correctional insulin per protocol. <a href="#refs">[5]</a></li>
+          <li><strong>Pump/CGM:</strong> coordinate a pump plan; document basal setting and intraop monitoring frequency. <a href="#refs">[5]</a></li>
+        </ul>
+        <p style="margin-top:8px; color:var(--muted); font-size:13px;">
+          Target periop glucose ranges should follow institutional policy (often 80–180 mg/dL in many protocols).
+        </p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>If on SGLT2 inhibitor within the hold window:</strong> screen for symptoms of ketoacidosis (nausea, vomiting, abdominal pain, malaise) and consider ketone testing.
+      Treat as higher-risk even if glucose is normal (euglycemic DKA). <a href="#refs">[3,4]</a>
+    </div>
+  </section>
+
+  <section id="antithrom">
+    <h2>8) Antithrombotics (anticoagulants / antiplatelets)</h2>
+    <div class="callout danger">
+      <strong>Do not stop antiplatelet therapy in patients with recent coronary stents or recent ACS without cardiology input.</strong>
+      Document indication and date of stent/ACS, and planned procedure bleeding risk.
+      <a href="#refs">[6]</a>
+    </div>
+
+    <p>
+      Stop timing varies by medication, renal function, bleeding risk, and whether neuraxial/regional anesthesia is planned.
+      Use institutional pathways aligned with CHEST perioperative antithrombotic guidance and ASRA neuraxial guidance.
+      <a href="#refs">[9,10]</a>
+    </p>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Operational rules (default)</h4>
+        <ol>
+          <li>Classify procedure bleeding risk: low vs intermediate vs high/closed-space.</li>
+          <li>Determine thrombotic risk: indication (AF/VTE/mechanical valve), recent VTE, recent stent/ACS.</li>
+          <li>For neuraxial blocks/epidurals: follow ASRA stop/restart guidance.</li>
+          <li>Record last dose and planned restart time in the anesthesia record.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h4>Typical elective stop windows (illustrative only)</h4>
+        <ul>
+          <li><strong>Warfarin:</strong> often stop ~5 days preop; verify INR prior to procedure. <a href="#refs">[9]</a></li>
+          <li><strong>DOACs:</strong> often stop 24–72+ hours preop depending on bleeding risk and renal function. <a href="#refs">[9,10]</a></li>
+          <li><strong>Clopidogrel:</strong> often stop ~5 days before high bleeding-risk procedures <em>unless compelling cardiac indication</em>. <a href="#refs">[6,10]</a></li>
+          <li><strong>Prasugrel:</strong> often 7 days; <strong>ticagrelor</strong> often 3–5 days (procedure dependent). <a href="#refs">[10]</a></li>
+          <li><strong>Aspirin:</strong> often continue for secondary prevention; stop for selected closed-space cases per surgeon/anesthesia consensus. <a href="#refs">[6]</a></li>
+        </ul>
+        <p style="margin-top:8px; color:var(--muted); font-size:13px;">
+          These are not substitutes for formal pathways. Neuraxial timing differs and may be longer.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="neuraxial">
+    <h2>9) Neuraxial / regional anesthesia considerations</h2>
+    <p>
+      For neuraxial techniques (spinal/epidural) and deep plexus blocks, adhere to ASRA guidance on anticoagulant/antiplatelet timing.
+      Regional anesthesia planning may change preop stop intervals and postoperative restart timing.
+      <a href="#refs">[10]</a>
+    </p>
+    <div class="callout warn">
+      <strong>Departmental recommendation:</strong> if neuraxial is planned or possible, the preop clinic note should explicitly document:
+      (1) antithrombotic type and last dose, (2) ASRA-compliant hold interval, (3) catheter management plan (if applicable).
+      <a href="#refs">[10]</a>
+    </div>
+  </section>
+
+  <section id="dayof">
+    <h2>10) Day-of-surgery checklist (anesthesia)</h2>
+    <ol>
+      <li><strong>Confirm NPO status</strong> (type and time of last intake). <a href="#refs">[1]</a></li>
+      <li><strong>GLP‑1 RA assessment:</strong> agent, last dose, GI symptoms, risk tier; verify whether 24-hr liquid diet was used if high risk. <a href="#refs">[2]</a></li>
+      <li><strong>Diabetes safety:</strong> confirm SGLT2 inhibitor hold interval; check glucose; consider ketones if symptoms/concerns. <a href="#refs">[3,4,5]</a></li>
+      <li><strong>Antithrombotics:</strong> document indication + last dose; neuraxial plan; confirm stop interval adherence. <a href="#refs">[9,10]</a></li>
+      <li><strong>Withdrawal-risk meds:</strong> beta blockers, clonidine, anticonvulsants, chronic steroids administered as planned. <a href="#refs">[6,7]</a></li>
+      <li><strong>Resume plan:</strong> establish postoperative restart timing for held medications, especially antithrombotics and diabetes meds.</li>
+    </ol>
+  </section>
+
+  <section id="refs">
+    <h2>11) References</h2>
+    <ol>
+      <li><strong>American Society of Anesthesiologists (ASA).</strong> Practice Guidelines for Preoperative Fasting and the Use of Pharmacologic Agents to Reduce the Risk of Pulmonary Aspiration (updated guideline; widely implemented NPO intervals). Anesthesiology.</li>
+      <li><strong>Multi-Society Clinical Practice Guidance (ASA and partner societies).</strong> Perioperative management of patients taking GLP‑1 receptor agonists (2024): most patients may continue; high-risk patients may use 24-hour liquid-only diet and other mitigation strategies.</li>
+      <li><strong>FDA Drug Safety Communication.</strong> SGLT2 inhibitors and risk of ketoacidosis (euglycemic DKA) — perioperative risk recognized.</li>
+      <li><strong>American Diabetes Association (ADA).</strong> Standards of Care in Diabetes—Hospital/Perioperative Management: perioperative medication considerations; avoid SGLT2 inhibitors preop (timing per institutional policy).</li>
+      <li><strong>Society/consensus perioperative diabetes management guidance</strong> (e.g., endocrine/anesthesia consensus statements): insulin adjustment and holding hypoglycemia-prone agents while NPO.</li>
+      <li><strong>ACC/AHA Perioperative Cardiovascular Evaluation/Management Guideline</strong> (most recent update): continuation of chronic beta blockers; management of antiplatelets in stent patients; perioperative statins and BP meds considerations.</li>
+      <li><strong>Endocrine Society / perioperative steroid coverage references:</strong> guidance for patients with adrenal suppression risk and perioperative glucocorticoid management.</li>
+      <li><strong>ASA advisory and perioperative medication safety resources</strong> regarding herbal supplements and anesthesia interactions.</li>
+      <li><strong>CHEST Guideline.</strong> Perioperative Management of Antithrombotic Therapy (latest edition): warfarin/DOAC interruption, bridging indications, procedural bleeding risk framework.</li>
+      <li><strong>ASRA (American Society of Regional Anesthesia).</strong> Regional Anesthesia in the Patient Receiving Antithrombotic or Thrombolytic Therapy (latest guideline): neuraxial and deep plexus block timing for anticoagulants/antiplatelets.</li>
+    </ol>
+    <p class="callout" style="font-size:13px;">
+      <strong>Note:</strong> Replace placeholder references with your institution’s preferred citations (with exact years/links) and align stop intervals with your local pharmacy and perioperative pathways.
+    </p>
+  </section>
+
+  <section id="appendix">
+    <h2>Appendix: quick reference lists</h2>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>“Continue” quick list</h4>
+        <ul>
+          <li>Beta blockers, CCBs, statins, clonidine</li>
+          <li>Inhalers/asthma meds</li>
+          <li>Anticonvulsants; Parkinson meds (time-sensitive)</li>
+          <li>Levothyroxine</li>
+          <li>Chronic steroids (evaluate stress-dose)</li>
+          <li>Chronic opioids; acetaminophen</li>
+          <li>Transplant immunosuppression (coordinate)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>“Hold/adjust” quick list</h4>
+        <ul>
+          <li><strong>SGLT2 inhibitors:</strong> hold ≥3 days (4 days for ertugliflozin)</li>
+          <li><strong>Sulfonylureas:</strong> hold DOS</li>
+          <li><strong>Metformin:</strong> hold DOS (earlier if renal/major surgery/contrast)</li>
+          <li><strong>ACEi/ARB:</strong> hold DOS (typical)</li>
+          <li><strong>Diuretics:</strong> hold DOS (typical)</li>
+          <li><strong>Insulin:</strong> adjust basal; hold meal bolus while NPO</li>
+          <li><strong>Antithrombotics:</strong> follow pathway; document indication + last dose</li>
+          <li>Herbal supplements: stop 1–2 weeks when feasible</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout ok">
+      <strong>Suggested departmental add-ons:</strong>
+      <ul>
+        <li>Add institutional glucose targets and insulin order sets (PACU/inpatient).</li>
+        <li>Add drug-specific anticoagulant stop/restart tables linked to pharmacy and ASRA.</li>
+        <li>Add pediatric, pregnancy, and bariatric surgery fasting exceptions if relevant.</li>
+      </ul>
+    </div>
+
+  </section>
+
+  <div class="footer">
+    <p>
+      This document is a template for departmental use. Final clinical decisions must be individualized.
+      Update intervals and citations per local policy.
+    </p>
+  </div>
+
+</main>
+</body>
+</html>

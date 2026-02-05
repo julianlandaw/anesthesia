@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Medication Dosing Calculator</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Medication Dosing Calculator</h1>
+      <div class="toggle-wrapper">
+  <label class="toggle-label">
+    <input type="checkbox" id="darkToggle" onchange="toggleDarkMode()" />
+    Dark Mode
+  </label>
+</div>
+    <div class="form">
+      <label for="sex">Sex:
+        <select id="sex">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </label>
+      <label for="age">Age (years):
+        <input type="number" id="age" value="40" />
+      </label>
+      <label for="height">Height (cm):
+        <input type="number" id="height" value="175" />
+      </label>
+      <label for="weight">Weight (kg):
+        <input type="number" id="weight" value="80" />
+      </label>
+      <button type="button" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="search-container">
+      <input type="text" id="searchBox" placeholder="Search for a drug or category..." oninput="filterResults()" />
+    </div>
+    <div id="results" class="accordion"></div>
+    <div class="export-buttons">
+      <button type="button" onclick="copyToClipboard()">Copy to Clipboard</button>
+      <button type="button" onclick="exportToPDF()">Export to PDF</button>
+      <button type="button" onclick="exportToCSV()">Export to CSV</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

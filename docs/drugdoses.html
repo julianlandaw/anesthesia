@@ -1,48 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Medication Dosing Calculator</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Medication Dosing Calculator | Anesthesia Toolkit</title>
+  <meta name="description" content="Adult anesthesia medication dosing ranges calculated from total, ideal, lean, or fat-free body weight." />
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'dark' || theme === 'light') {
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.style.colorScheme = theme;
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to calculator</a>
   <div class="container">
-    <h1>Medication Dosing Calculator</h1>
-      <div class="toggle-wrapper">
-  <label class="toggle-label">
-    <input type="checkbox" id="darkToggle" onchange="toggleDarkMode()" />
-    Dark Mode
-  </label>
-</div>
-    <div class="form">
-      <label for="sex">Sex:
-        <select id="sex">
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-      </label>
-      <label for="age">Age (years):
-        <input type="number" id="age" value="40" />
-      </label>
-      <label for="height">Height (cm):
-        <input type="number" id="height" value="175" />
-      </label>
-      <label for="weight">Weight (kg):
-        <input type="number" id="weight" value="80" />
-      </label>
-      <button type="button" onclick="calculate()">Calculate</button>
-    </div>
-    <div class="search-container">
-      <input type="text" id="searchBox" placeholder="Search for a drug or category..." oninput="filterResults()" />
-    </div>
-    <div id="results" class="accordion"></div>
-    <div class="export-buttons">
-      <button type="button" onclick="copyToClipboard()">Copy to Clipboard</button>
-      <button type="button" onclick="exportToPDF()">Export to PDF</button>
-      <button type="button" onclick="exportToCSV()">Export to CSV</button>
-    </div>
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Anesthesia Toolkit home">
+        <span class="logo" aria-hidden="true">Rx</span>
+        <span><strong>Medication Dosing</strong><small>Anesthesia Toolkit</small></span>
+      </a>
+      <div class="header-actions">
+        <a class="button button-secondary compact" href="index.html">← Home</a>
+        <button class="button button-secondary compact" id="themeBtn" type="button" title="Change color theme"><span aria-hidden="true">🖥️</span> Theme</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Adult decision support</p>
+          <h1 id="page-title">Medication dosing calculator</h1>
+          <p>Calculate commonly used anesthesia dose ranges from total, ideal, lean, and fat-free body weight.</p>
+        </div>
+        <div class="clinical-note" role="note"><strong>Verify before use.</strong> These are reference ranges, not orders. Adjust for indication, comorbidities, organ function, hemodynamics, local policy, and the specific product label.</div>
+      </section>
+
+      <section class="workspace" aria-label="Patient inputs and calculated metrics">
+        <form class="patient-form" id="doseForm" novalidate>
+          <div class="section-heading">
+            <div><p class="eyebrow">Patient</p><h2>Inputs</h2></div>
+            <button class="text-button" id="resetBtn" type="button">Reset</button>
+          </div>
+          <div class="form-grid">
+            <label>Formula sex<select id="sex" name="sex"><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label>Age <span>years</span><input id="age" name="age" type="number" inputmode="numeric" min="18" max="120" step="1" value="40" required /></label>
+            <label>Height <span>cm</span><input id="height" name="height" type="number" inputmode="decimal" min="120" max="230" step="0.1" value="175" required /></label>
+            <label>Weight <span>kg</span><input id="weight" name="weight" type="number" inputmode="decimal" min="20" max="350" step="0.1" value="80" required /></label>
+          </div>
+          <p class="form-error" id="formError" role="alert" aria-live="assertive"></p>
+          <button class="button button-primary calculate-button" type="submit">Calculate doses</button>
+        </form>
+
+        <aside class="metrics-panel" aria-labelledby="metrics-title">
+          <div class="section-heading"><div><p class="eyebrow">Calculated weights</p><h2 id="metrics-title">Patient metrics</h2></div></div>
+          <div class="metrics" id="metrics" aria-live="polite"></div>
+          <dl class="abbreviations">
+            <div><dt>TBW</dt><dd>Total body weight</dd></div><div><dt>IBW</dt><dd>Ideal body weight</dd></div>
+            <div><dt>LBW</dt><dd>Lean body weight</dd></div><div><dt>FFM</dt><dd>Fat-free mass</dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="results-panel" aria-labelledby="results-title">
+        <div class="results-header">
+          <div><p class="eyebrow">Reference ranges</p><h2 id="results-title">Medication doses</h2></div>
+          <label class="search-field"><span class="sr-only">Search medications or categories</span><span aria-hidden="true">⌕</span><input id="searchBox" type="search" placeholder="Search drug, category, or basis…" autocomplete="off" /><kbd>/</kbd></label>
+        </div>
+        <div class="result-summary"><span id="resultCount" role="status" aria-live="polite"></span><button class="text-button" id="clearSearchBtn" type="button" hidden>Clear search</button></div>
+        <div id="results"></div>
+        <div class="empty-state" id="emptyState" hidden><strong>No matching medications</strong><span>Try a drug name, category, or dosing basis such as “TBW.”</span></div>
+        <div class="export-actions" aria-label="Export options">
+          <button class="button button-secondary" id="copyBtn" type="button">Copy report</button>
+          <button class="button button-secondary" id="csvBtn" type="button">Download CSV</button>
+          <button class="button button-secondary" id="printBtn" type="button">Print / save PDF</button>
+        </div>
+        <p class="action-status" id="actionStatus" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="reference-note" aria-labelledby="reference-title">
+        <h2 id="reference-title">Esmolol references</h2>
+        <p>The SVT loading and infusion doses follow the current U.S. prescribing information. The laryngoscopy/intubation range is based on published peri-induction studies and is off-label. Titrate to clinical response and monitor for hypotension and bradycardia. <a href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=4cfdfa50-579b-43e7-bc0a-e831d3099bfd" target="_blank" rel="noopener noreferrer">DailyMed label ↗</a> <a href="https://pubmed.ncbi.nlm.nih.gov/35422539/" target="_blank" rel="noopener noreferrer">0.5 mg/kg study ↗</a> <a href="https://pubmed.ncbi.nlm.nih.gov/31198248/" target="_blank" rel="noopener noreferrer">1.5 mg/kg study ↗</a></p>
+      </section>
+    </main>
+
+    <footer><span>Adult reference tool • Data stays on this device</span><a href="#main">Back to top ↑</a></footer>
   </div>
   <script src="script.js"></script>
 </body>

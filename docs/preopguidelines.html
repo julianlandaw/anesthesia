@@ -3,7 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="description" content="Adult preoperative medication and fasting guidance for anesthesia-led evaluation." />
   <title>Preoperative Medication & Fasting Guidelines (Anesthesia Department)</title>
+  <script>
+    (function(){
+      const t = localStorage.getItem('theme');
+      if (t === 'dark' || t === 'light') {
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.style.colorScheme = t;
+      }
+    })();
+  </script>
   <style>
     :root{
       --ink:#111827;
@@ -15,12 +26,41 @@
       --danger:#b91c1c;
       --ok:#065f46;
       --border:#e5e7eb;
+      --card:#ffffff;
+      --callout:#f8fafc;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    body{font-family:var(--sans); color:var(--ink); background:var(--bg); margin:0;}
-    header{padding:28px 20px; border-bottom:1px solid var(--border);}
+    :root[data-theme="dark"]{
+      --ink:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --accent:#a99cff;
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.07);
+      --warn:#ffcc66;
+      --danger:#ff8a8a;
+      --ok:#6ee7b7;
+      --border:rgba(255,255,255,.14);
+      --card:#141d2e;
+      --callout:rgba(255,255,255,.045);
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root:not([data-theme]){
+        --ink:rgba(255,255,255,.92); --muted:rgba(255,255,255,.68); --accent:#a99cff;
+        --bg:#0b1220; --panel:rgba(255,255,255,.07); --warn:#ffcc66; --danger:#ff8a8a;
+        --ok:#6ee7b7; --border:rgba(255,255,255,.14); --card:#141d2e; --callout:rgba(255,255,255,.045);
+      }
+    }
+
+    body{font-family:var(--sans); color:var(--ink); background:radial-gradient(800px 360px at 18% -10%,rgba(124,92,255,.18),transparent 62%),var(--bg); margin:0;}
+    header{padding:22px 20px; border-bottom:1px solid var(--border); background:var(--callout);}
+    .header-inner{max-width:1040px; margin:0 auto; display:flex; align-items:flex-start; justify-content:space-between; gap:18px;}
+    .header-copy{min-width:0;}
+    .header-actions{display:flex; gap:8px; flex:0 0 auto;}
+    .nav-button{min-height:40px; padding:8px 12px; border:1px solid var(--border); border-radius:999px; color:var(--ink); background:var(--panel); font-weight:700; font-size:13px; text-decoration:none; cursor:pointer;}
+    .nav-button:hover{text-decoration:none; border-color:var(--accent);}
     header h1{margin:0 0 6px 0; font-size:22px;}
     header .meta{color:var(--muted); font-size:13px; display:flex; gap:14px; flex-wrap:wrap;}
     main{max-width:1040px; margin:0 auto; padding:20px;}
@@ -36,7 +76,7 @@
     h3{font-size:15px; margin:16px 0 8px 0;}
     p{line-height:1.55; margin:10px 0;}
 
-    .callout{border:1px solid var(--border); border-left:4px solid var(--accent); background:#f8fafc; padding:12px 14px; border-radius:10px; margin:10px 0;}
+    .callout{border:1px solid var(--border); border-left:4px solid var(--accent); background:var(--callout); padding:12px 14px; border-radius:10px; margin:10px 0;}
     .callout.warn{border-left-color:var(--warn);}
     .callout.danger{border-left-color:var(--danger);}
     .callout.ok{border-left-color:var(--ok);}
@@ -46,7 +86,7 @@
       .grid.two{grid-template-columns: 1fr 1fr;}
     }
 
-    .card{border:1px solid var(--border); border-radius:10px; padding:12px 14px; background:#fff;}
+    .card{border:1px solid var(--border); border-radius:10px; padding:12px 14px; background:var(--card);}
     .card h4{margin:0 0 8px 0; font-size:14px;}
 
     ul, ol{line-height:1.5;}
@@ -55,7 +95,7 @@
     code, pre{font-family:var(--mono);}
     pre{background:#0b1020; color:#e5e7eb; padding:12px; border-radius:10px; overflow:auto;}
 
-    .badge{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); background:#fff; margin-left:6px; color:var(--muted);}
+    .badge{display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); background:var(--card); margin-left:6px; color:var(--muted);}
     .badge.hold{border-color:#fecaca; background:#fff1f2; color:#991b1b;}
     .badge.cont{border-color:#bbf7d0; background:#f0fdf4; color:#065f46;}
     .badge.caution{border-color:#fde68a; background:#fffbeb; color:#92400e;}
@@ -65,21 +105,36 @@
     /* Print */
     @media print{
       nav.toc{display:none;}
+      .header-actions{display:none;}
       a{text-decoration:none; color:inherit;}
       .card, .callout{break-inside:avoid;}
       header{border-bottom:0;}
       main{max-width:none;}
     }
+    @media (max-width:720px){
+      .header-inner{flex-direction:column;}
+      .header-actions{width:100%;}
+      .nav-button{flex:1; text-align:center;}
+    }
   </style>
+  <link rel="stylesheet" href="enhancements.css" />
 </head>
 <body>
 <header>
-  <h1>Preoperative Medication & Fasting Guidelines <span class="badge">Anesthesia Department</span></h1>
-  <div class="meta">
-    <div><strong>Version:</strong> 1.0 (template)</div>
-    <div><strong>Effective date:</strong> 2026-02-02</div>
-    <div><strong>Owner:</strong> Dept. of Anesthesiology</div>
-    <div><strong>Applies to:</strong> Elective procedures requiring anesthesia/sedation</div>
+  <div class="header-inner">
+    <div class="header-copy">
+      <h1>Preoperative Medication & Fasting Guidelines <span class="badge">Anesthesia Department</span></h1>
+      <div class="meta">
+        <div><strong>Version:</strong> 1.0 (template)</div>
+        <div><strong>Effective date:</strong> 2026-02-02</div>
+        <div><strong>Owner:</strong> Dept. of Anesthesiology</div>
+        <div><strong>Applies to:</strong> Elective procedures requiring anesthesia/sedation</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="nav-button" href="index.html">← Home</a>
+      <button class="nav-button" id="themeBtn" type="button"><span aria-hidden="true">🖥️</span> Theme</button>
+    </div>
   </div>
 </header>
 <main>
@@ -505,5 +560,21 @@
   </div>
 
 </main>
+<script>
+  const themeBtn = document.getElementById('themeBtn');
+  const themeIcon = themeBtn.querySelector('span');
+  function savedTheme(){ const t = localStorage.getItem('theme'); return t === 'dark' || t === 'light' ? t : 'system'; }
+  function applyTheme(theme){
+    if(theme === 'system') { document.documentElement.removeAttribute('data-theme'); document.documentElement.style.colorScheme = ''; }
+    else { document.documentElement.setAttribute('data-theme', theme); document.documentElement.style.colorScheme = theme; }
+    localStorage.setItem('theme', theme);
+    const config = {system:['🖥️','System'],dark:['🌙','Dark'],light:['☀️','Light']}[theme];
+    themeIcon.textContent = config[0];
+    themeBtn.title = `Theme: ${config[1]}. Click to change.`;
+    themeBtn.setAttribute('aria-label', `Theme: ${config[1]}. Click to change theme.`);
+  }
+  themeBtn.addEventListener('click', () => { const order=['system','dark','light']; applyTheme(order[(order.indexOf(savedTheme())+1)%order.length]); });
+  applyTheme(savedTheme());
+</script>
 </body>
 </html>

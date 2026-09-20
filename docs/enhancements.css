@@ -1,0 +1,22 @@
+/* Shared progressive enhancements for the standalone toolkit pages. */
+button, a, input, select, summary { touch-action: manipulation; }
+button, .btn, .linkpill, .iconbtn { min-height: 42px; }
+input, select, output, .value, .big { font-variant-numeric: tabular-nums; }
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent, #6257e8) 72%, white);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+@media (max-width: 560px) {
+  .topbar { align-items: flex-start !important; }
+  .topbar .actions { width: 100%; justify-content: flex-start !important; }
+  .topbar .linkpill, .topbar .btn, .topbar .iconbtn { min-height: 44px; }
+}

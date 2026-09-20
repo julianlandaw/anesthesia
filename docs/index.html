@@ -309,11 +309,12 @@
     /* Hidden (for filtering) */
     .hidden{display:none !important;}
   </style>
+  <link rel="stylesheet" href="enhancements.css" />
 </head>
 
 <body>
   <div class="container">
-    <header class="topbar" role="banner note">
+    <header class="topbar" role="banner">
       <div class="brand" aria-label="Site identity">
         <div class="logo" aria-hidden="true">
           <!-- Simple anesthesia-ish icon -->
@@ -350,8 +351,7 @@
     <section class="hero" aria-label="Overview">
       <h2>Quick access to anesthesia calculators, pre-op guidance, and bedside references</h2>
       <p>
-        This index is designed to live alongside your local HTML tools (no internet required).
-        Add new pages as you build them — they’ll appear as cards under the right category.
+        Patient-specific calculators and concise perioperative references, designed for fast use on desktop or mobile.
       </p>
       <div class="chips" aria-label="Highlights">
         <span class="chip">Offline-friendly</span>
@@ -371,7 +371,7 @@
       <div class="grid" id="gridCalculators">
         <a class="card tool" href="drugdoses.html"
            data-title="Drug Doses"
-           data-tags="calculator dosing induction maintenance propofol opioids weight height age sex"
+           data-tags="calculator dosing esmolol induction intubation maintenance propofol opioids vasopressors weight height age sex"
            data-category="Calculators">
           <span class="go">Open →</span>
           <div class="row">
@@ -389,7 +389,7 @@
               <div class="meta">
                 <span class="tag accent">Calculator</span>
                 <span class="tag good">Fast</span>
-                <span class="tag">Adults / Peds-ready</span>
+                <span class="tag">Adult</span>
               </div>
             </div>
           </div>
@@ -512,34 +512,6 @@
       </div>
     </section>
 
-    <!-- REFERENCES (optional placeholder) -->
-    <section class="section" aria-label="References">
-      <div class="sectionhead">
-        <h3>References</h3>
-        <div class="count"><span id="countReferences">0</span> items</div>
-      </div>
-
-      <div class="grid" id="gridReferences">
-        <div class="card" style="grid-column: span 12;">
-          <div class="row">
-            <div class="icon" aria-hidden="true">📚</div>
-            <div>
-              <h4>Add your references here</h4>
-              <p>
-                Link local pages like “Airway Algorithms”, “Vasopressor Cheat Sheet”, “Regional Blocks”,
-                “PACU Discharge Criteria”, etc.
-              </p>
-              <div class="meta">
-                <span class="tag">Tip: duplicate a card</span>
-                <span class="tag">Set href="yourpage.html"</span>
-                <span class="tag">Update data-tags for search</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <footer>
       <div>© <span id="year"></span> Anesthesia Toolkit • Local-only HTML</div>
       <div>
@@ -626,7 +598,7 @@
     }
 
     function updateCounts(){
-      const byCategory = {Calculators:0, Guidelines:0, References:0};
+      const byCategory = {Calculators:0, Guidelines:0};
       tools.forEach(card => {
         if (!card.classList.contains('hidden')){
           const cat = card.dataset.category || 'References';
@@ -635,7 +607,6 @@
       });
       document.getElementById('countCalculators').textContent = byCategory.Calculators || 0;
       document.getElementById('countGuidelines').textContent = byCategory.Guidelines || 0;
-      document.getElementById('countReferences').textContent = byCategory.References || 0;
     }
 
     q?.addEventListener('input', applyFilter);

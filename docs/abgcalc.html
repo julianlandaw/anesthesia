@@ -4,74 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f6f7fb" />
   <title>ABG Interpreter</title>
   <meta name="description" content="ABG interpreter: primary disorder, compensation checks, and optional A–a gradient & anion gap tools (decision-support only)." />
 
-  <!-- Apply saved theme before paint -->
-  <script>
-    (function () {
-      const t = localStorage.getItem('theme'); // "dark" | "light" | "system" | null
-      if (t === 'dark' || t === 'light') {
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.style.colorScheme = t;
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-    })();
-  </script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <script src="calculations.js"></script>
+  <link rel="stylesheet" href="theme.css" />
 
   <style>
-    /* =============== THEME TOKENS =============== */
-    :root{
-      --bg: #0b1220;
-      --surface: rgba(255,255,255,.06);
-      --surface-2: rgba(255,255,255,.09);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --border: rgba(255,255,255,.12);
-      --shadow: 0 12px 30px rgba(0,0,0,.25);
-      --accent: #7c5cff;
-      --accent-2:#16c2a1;
-      --warn:#ffcc66;
-      --danger:#ff6b6b;
-      --ok:#6ee7b7;
-      --radius: 18px;
-      --radius-sm: 14px;
-      --max: 1100px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    :root[data-theme="light"]{
-      --bg:#f6f7fb;
-      --surface: rgba(17,24,39,.05);
-      --surface-2: rgba(17,24,39,.08);
-      --text: rgba(17,24,39,.92);
-      --muted: rgba(17,24,39,.7);
-      --border: rgba(17,24,39,.12);
-      --shadow: 0 12px 30px rgba(17,24,39,.10);
-      --accent:#5b5cff;
-      --accent-2:#0fb49a;
-      --warn:#c07a00;
-      --danger:#c2410c;
-      --ok:#047857;
-    }
-    @media (prefers-color-scheme: light){
-      :root:not([data-theme]){
-        --bg:#f6f7fb;
-        --surface: rgba(17,24,39,.05);
-        --surface-2: rgba(17,24,39,.08);
-        --text: rgba(17,24,39,.92);
-        --muted: rgba(17,24,39,.7);
-        --border: rgba(17,24,39,.12);
-        --shadow: 0 12px 30px rgba(17,24,39,.10);
-        --accent:#5b5cff;
-        --accent-2:#0fb49a;
-        --warn:#c07a00;
-        --danger:#c2410c;
-        --ok:#047857;
-      }
-    }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -379,7 +323,7 @@
         <a class="linkpill" href="index.html">← Home</a>
         <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
         <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span aria-hidden="true">🖥️</span> Theme
+          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
         </button>
       </div>
     </header>
@@ -562,7 +506,7 @@
     </div>
 
     <div class="footer">
-      <div>© <span id="year"></span> ABG Interpreter • Local-only HTML</div>
+      <div>© <span id="year"></span> ABG Interpreter • Available offline after first visit</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a class="linkpill" href="index.html">← Back to Home</a>
         <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
@@ -573,47 +517,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
 
   <script>
-    // =============================
-    // THEME: Dark -> Light -> System
-    // =============================
-    const themeBtn = document.getElementById('themeBtn');
-
-    function getSavedTheme(){
-      const t = localStorage.getItem('theme');
-      return (t === 'dark' || t === 'light' || t === 'system') ? t : 'system';
-    }
-    function updateThemeButton(mode){
-      const icon = (mode === 'dark') ? '🌙' : (mode === 'light') ? '☀️' : '🖥️';
-      const label = (mode === 'dark') ? 'Dark' : (mode === 'light') ? 'Light' : 'System';
-      themeBtn.querySelector('span').textContent = icon;
-      themeBtn.setAttribute('data-mode', label);
-      themeBtn.title = `Theme: ${label} (click to change)`;
-      themeBtn.setAttribute('aria-label', `Theme: ${label}. Click to switch theme.`);
-    }
-    function applyTheme(mode){
-      if (mode === 'dark' || mode === 'light') {
-        document.documentElement.setAttribute('data-theme', mode);
-        document.documentElement.style.colorScheme = mode;
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-      localStorage.setItem('theme', mode);
-      updateThemeButton(mode);
-    }
-    updateThemeButton(getSavedTheme());
-    themeBtn?.addEventListener('click', () => {
-      const current = getSavedTheme();
-      const next = (current === 'dark') ? 'light' : (current === 'light') ? 'system' : 'dark';
-      applyTheme(next);
-    });
-    if (window.matchMedia) {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      mq.addEventListener?.('change', () => {
-        if (getSavedTheme() === 'system') updateThemeButton('system');
-      });
-    }
-
     // =============================
     // ABG LOGIC
     // =============================
@@ -740,8 +643,9 @@
 
       // Metabolic acidosis: Winter’s formula
       if (t.includes('metabolic acidosis')){
-        const exp = 1.5*hco3 + 8;
-        const lo = exp - 2, hi = exp + 2;
+        const winter = window.AnesthesiaCalculations.winterExpectedPaco2(hco3);
+        const exp = winter.expected;
+        const lo = winter.min, hi = winter.max;
         const ok = paco2 >= lo && paco2 <= hi;
         if (ok){
           out.title = 'Respiratory compensation appears appropriate (Winter’s)';
@@ -867,8 +771,9 @@
       ph2o = isNum(ph2o) ? ph2o : 47;
       rq = isNum(rq) ? rq : 0.8;
 
-      const PAO2 = f*(pb - ph2o) - (paco2 / rq);
-      const Aa = PAO2 - pao2;
+      const gas = window.AnesthesiaCalculations.alveolarGas({pao2, paco2, fio2: f, pb, ph2o, rq});
+      const PAO2 = gas.PAO2;
+      const Aa = gas.Aa;
 
       let sub = `PAO₂ ≈ ${round(PAO2,0)} mmHg; A–a ≈ ${round(Aa,0)} mmHg.`;
       if (isNum(age)){
@@ -880,13 +785,14 @@
 
     function anionGap(na, cl, hco3, alb){
       if (!isNum(na) || !isNum(cl) || !isNum(hco3)) return {val:'—', sub:'Requires Na, Cl, HCO₃.'};
-      const ag = na - (cl + hco3);
+      const calculated = window.AnesthesiaCalculations.anionGap({na, cl, hco3, albumin: alb});
+      const ag = calculated.value;
 
       let sub = `AG = Na − (Cl + HCO₃) = ${round(ag,1)}.`;
       let val = `${round(ag,1)}`;
 
       if (isNum(alb)){
-        const agc = ag + 2.5*(4.0 - alb);
+        const agc = calculated.corrected;
         sub += ` AGcorr ≈ ${round(agc,1)} (albumin ${round(alb,1)} g/dL).`;
         val = `${round(ag,1)} (corr ${round(agc,1)})`;
 

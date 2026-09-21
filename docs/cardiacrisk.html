@@ -4,74 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f6f7fb" />
   <title>Cardiac Risk Helper (RCRI + METs)</title>
   <meta name="description" content="Adult perioperative cardiac risk helper: RCRI + functional capacity prompts (decision-support only)." />
 
-  <!-- Apply saved theme before paint -->
-  <script>
-    (function () {
-      const t = localStorage.getItem('theme'); // "dark" | "light" | "system" | null
-      if (t === 'dark' || t === 'light') {
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.style.colorScheme = t;
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-    })();
-  </script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <script src="calculations.js"></script>
+  <link rel="stylesheet" href="theme.css" />
 
   <style>
-    /* =============== THEME TOKENS =============== */
-    :root{
-      --bg: #0b1220;
-      --surface: rgba(255,255,255,.06);
-      --surface-2: rgba(255,255,255,.09);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --border: rgba(255,255,255,.12);
-      --shadow: 0 12px 30px rgba(0,0,0,.25);
-      --accent: #7c5cff;
-      --accent-2:#16c2a1;
-      --warn:#ffcc66;
-      --danger:#ff6b6b;
-      --ok:#6ee7b7;
-      --radius: 18px;
-      --radius-sm: 14px;
-      --max: 1100px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    :root[data-theme="light"]{
-      --bg:#f6f7fb;
-      --surface: rgba(17,24,39,.05);
-      --surface-2: rgba(17,24,39,.08);
-      --text: rgba(17,24,39,.92);
-      --muted: rgba(17,24,39,.7);
-      --border: rgba(17,24,39,.12);
-      --shadow: 0 12px 30px rgba(17,24,39,.10);
-      --accent:#5b5cff;
-      --accent-2:#0fb49a;
-      --warn:#c07a00;
-      --danger:#c2410c;
-      --ok:#047857;
-    }
-    @media (prefers-color-scheme: light){
-      :root:not([data-theme]){
-        --bg:#f6f7fb;
-        --surface: rgba(17,24,39,.05);
-        --surface-2: rgba(17,24,39,.08);
-        --text: rgba(17,24,39,.92);
-        --muted: rgba(17,24,39,.7);
-        --border: rgba(17,24,39,.12);
-        --shadow: 0 12px 30px rgba(17,24,39,.10);
-        --accent:#5b5cff;
-        --accent-2:#0fb49a;
-        --warn:#c07a00;
-        --danger:#c2410c;
-        --ok:#047857;
-      }
-    }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -411,7 +355,7 @@
         <a class="linkpill" href="index.html">← Home</a>
         <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
         <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span aria-hidden="true">🖥️</span> Theme
+          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
         </button>
       </div>
     </header>
@@ -489,7 +433,7 @@
         <h3>RCRI (Revised Cardiac Risk Index)</h3>
 
         <div class="check">
-          <input type="checkbox" id="rcriHighRiskSurg" />
+          <input type="checkbox" id="rcriHighRiskSurg" aria-label="High-risk surgery" />
           <div>
             <div class="t">High-risk surgery</div>
             <div class="d">Major intraperitoneal, intrathoracic, or suprainguinal vascular (institution definitions vary).</div>
@@ -497,7 +441,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rcriIHD" />
+          <input type="checkbox" id="rcriIHD" aria-label="Ischemic heart disease" />
           <div>
             <div class="t">Ischemic heart disease</div>
             <div class="d">History of MI, positive stress test, angina, or prior coronary intervention.</div>
@@ -505,7 +449,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rcriCHF" />
+          <input type="checkbox" id="rcriCHF" aria-label="Heart failure" />
           <div>
             <div class="t">Heart failure</div>
             <div class="d">History of HF or pulmonary edema; reduced EF or symptomatic HF.</div>
@@ -513,7 +457,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rcriCVA" />
+          <input type="checkbox" id="rcriCVA" aria-label="Cerebrovascular disease" />
           <div>
             <div class="t">Cerebrovascular disease</div>
             <div class="d">History of stroke or TIA.</div>
@@ -521,7 +465,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rcriInsulin" />
+          <input type="checkbox" id="rcriInsulin" aria-label="Diabetes treated with insulin" />
           <div>
             <div class="t">Diabetes treated with insulin</div>
             <div class="d">Insulin use as a marker for higher-risk diabetes.</div>
@@ -529,7 +473,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rcriCr" />
+          <input type="checkbox" id="rcriCr" aria-label="Creatinine above 2 milligrams per deciliter or significant renal insufficiency" />
           <div>
             <div class="t">Creatinine &gt; 2.0 mg/dL (or significant renal insufficiency)</div>
             <div class="d">Use local definitions if different.</div>
@@ -541,7 +485,7 @@
         <h3 style="margin-top:0;">Active cardiac condition red flags</h3>
 
         <div class="check">
-          <input type="checkbox" id="rfACS" />
+          <input type="checkbox" id="rfACS" aria-label="Unstable angina or suspected acute coronary syndrome" />
           <div>
             <div class="t">Unstable angina / suspected ACS</div>
             <div class="d">New/worsening chest pain, ischemic symptoms, or concern for acute coronary syndrome.</div>
@@ -549,7 +493,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfDecompHF" />
+          <input type="checkbox" id="rfDecompHF" aria-label="Decompensated heart failure" />
           <div>
             <div class="t">Decompensated heart failure</div>
             <div class="d">Pulmonary edema, escalating diuretics, new orthopnea/PND, or significant volume overload.</div>
@@ -557,7 +501,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfArrhythmia" />
+          <input type="checkbox" id="rfArrhythmia" aria-label="Significant arrhythmia" />
           <div>
             <div class="t">Significant arrhythmia</div>
             <div class="d">Symptomatic brady/tachyarrhythmia, high-grade AV block, or poorly controlled rate.</div>
@@ -565,7 +509,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfValve" />
+          <input type="checkbox" id="rfValve" aria-label="Severe valvular disease symptoms" />
           <div>
             <div class="t">Severe valvular disease symptoms</div>
             <div class="d">Syncope/angina/dyspnea with known severe AS, severe MS, etc.</div>
@@ -628,7 +572,7 @@
     </div>
 
     <div class="footer">
-      <div>© <span id="year"></span> Cardiac Risk Helper • Local-only HTML</div>
+      <div>© <span id="year"></span> Cardiac Risk Helper • Available offline after first visit</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a class="linkpill" href="index.html">← Back to Home</a>
         <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
@@ -639,47 +583,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
 
   <script>
-    // =============================
-    // THEME: Dark -> Light -> System
-    // =============================
-    const themeBtn = document.getElementById('themeBtn');
-
-    function getSavedTheme(){
-      const t = localStorage.getItem('theme');
-      return (t === 'dark' || t === 'light' || t === 'system') ? t : 'system';
-    }
-    function updateThemeButton(mode){
-      const icon = (mode === 'dark') ? '🌙' : (mode === 'light') ? '☀️' : '🖥️';
-      const label = (mode === 'dark') ? 'Dark' : (mode === 'light') ? 'Light' : 'System';
-      themeBtn.querySelector('span').textContent = icon;
-      themeBtn.setAttribute('data-mode', label);
-      themeBtn.title = `Theme: ${label} (click to change)`;
-      themeBtn.setAttribute('aria-label', `Theme: ${label}. Click to switch theme.`);
-    }
-    function applyTheme(mode){
-      if (mode === 'dark' || mode === 'light') {
-        document.documentElement.setAttribute('data-theme', mode);
-        document.documentElement.style.colorScheme = mode;
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-      localStorage.setItem('theme', mode);
-      updateThemeButton(mode);
-    }
-    updateThemeButton(getSavedTheme());
-    themeBtn?.addEventListener('click', () => {
-      const current = getSavedTheme();
-      const next = (current === 'dark') ? 'light' : (current === 'light') ? 'system' : 'dark';
-      applyTheme(next);
-    });
-    if (window.matchMedia) {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      mq.addEventListener?.('change', () => {
-        if (getSavedTheme() === 'system') updateThemeButton('system');
-      });
-    }
-
     // =============================
     // CARDIAC RISK LOGIC
     // =============================
@@ -727,14 +630,14 @@
     }
 
     function rcriScore(){
-      return [
+      return window.AnesthesiaCalculations.rcriScore([
         els.rcriHighRiskSurg.checked,
         els.rcriIHD.checked,
         els.rcriCHF.checked,
         els.rcriCVA.checked,
         els.rcriInsulin.checked,
         els.rcriCr.checked
-      ].filter(Boolean).length;
+      ]);
     }
 
     function rcriCategory(score){
@@ -957,4 +860,3 @@
   </script>
 </body>
 </html>
-``

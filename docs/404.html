@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f6f7fb" />
+  <meta name="description" content="The requested Anesthesia Toolkit page could not be found." />
+  <title>Page Not Found | Anesthesia Toolkit</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    *{box-sizing:border-box}
+    body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;color:var(--text);background:radial-gradient(800px 420px at 20% 0,var(--glow-1),transparent 60%),radial-gradient(800px 420px at 90% 10%,var(--glow-2),transparent 60%),var(--bg);font-family:var(--font)}
+    main{width:min(620px,100%);padding:34px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow);text-align:center}
+    .logo{display:grid;width:64px;height:64px;margin:0 auto 20px;place-items:center;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent-2));font-size:30px}
+    h1{margin:0;font-size:clamp(1.7rem,5vw,2.5rem)}
+    p{margin:12px auto 24px;max-width:48ch;color:var(--muted);line-height:1.55}
+    a,button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:10px 16px;border:1px solid var(--border);border-radius:999px;color:var(--text);background:var(--control-bg);font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+    .actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="logo" aria-hidden="true">↩</div>
+    <h1>Page not found</h1>
+    <p>The link may be outdated or the page may have moved. Return to the toolkit to find the calculator or reference you need.</p>
+    <div class="actions">
+      <a href="index.html">Return to toolkit</a>
+      <button id="themeBtn" type="button"><span data-theme-icon aria-hidden="true">🖥️</span> Theme</button>
+    </div>
+  </main>
+</body>
+</html>

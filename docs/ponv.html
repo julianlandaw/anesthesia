@@ -4,74 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f6f7fb" />
   <title>PONV Risk + Prophylaxis</title>
   <meta name="description" content="Adult PONV helper: Apfel score, risk estimate, and prophylaxis plan builder (decision-support only)." />
 
-  <!-- Apply saved theme before paint -->
-  <script>
-    (function () {
-      const t = localStorage.getItem('theme'); // "dark" | "light" | "system" | null
-      if (t === 'dark' || t === 'light') {
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.style.colorScheme = t;
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-    })();
-  </script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <script src="calculations.js"></script>
+  <link rel="stylesheet" href="theme.css" />
 
   <style>
-    /* =============== THEME TOKENS =============== */
-    :root{
-      --bg: #0b1220;
-      --surface: rgba(255,255,255,.06);
-      --surface-2: rgba(255,255,255,.09);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --border: rgba(255,255,255,.12);
-      --shadow: 0 12px 30px rgba(0,0,0,.25);
-      --accent: #7c5cff;
-      --accent-2:#16c2a1;
-      --warn:#ffcc66;
-      --danger:#ff6b6b;
-      --ok:#6ee7b7;
-      --radius: 18px;
-      --radius-sm: 14px;
-      --max: 1050px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-    :root[data-theme="light"]{
-      --bg:#f6f7fb;
-      --surface: rgba(17,24,39,.05);
-      --surface-2: rgba(17,24,39,.08);
-      --text: rgba(17,24,39,.92);
-      --muted: rgba(17,24,39,.7);
-      --border: rgba(17,24,39,.12);
-      --shadow: 0 12px 30px rgba(17,24,39,.10);
-      --accent:#5b5cff;
-      --accent-2:#0fb49a;
-      --warn:#c07a00;
-      --danger:#c2410c;
-      --ok:#047857;
-    }
-    @media (prefers-color-scheme: light){
-      :root:not([data-theme]){
-        --bg:#f6f7fb;
-        --surface: rgba(17,24,39,.05);
-        --surface-2: rgba(17,24,39,.08);
-        --text: rgba(17,24,39,.92);
-        --muted: rgba(17,24,39,.7);
-        --border: rgba(17,24,39,.12);
-        --shadow: 0 12px 30px rgba(17,24,39,.10);
-        --accent:#5b5cff;
-        --accent-2:#0fb49a;
-        --warn:#c07a00;
-        --danger:#c2410c;
-        --ok:#047857;
-      }
-    }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -447,7 +391,7 @@
         <a class="linkpill" href="index.html" title="Back to Home">← Home</a>
         <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
         <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span aria-hidden="true">🖥️</span> Theme
+          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
         </button>
       </div>
     </header>
@@ -470,7 +414,7 @@
         <h3>Apfel risk factors (adult)</h3>
 
         <div class="check">
-          <input type="checkbox" id="rfFemale" />
+          <input type="checkbox" id="rfFemale" aria-label="Female sex" />
           <div>
             <div class="t">Female sex</div>
             <div class="d">Apfel risk factor</div>
@@ -478,7 +422,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfNonsmoker" />
+          <input type="checkbox" id="rfNonsmoker" aria-label="Non-smoker" />
           <div>
             <div class="t">Non-smoker</div>
             <div class="d">Current non-smoker / no active smoking</div>
@@ -486,7 +430,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfHx" />
+          <input type="checkbox" id="rfHx" aria-label="History of postoperative nausea and vomiting or motion sickness" />
           <div>
             <div class="t">History of PONV or motion sickness</div>
             <div class="d">Prior PONV, or significant motion sickness</div>
@@ -494,7 +438,7 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfOpioids" checked />
+          <input type="checkbox" id="rfOpioids" aria-label="Postoperative opioids planned or likely" checked />
           <div>
             <div class="t">Post-op opioids planned/likely</div>
             <div class="d">Expected need for opioids in PACU/early post-op</div>
@@ -602,7 +546,7 @@
 
         <div class="planGrid" id="agentGrid">
           <div class="agent">
-            <input type="checkbox" id="agDex" />
+            <input type="checkbox" id="agDex" aria-label="Dexamethasone" />
             <div>
               <div class="name">Dexamethasone</div>
               <div class="desc">Steroid class (often given after induction).</div>
@@ -611,7 +555,7 @@
           </div>
 
           <div class="agent">
-            <input type="checkbox" id="ag5ht3" />
+            <input type="checkbox" id="ag5ht3" aria-label="5-HT3 antagonist such as ondansetron" />
             <div>
               <div class="name">5‑HT3 antagonist (e.g., ondansetron)</div>
               <div class="desc">Serotonin antagonist class (often near end of case).</div>
@@ -620,7 +564,7 @@
           </div>
 
           <div class="agent">
-            <input type="checkbox" id="agDroperidol" />
+            <input type="checkbox" id="agDroperidol" aria-label="Butyrophenone such as droperidol" />
             <div>
               <div class="name">Butyrophenone (e.g., droperidol)</div>
               <div class="desc">Useful adjunct; consider QT risk and local policy.</div>
@@ -629,7 +573,7 @@
           </div>
 
           <div class="agent">
-            <input type="checkbox" id="agScop" />
+            <input type="checkbox" id="agScop" aria-label="Scopolamine patch" />
             <div>
               <div class="name">Scopolamine patch</div>
               <div class="desc">Anticholinergic (often pre-op); avoid when contraindicated.</div>
@@ -638,7 +582,7 @@
           </div>
 
           <div class="agent">
-            <input type="checkbox" id="agNK1" />
+            <input type="checkbox" id="agNK1" aria-label="NK1 antagonist such as aprepitant" />
             <div>
               <div class="name">NK1 antagonist (e.g., aprepitant)</div>
               <div class="desc">High-risk cases / rescue prevention; consider cost/local pathways.</div>
@@ -647,7 +591,7 @@
           </div>
 
           <div class="agent">
-            <input type="checkbox" id="agTIVA" />
+            <input type="checkbox" id="agTIVA" aria-label="TIVA or propofol-forward strategy" />
             <div>
               <div class="name">TIVA/propofol-forward strategy</div>
               <div class="desc">Technique choice that can reduce baseline risk (where appropriate).</div>
@@ -675,7 +619,7 @@
           </div>
 
           <div>
-            <label>Selected plan summary</label>
+            <label for="planSummary">Selected plan summary</label>
             <input id="planSummary" type="text" readonly />
             <div class="note" style="margin-top:10px;">
               Tip: For rescue, avoid repeating same class; choose a different mechanism when possible (context-dependent).
@@ -701,7 +645,7 @@
     </div>
 
     <div class="footer">
-      <div>© <span id="year"></span> PONV Helper • Local-only HTML</div>
+      <div>© <span id="year"></span> PONV Helper • Available offline after first visit</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a class="linkpill" href="index.html">← Back to Home</a>
         <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
@@ -712,47 +656,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
 
   <script>
-    // =============================
-    // THEME: Dark -> Light -> System
-    // =============================
-    const themeBtn = document.getElementById('themeBtn');
-
-    function getSavedTheme(){
-      const t = localStorage.getItem('theme');
-      return (t === 'dark' || t === 'light' || t === 'system') ? t : 'system';
-    }
-    function updateThemeButton(mode){
-      const icon = (mode === 'dark') ? '🌙' : (mode === 'light') ? '☀️' : '🖥️';
-      const label = (mode === 'dark') ? 'Dark' : (mode === 'light') ? 'Light' : 'System';
-      themeBtn.querySelector('span').textContent = icon;
-      themeBtn.setAttribute('data-mode', label);
-      themeBtn.title = `Theme: ${label} (click to change)`;
-      themeBtn.setAttribute('aria-label', `Theme: ${label}. Click to switch theme.`);
-    }
-    function applyTheme(mode){
-      if (mode === 'dark' || mode === 'light') {
-        document.documentElement.setAttribute('data-theme', mode);
-        document.documentElement.style.colorScheme = mode;
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-      localStorage.setItem('theme', mode);
-      updateThemeButton(mode);
-    }
-    updateThemeButton(getSavedTheme());
-    themeBtn?.addEventListener('click', () => {
-      const current = getSavedTheme();
-      const next = (current === 'dark') ? 'light' : (current === 'light') ? 'system' : 'dark';
-      applyTheme(next);
-    });
-    if (window.matchMedia) {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      mq.addEventListener?.('change', () => {
-        if (getSavedTheme() === 'system') updateThemeButton('system');
-      });
-    }
-
     // =============================
     // PONV LOGIC
     // =============================
@@ -805,22 +708,16 @@
     }
 
     function apfelScore(){
-      let s = 0;
-      if (els.rfFemale.checked) s++;
-      if (els.rfNonsmoker.checked) s++;
-      if (els.rfHx.checked) s++;
-      if (els.rfOpioids.checked) s++;
-      return s;
+      return window.AnesthesiaCalculations.apfelScore([
+        els.rfFemale.checked,
+        els.rfNonsmoker.checked,
+        els.rfHx.checked,
+        els.rfOpioids.checked
+      ]);
     }
 
     // Commonly cited simplified mapping (approximate)
-    const riskMap = {
-      0: {pct: '≈10%', label: 'Low'},
-      1: {pct: '≈20%', label: 'Low–moderate'},
-      2: {pct: '≈40%', label: 'Moderate'},
-      3: {pct: '≈60%', label: 'High'},
-      4: {pct: '≈80%', label: 'Very high'}
-    };
+    const riskMap = window.AnesthesiaCalculations.apfelRisk;
 
     function tierFor(score){
       if (score <= 1) return {tier: 'Minimal–light', sub: 'Often 0–1 agent; focus on technique & opioid-sparing when possible.', cls: 'ok'};

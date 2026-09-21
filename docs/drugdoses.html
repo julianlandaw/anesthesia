@@ -4,18 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#f6f7fb" />
   <title>Medication Dosing Calculator | Anesthesia Toolkit</title>
   <meta name="description" content="Adult anesthesia medication dosing ranges calculated from total, ideal, lean, or fat-free body weight." />
-  <script>
-    (function () {
-      const theme = localStorage.getItem('theme');
-      if (theme === 'dark' || theme === 'light') {
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.style.colorScheme = theme;
-      }
-    })();
-  </script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -28,7 +24,7 @@
       </a>
       <div class="header-actions">
         <a class="button button-secondary compact" href="index.html">← Home</a>
-        <button class="button button-secondary compact" id="themeBtn" type="button" title="Change color theme"><span aria-hidden="true">🖥️</span> Theme</button>
+        <button class="button button-secondary compact" id="themeBtn" type="button" title="Change color theme"><span data-theme-icon aria-hidden="true">🖥️</span> Theme</button>
       </div>
     </header>
 
@@ -92,6 +88,7 @@
 
     <footer><span>Adult reference tool • Data stays on this device</span><a href="#main">Back to top ↑</a></footer>
   </div>
+  <script src="calculations.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

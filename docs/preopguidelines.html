@@ -4,56 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f6f7fb" />
   <meta name="description" content="Adult preoperative medication and fasting guidance for anesthesia-led evaluation." />
   <title>Preoperative Medication & Fasting Guidelines (Anesthesia Department)</title>
-  <script>
-    (function(){
-      const t = localStorage.getItem('theme');
-      if (t === 'dark' || t === 'light') {
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.style.colorScheme = t;
-      }
-    })();
-  </script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <link rel="stylesheet" href="theme.css" />
   <style>
-    :root{
-      --ink:#111827;
-      --muted:#4b5563;
-      --accent:#1d4ed8;
-      --bg:#ffffff;
-      --panel:#f3f4f6;
-      --warn:#b45309;
-      --danger:#b91c1c;
-      --ok:#065f46;
-      --border:#e5e7eb;
-      --card:#ffffff;
-      --callout:#f8fafc;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-
-    :root[data-theme="dark"]{
-      --ink:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.68);
-      --accent:#a99cff;
-      --bg:#0b1220;
-      --panel:rgba(255,255,255,.07);
-      --warn:#ffcc66;
-      --danger:#ff8a8a;
-      --ok:#6ee7b7;
-      --border:rgba(255,255,255,.14);
-      --card:#141d2e;
-      --callout:rgba(255,255,255,.045);
-    }
-
-    @media (prefers-color-scheme: dark){
-      :root:not([data-theme]){
-        --ink:rgba(255,255,255,.92); --muted:rgba(255,255,255,.68); --accent:#a99cff;
-        --bg:#0b1220; --panel:rgba(255,255,255,.07); --warn:#ffcc66; --danger:#ff8a8a;
-        --ok:#6ee7b7; --border:rgba(255,255,255,.14); --card:#141d2e; --callout:rgba(255,255,255,.045);
-      }
-    }
-
     body{font-family:var(--sans); color:var(--ink); background:radial-gradient(800px 360px at 18% -10%,rgba(124,92,255,.18),transparent 62%),var(--bg); margin:0;}
     header{padding:22px 20px; border-bottom:1px solid var(--border); background:var(--callout);}
     .header-inner{max-width:1040px; margin:0 auto; display:flex; align-items:flex-start; justify-content:space-between; gap:18px;}
@@ -133,7 +92,7 @@
     </div>
     <div class="header-actions">
       <a class="nav-button" href="index.html">← Home</a>
-      <button class="nav-button" id="themeBtn" type="button"><span aria-hidden="true">🖥️</span> Theme</button>
+      <button class="nav-button" id="themeBtn" type="button"><span data-theme-icon aria-hidden="true">🖥️</span> Theme</button>
     </div>
   </div>
 </header>
@@ -560,21 +519,5 @@
   </div>
 
 </main>
-<script>
-  const themeBtn = document.getElementById('themeBtn');
-  const themeIcon = themeBtn.querySelector('span');
-  function savedTheme(){ const t = localStorage.getItem('theme'); return t === 'dark' || t === 'light' ? t : 'system'; }
-  function applyTheme(theme){
-    if(theme === 'system') { document.documentElement.removeAttribute('data-theme'); document.documentElement.style.colorScheme = ''; }
-    else { document.documentElement.setAttribute('data-theme', theme); document.documentElement.style.colorScheme = theme; }
-    localStorage.setItem('theme', theme);
-    const config = {system:['🖥️','System'],dark:['🌙','Dark'],light:['☀️','Light']}[theme];
-    themeIcon.textContent = config[0];
-    themeBtn.title = `Theme: ${config[1]}. Click to change.`;
-    themeBtn.setAttribute('aria-label', `Theme: ${config[1]}. Click to change theme.`);
-  }
-  themeBtn.addEventListener('click', () => { const order=['system','dark','light']; applyTheme(order[(order.indexOf(savedTheme())+1)%order.length]); });
-  applyTheme(savedTheme());
-</script>
 </body>
 </html>

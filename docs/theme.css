@@ -1,0 +1,101 @@
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --surface: rgba(255,255,255,.76);
+  --surface-strong: #ffffff;
+  --surface-2: rgba(255,255,255,.92);
+  --text: #1f2937;
+  --ink: var(--text);
+  --muted: #586174;
+  --border: rgba(17,24,39,.14);
+  --shadow: 0 12px 30px rgba(17,24,39,.10);
+  --control-bg: rgba(255,255,255,.58);
+  --raised-start: rgba(255,255,255,.82);
+  --raised-end: rgba(255,255,255,.56);
+  --hover-start: rgba(91,92,255,.12);
+  --hover-end: rgba(255,255,255,.72);
+  --icon-bg: rgba(255,255,255,.72);
+  --accent: #5b5cff;
+  --accent-strong: #5145d8;
+  --accent-2: #087f70;
+  --warn: #9a6200;
+  --danger: #b42318;
+  --ok: #047857;
+  --glow-1: rgba(124,92,255,.20);
+  --glow-2: rgba(22,194,161,.16);
+  --glow-3: rgba(255,204,102,.10);
+  --panel: var(--surface);
+  --card: var(--surface-strong);
+  --callout: rgba(255,255,255,.58);
+  --radius: 18px;
+  --radius-sm: 14px;
+  --max: 1100px;
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --sans: var(--font);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #080d18;
+  --surface: rgba(17,24,39,.82);
+  --surface-strong: #141d2e;
+  --surface-2: rgba(30,41,59,.94);
+  --text: #f3f4f6;
+  --ink: var(--text);
+  --muted: #c3cad6;
+  --border: rgba(255,255,255,.16);
+  --shadow: 0 12px 30px rgba(0,0,0,.35);
+  --control-bg: rgba(255,255,255,.055);
+  --raised-start: rgba(255,255,255,.085);
+  --raised-end: rgba(255,255,255,.035);
+  --hover-start: rgba(124,92,255,.18);
+  --hover-end: rgba(255,255,255,.045);
+  --icon-bg: rgba(255,255,255,.08);
+  --accent: #9b87ff;
+  --accent-strong: #7c62ff;
+  --accent-2: #35d8b8;
+  --warn: #ffd477;
+  --danger: #ff8a8a;
+  --ok: #6ee7b7;
+  --glow-1: rgba(124,92,255,.30);
+  --glow-2: rgba(22,194,161,.22);
+  --glow-3: rgba(255,204,102,.10);
+  --panel: var(--surface);
+  --card: var(--surface-strong);
+  --callout: rgba(255,255,255,.045);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #080d18;
+    --surface: rgba(17,24,39,.82);
+    --surface-strong: #141d2e;
+    --surface-2: rgba(30,41,59,.94);
+    --text: #f3f4f6;
+    --ink: var(--text);
+    --muted: #c3cad6;
+    --border: rgba(255,255,255,.16);
+    --shadow: 0 12px 30px rgba(0,0,0,.35);
+    --control-bg: rgba(255,255,255,.055);
+    --raised-start: rgba(255,255,255,.085);
+    --raised-end: rgba(255,255,255,.035);
+    --hover-start: rgba(124,92,255,.18);
+    --hover-end: rgba(255,255,255,.045);
+    --icon-bg: rgba(255,255,255,.08);
+    --accent: #9b87ff;
+    --accent-strong: #7c62ff;
+    --accent-2: #35d8b8;
+    --warn: #ffd477;
+    --danger: #ff8a8a;
+    --ok: #6ee7b7;
+    --glow-1: rgba(124,92,255,.30);
+    --glow-2: rgba(22,194,161,.22);
+    --glow-3: rgba(255,204,102,.10);
+    --panel: var(--surface);
+    --card: var(--surface-strong);
+    --callout: rgba(255,255,255,.045);
+  }
+}

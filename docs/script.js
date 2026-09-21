@@ -26,16 +26,7 @@
   }
 
   function calculateMetrics(patient) {
-    const TBW = patient.weight;
-    const BMI = TBW / ((patient.height / 100) ** 2);
-    const IBW = patient.sex === 'male' ? 50 + 0.91 * (patient.height - 152.4) : 45.5 + 0.91 * (patient.height - 152.4);
-    const LBW = patient.sex === 'male'
-      ? 1.10 * TBW - 128 * ((TBW / patient.height) ** 2)
-      : 1.07 * TBW - 148 * ((TBW / patient.height) ** 2);
-    const FFM = patient.sex === 'male'
-      ? (9270 * TBW) / (6680 + 216 * BMI)
-      : (9270 * TBW) / (8780 + 244 * BMI);
-    return { TBW, BMI, IBW, LBW, FFM };
+    return window.AnesthesiaCalculations.bodyMetrics(patient);
   }
 
   function buildSections(patient, m) {
@@ -173,22 +164,11 @@
   let statusTimer;
   function showStatus(message) { actionStatus.textContent = message; clearTimeout(statusTimer); statusTimer = setTimeout(() => { actionStatus.textContent = ''; }, 3000); }
 
-  const themeBtn = $('#themeBtn'); const themeIcon = themeBtn.querySelector('span');
-  function savedTheme() { const value = localStorage.getItem('theme'); return value === 'dark' || value === 'light' ? value : 'system'; }
-  function applyTheme(theme) {
-    if (theme === 'system') { document.documentElement.removeAttribute('data-theme'); document.documentElement.style.colorScheme = ''; }
-    else { document.documentElement.setAttribute('data-theme', theme); document.documentElement.style.colorScheme = theme; }
-    localStorage.setItem('theme', theme);
-    const config = { system: ['🖥️', 'System'], dark: ['🌙', 'Dark'], light: ['☀️', 'Light'] }[theme];
-    themeIcon.textContent = config[0]; themeBtn.title = `Theme: ${config[1]}. Click to change.`; themeBtn.setAttribute('aria-label', `Theme: ${config[1]}. Click to change theme.`);
-  }
-
   form.addEventListener('submit', (event) => { event.preventDefault(); calculate(); });
   form.addEventListener('input', calculate); form.addEventListener('change', calculate); searchBox.addEventListener('input', filterResults);
   clearSearchBtn.addEventListener('click', () => { searchBox.value = ''; filterResults(); searchBox.focus(); });
   $('#resetBtn').addEventListener('click', () => { form.reset(); searchBox.value = ''; calculate(); });
   $('#copyBtn').addEventListener('click', copyReport); $('#csvBtn').addEventListener('click', downloadCsv); $('#printBtn').addEventListener('click', () => window.print());
-  themeBtn.addEventListener('click', () => { const order = ['system', 'dark', 'light']; applyTheme(order[(order.indexOf(savedTheme()) + 1) % order.length]); });
   window.addEventListener('keydown', (event) => { if (event.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) { event.preventDefault(); searchBox.focus(); } });
-  applyTheme(savedTheme()); calculate();
+  calculate();
 })();

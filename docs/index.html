@@ -4,74 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f6f7fb" />
   <title>Anesthesia Toolkit</title>
   <meta name="description" content="Local anesthesia practice toolkit: dosing calculators, pre-op guidance, checklists, and references." />
-
-  <!-- Prevent theme flash: apply saved theme before first paint -->
-  <script>
-    (function () {
-      const t = localStorage.getItem('theme'); // "dark" | "light" | "system" | null
-      if (t === 'dark' || t === 'light') {
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.style.colorScheme = t; // native controls match
-      } else {
-        // System theme: no explicit override; allow media query + browser default
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-    })();
-  </script>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Anesthesia Toolkit" />
+  <meta property="og:description" content="Anesthesia calculators, perioperative guidance, and bedside references." />
+  <meta property="og:image" content="https://julianlandaw.github.io/anesthesia/social-card.png" />
+  <meta property="og:url" content="https://julianlandaw.github.io/anesthesia/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <script src="theme.js"></script>
+  <script src="pwa.js" defer></script>
+  <link rel="stylesheet" href="theme.css" />
 
   <style>
-    /* =============== THEME TOKENS =============== */
-    /* Default (Dark) theme */
-    :root{
-      --bg: #0b1220;
-      --surface: rgba(255,255,255,.06);
-      --surface-2: rgba(255,255,255,.09);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --border: rgba(255,255,255,.12);
-      --shadow: 0 12px 30px rgba(0,0,0,.25);
-      --accent: #7c5cff;
-      --accent-2:#16c2a1;
-      --warn:#ffcc66;
-      --radius: 18px;
-      --radius-sm: 14px;
-      --max: 1100px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    }
-
-    /* Explicit Light theme when user selects it */
-    :root[data-theme="light"]{
-      --bg:#f6f7fb;
-      --surface: rgba(17,24,39,.05);
-      --surface-2: rgba(17,24,39,.08);
-      --text: rgba(17,24,39,.92);
-      --muted: rgba(17,24,39,.7);
-      --border: rgba(17,24,39,.12);
-      --shadow: 0 12px 30px rgba(17,24,39,.10);
-      --accent:#5b5cff;
-      --accent-2:#0fb49a;
-      --warn:#c07a00;
-    }
-
-    /* Follow system preference only when user hasn't chosen a theme */
-    @media (prefers-color-scheme: light){
-      :root:not([data-theme]){
-        --bg:#f6f7fb;
-        --surface: rgba(17,24,39,.05);
-        --surface-2: rgba(17,24,39,.08);
-        --text: rgba(17,24,39,.92);
-        --muted: rgba(17,24,39,.7);
-        --border: rgba(17,24,39,.12);
-        --shadow: 0 12px 30px rgba(17,24,39,.10);
-        --accent:#5b5cff;
-        --accent-2:#0fb49a;
-        --warn:#c07a00;
-      }
-    }
-
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -79,9 +27,9 @@
       font-family: var(--font);
       color: var(--text);
       background:
-        radial-gradient(900px 400px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
-        radial-gradient(900px 400px at 90% 0%, rgba(22,194,161,.28), transparent 55%),
-        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.15), transparent 60%),
+        radial-gradient(900px 400px at 20% -10%, var(--glow-1), transparent 60%),
+        radial-gradient(900px 400px at 90% 0%, var(--glow-2), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, var(--glow-3), transparent 60%),
         var(--bg);
       line-height: 1.35;
     }
@@ -123,7 +71,7 @@
       padding:9px 12px;
       border: 1px solid var(--border);
       border-radius: 999px;
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
     }
     .pill input{
       border:0; outline:0; background:transparent; color:var(--text);
@@ -135,12 +83,12 @@
       font-size:12px; color:var(--muted);
       padding:2px 8px; border-radius:999px;
       border:1px solid var(--border);
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
     }
 
     button.iconbtn{
       border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
       color: var(--text);
       border-radius: 999px;
       padding: 9px 12px;
@@ -152,7 +100,7 @@
       position:relative;
       white-space:nowrap;
     }
-    button.iconbtn:hover{background: rgba(255,255,255,.06)}
+    button.iconbtn:hover{background: var(--surface-2)}
     button.iconbtn:active{transform: translateY(1px)}
 
     /* Optional polish: subtle mode badge that doesn't clutter */
@@ -164,7 +112,7 @@
       padding: 3px 8px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
       color: var(--muted);
     }
 
@@ -174,7 +122,7 @@
       padding:22px 20px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      background: linear-gradient(180deg, var(--raised-start), var(--raised-end));
       box-shadow: var(--shadow);
     }
     .hero h2{
@@ -193,7 +141,7 @@
       font-size: 12px;
       color: var(--muted);
       border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
       padding: 6px 10px;
       border-radius: 999px;
     }
@@ -220,7 +168,7 @@
       border: 1px solid var(--border);
       border-radius: 999px;
       padding: 5px 10px;
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
     }
 
     /* Cards grid */
@@ -235,7 +183,7 @@
       padding: 14px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      background: linear-gradient(180deg, var(--raised-start), var(--raised-end));
       transition: transform .12s ease, border-color .15s ease, background .15s ease;
       position:relative;
       overflow:hidden;
@@ -243,7 +191,7 @@
     .card:hover{
       transform: translateY(-2px);
       border-color: rgba(124,92,255,.35);
-      background: linear-gradient(180deg, rgba(124,92,255,.12), rgba(255,255,255,.02));
+      background: linear-gradient(180deg, var(--hover-start), var(--hover-end));
     }
     .card:active{transform: translateY(0px)}
     .card .row{
@@ -251,7 +199,7 @@
     }
     .icon{
       width: 42px; height: 42px; border-radius: 14px;
-      background: rgba(255,255,255,.06);
+      background: var(--icon-bg);
       border: 1px solid var(--border);
       display:grid; place-items:center; flex:0 0 auto;
     }
@@ -266,7 +214,7 @@
       padding: 4px 9px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
       color: var(--muted);
     }
     .tag.accent{border-color: rgba(124,92,255,.35); color: var(--text)}
@@ -275,7 +223,7 @@
     .go{
       position:absolute; right:12px; top:12px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
+      background: var(--control-bg);
       border-radius: 999px;
       padding: 6px 9px;
       font-size: 12px;
@@ -343,7 +291,7 @@
         </div>
 
         <button class="iconbtn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span aria-hidden="true">🖥️</span> Theme
+          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
         </button>
       </div>
     </header>
@@ -513,7 +461,7 @@
     </section>
 
     <footer>
-      <div>© <span id="year"></span> Anesthesia Toolkit • Local-only HTML</div>
+      <div>© <span id="year"></span> Anesthesia Toolkit • Available offline after first visit</div>
       <div>
         <a class="smalllink" href="#" id="clearSearch">Clear search</a>
         <span aria-hidden="true"> · </span>
@@ -523,58 +471,6 @@
   </div>
 
   <script>
-    // =============================
-    // THEME: Dark -> Light -> System
-    // =============================
-    const themeBtn = document.getElementById('themeBtn');
-
-    function getSavedTheme(){
-      const t = localStorage.getItem('theme');
-      return (t === 'dark' || t === 'light' || t === 'system') ? t : 'system';
-    }
-
-    function applyTheme(mode){ // "dark" | "light" | "system"
-      if (mode === 'dark' || mode === 'light') {
-        document.documentElement.setAttribute('data-theme', mode);
-        document.documentElement.style.colorScheme = mode; // native controls match
-      } else {
-        // system: remove explicit override; CSS media query handles palette
-        document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.colorScheme = '';
-      }
-      localStorage.setItem('theme', mode);
-      updateThemeButton(mode);
-    }
-
-    function updateThemeButton(mode){
-      const icon = (mode === 'dark') ? '🌙' : (mode === 'light') ? '☀️' : '🖥️';
-      const label = (mode === 'dark') ? 'Dark' : (mode === 'light') ? 'Light' : 'System';
-      themeBtn.querySelector('span').textContent = icon;
-
-      // Optional polish: compact button + subtle badge
-      themeBtn.setAttribute('data-mode', label);
-      themeBtn.title = `Theme: ${label} (click to change)`;
-      themeBtn.setAttribute('aria-label', `Theme: ${label}. Click to switch theme.`);
-    }
-
-    // Initialize button state to what is currently saved (head script already applied it)
-    updateThemeButton(getSavedTheme());
-
-    themeBtn?.addEventListener('click', () => {
-      const current = getSavedTheme();
-      const next = (current === 'dark') ? 'light' : (current === 'light') ? 'system' : 'dark';
-      applyTheme(next);
-    });
-
-    // If user is in "system" mode and OS preference changes while page is open,
-    // our CSS already adapts; we just keep the label/icon consistent.
-    if (window.matchMedia) {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      mq.addEventListener?.('change', () => {
-        if (getSavedTheme() === 'system') updateThemeButton('system');
-      });
-    }
-
     // =============================
     // SEARCH / FILTER
     // =============================

@@ -302,6 +302,7 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#main">Skip to calculator</a>
   <div class="container">
     <header class="topbar">
       <div class="left">
@@ -328,17 +329,13 @@
       </div>
     </header>
 
-    <section class="hero">
-      <h2>Structured ABG interpretation at the bedside</h2>
-      <p>
-        Enter pH, PaCO₂, HCO₃⁻, PaO₂, and FiO₂. This tool estimates the <b>primary disorder</b>,
-        checks <b>expected compensation</b>, and can calculate <b>A–a gradient</b> and <b>P/F ratio</b>.
-        Optional labs enable <b>anion gap</b> and <b>delta gap</b>.
-      </p>
-      <div class="note">
-        <b>Decision-support only.</b> Results depend on assumptions and may not apply in all clinical contexts
-        (e.g., mixed disorders, ventilator changes, chronic CO₂ retention, altitude). Verify clinically.
-      </div>
+    <main id="main">
+    <section class="hero compact-hero" aria-label="Clinical-use note">
+      <p><b>Adult decision support.</b> Enter the three core acid–base values; add oxygenation or chemistry only when needed.</p>
+      <details>
+        <summary>About this tool</summary>
+        <p>Rules are approximations and may not apply to mixed disorders, acute ventilator changes, chronic CO₂ retention, altitude, or other complex contexts.</p>
+      </details>
     </section>
 
     <div class="grid">
@@ -346,7 +343,7 @@
       <section class="panel" aria-label="Inputs">
         <h3>Inputs</h3>
 
-        <div class="row">
+        <div class="row three">
           <div>
             <label for="ph">pH</label>
             <input id="ph" type="number" inputmode="decimal" step="0.01" min="6.8" max="7.8" placeholder="e.g., 7.32" />
@@ -355,30 +352,30 @@
             <label for="paco2">PaCO₂ (mmHg)</label>
             <input id="paco2" type="number" inputmode="decimal" step="1" min="10" max="120" placeholder="e.g., 52" />
           </div>
-        </div>
-
-        <div class="row">
           <div>
             <label for="hco3">HCO₃⁻ (mEq/L)</label>
             <input id="hco3" type="number" inputmode="decimal" step="0.1" min="2" max="60" placeholder="e.g., 24.0" />
           </div>
+        </div>
+
+        <details class="secondary-details">
+          <summary>Add oxygenation analysis</summary>
+        <div class="row three details-body">
           <div>
             <label for="pao2">PaO₂ (mmHg)</label>
             <input id="pao2" type="number" inputmode="decimal" step="1" min="10" max="600" placeholder="e.g., 90" />
           </div>
-        </div>
-
-        <div class="row">
           <div>
             <label for="fio2">FiO₂</label>
-            <input id="fio2" type="number" inputmode="decimal" step="0.01" min="0.21" max="1" placeholder="e.g., 0.50" />
-            <div class="help">Enter fraction 0.21–1.0. If you type 50, it will be interpreted as 0.50.</div>
+            <input id="fio2" type="number" inputmode="decimal" step="0.01" min="0.21" max="100" placeholder="0.50 or 50" />
+            <div class="help">Fraction 0.21–1.0 or percent 21–100.</div>
           </div>
           <div>
             <label for="age">Age (optional, years)</label>
             <input id="age" type="number" inputmode="numeric" step="1" min="0" max="120" placeholder="e.g., 65" />
           </div>
         </div>
+        </details>
 
         <details>
           <summary>Advanced oxygenation settings (optional)</summary>
@@ -425,11 +422,7 @@
           </p>
         </details>
 
-        <div class="hr"></div>
-
-        <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">
-          📋 Copy summary
-        </button>
+        <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
 
         <details>
           <summary>Compensation formulas used</summary>
@@ -448,62 +441,58 @@
 
       <!-- Outputs -->
       <section class="panel" aria-label="Results">
-        <h3>Interpretation</h3>
+        <div class="panel-heading">
+          <h3>Interpretation</h3>
+          <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">📋 Copy</button>
+        </div>
 
         <div class="results">
-          <div class="metric">
-            <h4>Acid–base status</h4>
-            <div class="value" id="statusOut">—</div>
-            <div class="sub" id="statusSub">Enter values to interpret.</div>
-          </div>
-
-          <div class="metric">
-            <h4>Primary process (best fit)</h4>
+          <div class="metric full result-primary">
+            <h4>Acid–base interpretation</h4>
             <div class="value" id="primaryOut">—</div>
             <div class="sub" id="primarySub">—</div>
-          </div>
-
-          <div class="metric full">
-            <h4>Compensation check</h4>
-            <div class="value" id="compOut">—</div>
+            <div class="sub"><strong id="statusOut">—</strong> <span id="statusSub">Enter values to interpret.</span></div>
+            <div class="value" id="compOut" style="font-size:16px;margin-top:10px;">—</div>
             <div class="sub" id="compSub">—</div>
             <div class="badge" id="compBadge">Awaiting inputs…</div>
           </div>
 
-          <div class="metric">
+          <details class="metric full secondary-details">
+            <summary>Optional oxygenation and chemistry results</summary>
+            <div class="result-inline details-body">
+          <div>
             <h4>Oxygenation</h4>
-            <div class="value" id="pfOut">—</div>
+            <strong id="pfOut">—</strong>
             <div class="sub" id="oxySub">P/F ratio (PaO₂/FiO₂) shown when both entered.</div>
           </div>
 
-          <div class="metric">
+          <div>
             <h4>A–a gradient (optional)</h4>
-            <div class="value" id="aaOut">—</div>
+            <strong id="aaOut">—</strong>
             <div class="sub" id="aaSub">Requires PaO₂, PaCO₂, FiO₂.</div>
           </div>
 
-          <div class="metric full">
+          <div>
             <h4>Anion gap (optional)</h4>
-            <div class="value" id="agOut">—</div>
+            <strong id="agOut">—</strong>
             <div class="sub" id="agSub">Requires Na, Cl, HCO₃.</div>
           </div>
-
-          <div class="metric full">
-            <h4>Copy preview</h4>
-            <div class="sub" id="copyPreview">Fill in ABG values to generate a summary.</div>
-          </div>
+            </div>
+          </details>
+          <span id="copyPreview" hidden></span>
         </div>
       </section>
 
-      <section class="panel full" aria-label="Notes">
-        <h3>Bedside notes (non-prescriptive)</h3>
+      <details class="panel full workflow-step" aria-label="Clinical notes">
+        <summary>Clinical notes</summary>
         <p style="margin:0;color:var(--muted);font-size:13px;max-width:105ch;">
           • Compensation rules are approximations; acute ventilator changes and chronic respiratory disease can mislead “best fit” logic.<br/>
           • Consider lactate, ketones, toxidromes, renal function, and clinical trajectory for metabolic processes.<br/>
           • On high FiO₂, A–a can be large even with modest shunt; interpret with clinical context and ventilation/perfusion factors.
         </p>
-      </section>
+      </details>
     </div>
+    </main>
 
     <div class="footer">
       <div>© <span id="year"></span> ABG Interpreter • Available offline after first visit</div>
@@ -553,15 +542,30 @@
       agSub: document.getElementById('agSub'),
 
       copyPreview: document.getElementById('copyPreview'),
+      inputError: document.getElementById('inputError'),
       copyBtn: document.getElementById('copyBtn'),
       resetBtn: document.getElementById('resetBtn'),
       toast: document.getElementById('toast')
     };
 
     function isNum(x){ return Number.isFinite(x); }
+    let validationErrors = [];
+    const fieldNames = {ph:'pH', paco2:'PaCO₂', hco3:'HCO₃⁻', pao2:'PaO₂', fio2:'FiO₂', age:'Age', pb:'Barometric pressure', ph2o:'Water-vapor pressure', rq:'Respiratory quotient', na:'Sodium', cl:'Chloride', alb:'Albumin'};
     function n(el){
+      if (el.value.trim() === '') {
+        el.removeAttribute('aria-invalid');
+        return NaN;
+      }
       const v = parseFloat(el.value);
-      return Number.isFinite(v) ? v : NaN;
+      let valid = Number.isFinite(v);
+      if (el.id === 'fio2') valid = valid && ((v >= 0.21 && v <= 1) || (v >= 21 && v <= 100));
+      else {
+        if (el.min !== '') valid = valid && v >= Number(el.min);
+        if (el.max !== '') valid = valid && v <= Number(el.max);
+      }
+      el.toggleAttribute('aria-invalid', !valid);
+      if (!valid) validationErrors.push(`${fieldNames[el.id] || el.id} is outside the accepted range.`);
+      return valid ? v : NaN;
     }
     function round(x, d=1){
       const p = Math.pow(10,d);
@@ -826,6 +830,7 @@
     }
 
     function recalc(){
+      validationErrors = [];
       const ph = n(els.ph);
       const paco2 = n(els.paco2);
       const hco3 = n(els.hco3);
@@ -841,6 +846,7 @@
       const na = n(els.na);
       const cl = n(els.cl);
       const alb = n(els.alb);
+      els.inputError.textContent = [...new Set(validationErrors)].join(' ');
 
       // Status
       const status = acidBaseStatus(ph);

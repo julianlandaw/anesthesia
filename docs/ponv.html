@@ -370,6 +370,7 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#main">Skip to calculator</a>
   <div class="container">
     <header class="topbar">
       <div class="left">
@@ -396,16 +397,13 @@
       </div>
     </header>
 
-    <section class="hero">
-      <h2>Fast PONV risk stratification with a clear prophylaxis plan</h2>
-      <p>
-        Check Apfel risk factors, optionally add modifiable anesthesia choices, and build a prophylaxis plan.
-        Use <b>Copy summary</b> to generate a one-line note.
-      </p>
-      <div class="note">
-        <b>Decision-support only.</b> This tool provides general guidance prompts and common class options.
-        Verify with patient-specific factors, contraindications (e.g., QT risk), institutional protocols, and current labeling/guidelines.
-      </div>
+    <main id="main">
+    <section class="hero compact-hero" aria-label="Clinical-use note">
+      <p><b>Adult decision support.</b> Score the four Apfel factors, then build a prophylaxis plan only if needed.</p>
+      <details>
+        <summary>About this tool</summary>
+        <p>Verify patient-specific contraindications, QT risk, interactions, institutional protocols, and current labeling or guidance.</p>
+      </details>
     </section>
 
     <div class="grid">
@@ -438,32 +436,33 @@
         </div>
 
         <div class="check">
-          <input type="checkbox" id="rfOpioids" aria-label="Postoperative opioids planned or likely" checked />
+          <input type="checkbox" id="rfOpioids" aria-label="Postoperative opioids planned or likely" />
           <div>
             <div class="t">Post-op opioids planned/likely</div>
             <div class="d">Expected need for opioids in PACU/early post-op</div>
           </div>
         </div>
 
-        <div class="hr"></div>
-
-        <h3 style="margin-top:0;">Modifiable anesthesia choices (optional)</h3>
+        <details class="secondary-details">
+        <summary>Modify baseline risk and add notes</summary>
+        <div class="details-body">
+        <h3 style="margin-top:0;">Anesthesia choices</h3>
 
         <div class="row">
           <div>
             <label for="anesthetic">Primary anesthetic</label>
             <select id="anesthetic">
-              <option value="volatile" selected>Volatile-based</option>
+              <option value="volatile">Volatile-based</option>
               <option value="tiva">TIVA/propofol-heavy</option>
-              <option value="mixed">Mixed/unsure</option>
+              <option value="mixed" selected>Mixed/unsure</option>
             </select>
           </div>
           <div>
             <label for="nitrous">Nitrous planned?</label>
             <select id="nitrous">
-              <option value="no" selected>No</option>
+              <option value="no">No</option>
               <option value="yes">Yes</option>
-              <option value="unknown">Unknown</option>
+              <option value="unknown" selected>Unknown</option>
             </select>
           </div>
         </div>
@@ -483,12 +482,8 @@
             <input id="notes" type="text" placeholder="e.g., QT risk, scopolamine contraindication…" />
           </div>
         </div>
-
-        <div class="hr"></div>
-
-        <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">
-          📋 Copy summary
-        </button>
+        </div>
+        </details>
 
         <details>
           <summary>About Apfel risk (how score maps to risk)</summary>
@@ -501,7 +496,10 @@
 
       <!-- Results -->
       <section class="panel" aria-label="Results">
-        <h3>Risk & suggestion</h3>
+        <div class="panel-heading">
+          <h3>Risk and suggestion</h3>
+          <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">📋 Copy</button>
+        </div>
 
         <div class="results">
           <div class="metric">
@@ -516,28 +514,29 @@
             <div class="sub" id="riskSub">Varies by population & practice</div>
           </div>
 
-          <div class="metric full">
+          <div class="metric full result-primary">
             <h4>Suggested prophylaxis intensity (non-prescriptive)</h4>
             <div class="value" id="tierOut">—</div>
             <div class="sub" id="tierSub">—</div>
             <div class="badge" id="tierBadge">Awaiting inputs…</div>
           </div>
 
-          <div class="metric full">
+          <details class="metric full secondary-details">
+            <summary>Modifiable-factor prompts</summary>
+            <div class="details-body">
             <h4>Modifiable factors (prompts)</h4>
             <div class="pillrow" id="modsRow"></div>
             <div class="sub" id="modsText" style="margin-top:8px;">—</div>
-          </div>
-
-          <div class="metric full">
-            <h4>Copy preview</h4>
-            <div class="sub" id="copyPreview">Check risk factors to generate a summary.</div>
-          </div>
+            </div>
+          </details>
+          <span id="copyPreview" hidden></span>
         </div>
       </section>
 
       <!-- Plan builder -->
-      <section class="panel full" aria-label="Plan builder">
+      <details class="panel full workflow-step" id="planBuilder" aria-label="Plan builder">
+        <summary>Build prophylaxis plan</summary>
+        <div class="details-body">
         <h3>Prophylaxis plan builder</h3>
         <p style="margin:0;color:var(--muted);font-size:13px;max-width:100ch;">
           Select agents/classes appropriate for the patient and your local practice. The “Suggested set” highlights typical
@@ -604,9 +603,9 @@
 
         <div class="row">
           <div>
-            <label for="suggestSet">Suggested set (auto)</label>
+            <label for="suggestSet">Plan intensity</label>
             <select id="suggestSet">
-              <option value="auto" selected>Auto (based on score)</option>
+              <option value="auto" selected>Based on current score</option>
               <option value="minimal">Minimal</option>
               <option value="moderate">Moderate</option>
               <option value="aggressive">Aggressive</option>
@@ -641,8 +640,10 @@
             <li><b>NK1 antagonist</b> (e.g., aprepitant): dosing varies by protocol; used mainly for higher-risk cases.</li>
           </ul>
         </details>
-      </section>
+        </div>
+      </details>
     </div>
+    </main>
 
     <div class="footer">
       <div>© <span id="year"></span> PONV Helper • Available offline after first visit</div>
@@ -885,14 +886,11 @@
     const apfelInputs = [els.rfFemale, els.rfNonsmoker, els.rfHx, els.rfOpioids];
     apfelInputs.forEach(cb => cb.addEventListener('change', () => {
       updateUI();
-      // If user has "auto" selection, keep it in sync when score changes
-      if (els.suggestSet.value === 'auto') maybeAutoSuggest();
     }));
 
     [els.anesthetic, els.nitrous, els.duration, els.notes].forEach(el => {
       el.addEventListener('change', () => {
         updateUI();
-        if (els.suggestSet.value === 'auto') maybeAutoSuggest();
       });
       el.addEventListener('input', updateUI);
     });
@@ -943,10 +941,10 @@
       els.rfFemale.checked = false;
       els.rfNonsmoker.checked = false;
       els.rfHx.checked = false;
-      els.rfOpioids.checked = true;
+      els.rfOpioids.checked = false;
 
-      els.anesthetic.value = 'volatile';
-      els.nitrous.value = 'no';
+      els.anesthetic.value = 'mixed';
+      els.nitrous.value = 'unknown';
       els.duration.value = 'unknown';
       els.notes.value = '';
 

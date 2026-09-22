@@ -60,6 +60,24 @@
     .badge.caution{border-color:#fde68a; background:#fffbeb; color:#92400e;}
 
     .footer{margin:26px 0 40px 0; padding-top:14px; border-top:1px solid var(--border); color:var(--muted); font-size:12px;}
+    .quick-reference{margin:0 0 18px; padding:16px; border:1px solid var(--border); border-radius:14px; background:var(--panel);}
+    .quick-head{display:flex; align-items:end; justify-content:space-between; gap:14px;}
+    .quick-head h2{margin:0 0 4px;}
+    .quick-head p{margin:0; color:var(--muted); font-size:13px;}
+    .quick-search{width:min(360px,100%); min-height:42px; padding:9px 11px; border:1px solid var(--border); border-radius:999px; color:var(--ink); background:var(--card);}
+    .quick-filters{display:flex; gap:7px; overflow-x:auto; margin-top:12px; padding-bottom:3px;}
+    .quick-filter{flex:0 0 auto; min-height:34px; padding:6px 11px; border:1px solid var(--border); border-radius:999px; color:var(--muted); background:var(--card); font-weight:700; cursor:pointer;}
+    .quick-filter.active{color:#fff; border-color:var(--accent); background:var(--accent);}
+    .quick-results{display:grid; gap:7px; margin-top:12px;}
+    .quick-row{display:grid; grid-template-columns:minmax(150px,1fr) 88px minmax(220px,1.5fr); gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--card); font-size:13px;}
+    .quick-row strong{font-size:13px;}
+    .quick-status{justify-self:start; padding:3px 7px; border-radius:999px; font-size:11px; font-weight:800; text-transform:uppercase;}
+    .quick-status.continue{color:var(--ok); background:color-mix(in srgb,var(--ok) 12%,transparent);}
+    .quick-status.hold{color:var(--danger); background:color-mix(in srgb,var(--danger) 12%,transparent);}
+    .quick-status.adjust{color:var(--warn); background:color-mix(in srgb,var(--warn) 12%,transparent);}
+    .quick-status.fasting{color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,transparent);}
+    .quick-row span:last-child{color:var(--muted);}
+    .quick-empty{padding:18px; color:var(--muted); text-align:center;}
 
     /* Print */
     @media print{
@@ -74,6 +92,10 @@
       .header-inner{flex-direction:column;}
       .header-actions{width:100%;}
       .nav-button{flex:1; text-align:center;}
+      .quick-head{align-items:stretch; flex-direction:column;}
+      .quick-search{width:100%;}
+      .quick-row{grid-template-columns:1fr auto;}
+      .quick-row span:last-child{grid-column:1/-1;}
     }
   </style>
   <link rel="stylesheet" href="enhancements.css" />
@@ -97,6 +119,27 @@
   </div>
 </header>
 <main>
+
+  <section class="quick-reference" aria-labelledby="quick-title">
+    <div class="quick-head">
+      <div>
+        <h2 id="quick-title">Quick medication and fasting lookup</h2>
+        <p>Default adult elective guidance; open the full sections below for exceptions and context.</p>
+      </div>
+      <label>
+        <span class="sr-only">Search medication or class</span>
+        <input class="quick-search" id="quickSearch" type="search" placeholder="Search medication or class…" autocomplete="off" />
+      </label>
+    </div>
+    <div class="quick-filters" aria-label="Guidance filters">
+      <button class="quick-filter active" type="button" data-quick-filter="all" aria-pressed="true">All</button>
+      <button class="quick-filter" type="button" data-quick-filter="continue" aria-pressed="false">Continue</button>
+      <button class="quick-filter" type="button" data-quick-filter="hold" aria-pressed="false">Hold</button>
+      <button class="quick-filter" type="button" data-quick-filter="adjust" aria-pressed="false">Adjust</button>
+      <button class="quick-filter" type="button" data-quick-filter="fasting" aria-pressed="false">Fasting</button>
+    </div>
+    <div class="quick-results" id="quickResults" aria-live="polite"></div>
+  </section>
 
   <nav class="toc" aria-label="Table of contents">
     <h2>Contents</h2>
@@ -519,5 +562,53 @@
   </div>
 
 </main>
+<script>
+  (() => {
+    const items = [
+      ['Clear liquids','fasting','Stop 2 hours before anesthesia/sedation'],
+      ['Light meal / non-fat solids','fasting','Minimum 6-hour fast'],
+      ['Fatty meal, meat, or fried food','fasting','Minimum 8-hour fast'],
+      ['Beta blockers','continue','Continue through day of surgery'],
+      ['Calcium channel blockers','continue','Usually continue'],
+      ['Statins','continue','Continue through day of surgery'],
+      ['Clonidine','continue','Continue; avoid rebound hypertension'],
+      ['Inhalers and asthma medications','continue','Continue'],
+      ['Anticonvulsants','continue','Continue; avoid missed doses'],
+      ['Parkinson medications','continue','Continue; timing is important'],
+      ['SGLT2 inhibitors','hold','Hold at least 3 days; 4 days for ertugliflozin'],
+      ['Sulfonylureas','hold','Hold on day of surgery'],
+      ['Metformin','hold','Typically hold on day of surgery'],
+      ['ACE inhibitors / ARBs','hold','Typically hold on day of surgery; individualize'],
+      ['Diuretics','hold','Typically hold on day of surgery; individualize'],
+      ['Basal insulin','adjust','Commonly give 50–80% based on timing and protocol'],
+      ['Meal-time insulin','hold','Hold while NPO; use correction protocol'],
+      ['GLP-1 receptor agonists','adjust','Usually continue; use symptom and risk-based mitigation'],
+      ['Antithrombotics','adjust','Indication-, drug-, renal-, and procedure-specific pathway'],
+      ['Herbal supplements','hold','Stop 1–2 weeks when feasible']
+    ];
+    const results = document.getElementById('quickResults');
+    const search = document.getElementById('quickSearch');
+    let filter = 'all';
+    function render(){
+      const query = search.value.trim().toLowerCase();
+      const matches = items.filter(([name,status,detail]) => (filter === 'all' || status === filter) && `${name} ${detail}`.toLowerCase().includes(query));
+      results.replaceChildren(...matches.map(([name,status,detail]) => {
+        const row = document.createElement('div'); row.className = 'quick-row';
+        const title = document.createElement('strong'); title.textContent = name;
+        const badge = document.createElement('span'); badge.className = `quick-status ${status}`; badge.textContent = status;
+        const text = document.createElement('span'); text.textContent = detail;
+        row.append(title,badge,text); return row;
+      }));
+      if (!matches.length) { const empty=document.createElement('div'); empty.className='quick-empty'; empty.textContent='No matching quick-reference items.'; results.append(empty); }
+    }
+    search.addEventListener('input', render);
+    document.querySelectorAll('[data-quick-filter]').forEach((button) => button.addEventListener('click', () => {
+      filter = button.dataset.quickFilter;
+      document.querySelectorAll('[data-quick-filter]').forEach((chip) => { const active=chip===button; chip.classList.toggle('active',active); chip.setAttribute('aria-pressed',String(active)); });
+      render();
+    }));
+    render();
+  })();
+</script>
 </body>
 </html>

@@ -334,6 +334,7 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#main">Skip to calculator</a>
   <div class="container">
     <header class="topbar">
       <div class="left">
@@ -360,16 +361,13 @@
       </div>
     </header>
 
-    <section class="hero">
-      <h2>Set lung-protective ventilation quickly with PBW-based TV targets</h2>
-      <p>
-        Enter sex and height to calculate <b>PBW</b>, then select a strategy to get a recommended <b>tidal volume range</b>.
-        Adjust RR to estimate <b>minute ventilation</b>. Use the copy button to generate a short charting note.
-      </p>
-      <div class="note">
-        <b>Decision-support only.</b> Verify with patient-specific factors (lung compliance, dead space, ARDS status, acid-base goals),
-        and local protocols. Always monitor pressures/volumes clinically.
-      </div>
+    <main id="main">
+    <section class="hero compact-hero" aria-label="Clinical-use note">
+      <p><b>Adult decision support.</b> Enter PBW inputs, choose a volume band, and adjust the resulting plan clinically.</p>
+      <details>
+        <summary>About this tool</summary>
+        <p>Verify against lung compliance, dead space, ARDS status, acid–base goals, delivered volumes and pressures, and local protocols.</p>
+      </details>
     </section>
 
     <div class="grid">
@@ -401,7 +399,7 @@
           <div>
             <label for="height">Height</label>
             <div class="inline">
-              <input id="height" type="number" inputmode="decimal" placeholder="e.g., 175" min="80" max="250" step="0.1" />
+              <input id="height" type="number" inputmode="decimal" placeholder="e.g., 175" step="0.1" />
               <select id="heightUnit" aria-label="Height unit">
                 <option value="cm" selected>cm</option>
                 <option value="in">in</option>
@@ -417,15 +415,17 @@
           </div>
         </div>
 
-        <div class="row three">
+        <details class="secondary-details">
+          <summary>Add charting details</summary>
+        <div class="row three details-body">
           <div>
             <label for="peep">PEEP (optional)</label>
             <input id="peep" type="number" inputmode="decimal" placeholder="e.g., 5" min="0" max="30" step="1" />
           </div>
           <div>
             <label for="fio2">FiO₂ (optional)</label>
-            <input id="fio2" type="number" inputmode="decimal" placeholder="e.g., 0.5" min="0.21" max="1" step="0.01" />
-            <div class="help">Enter fraction (0.21–1.0).</div>
+            <input id="fio2" type="number" inputmode="decimal" placeholder="0.5 or 50" min="0.21" max="100" step="0.01" />
+            <div class="help">Fraction 0.21–1.0 or percent 21–100.</div>
           </div>
           <div>
             <label for="mode">Mode (optional)</label>
@@ -438,6 +438,7 @@
             </select>
           </div>
         </div>
+        </details>
 
         <details>
           <summary>Custom TV band (optional)</summary>
@@ -457,11 +458,7 @@
           <p>Tip: A common “standard adult” band is 6–8; lung-protective is 4–6.</p>
         </details>
 
-        <div class="hr"></div>
-
-        <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">
-          📋 Copy summary
-        </button>
+        <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
 
         <details>
           <summary>Formulas used</summary>
@@ -475,67 +472,67 @@
 
       <!-- Outputs -->
       <section class="panel" aria-label="Results">
-        <h3>Results</h3>
+        <div class="panel-heading">
+          <h3>Ventilation plan</h3>
+          <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">📋 Copy</button>
+        </div>
 
         <div class="results">
-          <div class="metric">
+          <div class="metric result-primary">
             <h4>Predicted body weight (PBW)</h4>
             <div class="value" id="pbwOut">—</div>
             <div class="sub" id="heightCmOut">Height: —</div>
           </div>
 
-          <div class="metric">
+          <div class="metric result-primary">
             <h4>Recommended TV range</h4>
             <div class="value" id="tvRangeOut">—</div>
             <div class="sub" id="tvBandOut">Band: —</div>
           </div>
 
-          <div class="metric full">
+          <div class="metric full result-primary">
             <h4>Selected tidal volume (TV)</h4>
             <div class="value" id="tvOut">—</div>
 
             <div class="sliderwrap">
-              <div class="help" id="sliderHelp">Enter sex + height to enable TV selection.</div>
-              <div class="slidergrid">
-                <input id="tvSlider" type="range" aria-label="Selected tidal volume" min="200" max="700" step="10" value="420" disabled />
-                <input id="tvManual" type="number" aria-label="Selected tidal volume in milliliters" inputmode="numeric" min="50" max="2000" step="10" placeholder="TV (mL)" disabled />
+              <div class="help" id="sliderHelp">Enter formula sex and height to choose a tidal volume.</div>
+              <input id="tvSlider" type="hidden" value="" />
+              <input id="tvManual" type="number" aria-label="Selected tidal volume in milliliters" inputmode="numeric" min="50" max="2000" step="10" placeholder="TV (mL)" disabled />
+              <div class="preset-row" aria-label="Tidal-volume presets">
+                <button class="btn ghost" type="button" data-tv-preset="4">4 mL/kg</button>
+                <button class="btn ghost" type="button" data-tv-preset="6">6 mL/kg</button>
+                <button class="btn ghost" type="button" data-tv-preset="8">8 mL/kg</button>
               </div>
               <div class="help" id="tvPerKgOut">—</div>
               <div class="badge" id="tvBadge">Awaiting inputs…</div>
             </div>
           </div>
 
-          <div class="metric">
+          <div class="metric result-primary">
             <h4>Minute ventilation (MV)</h4>
             <div class="value" id="mvOut">—</div>
             <div class="sub">MV = TV × RR</div>
           </div>
 
           <div class="metric">
-            <h4>Quick note</h4>
-            <div class="sub" id="quickNote">
-              Use TV in mL/kg PBW, then titrate RR/PEEP/FiO₂ clinically and monitor pressures.
-            </div>
+            <h4>Context</h4>
             <div class="badge" id="contextBadge">—</div>
           </div>
-
-          <div class="metric full">
-            <h4>Copy preview</h4>
-            <div class="sub" id="copyPreview">Fill inputs to generate a one-line summary.</div>
-          </div>
+          <span id="copyPreview" hidden></span>
         </div>
       </section>
 
-      <section class="panel full" aria-label="Tips">
-        <h3>Adult practice tips (non-prescriptive)</h3>
+      <details class="panel full workflow-step" aria-label="Clinical notes">
+        <summary>Clinical notes</summary>
         <p style="margin:0;color:var(--muted);font-size:13px;max-width:95ch;">
           • Consider lung-protective strategy for most general anesthetics (especially high-risk lungs).<br/>
           • Reassess if high airway pressures, poor compliance, significant dead space, or acid-base goals require deviation.<br/>
           • In obesity/recruitment issues, PEEP titration and positioning matter; avoid over-distension.<br/>
           • Always confirm actual delivered TV (especially in PC/PS modes) and monitor plateau/driving pressures when relevant.
         </p>
-      </section>
+      </details>
     </div>
+    </main>
 
     <div class="footer">
       <div>© <span id="year"></span> Vent Settings Assistant • Available offline after first visit</div>
@@ -578,6 +575,8 @@
       mvOut: document.getElementById('mvOut'),
       contextBadge: document.getElementById('contextBadge'),
       copyPreview: document.getElementById('copyPreview'),
+      inputError: document.getElementById('inputError'),
+      presetButtons: Array.from(document.querySelectorAll('[data-tv-preset]')),
 
       copyBtn: document.getElementById('copyBtn'),
       resetBtn: document.getElementById('resetBtn'),
@@ -620,30 +619,8 @@
     }
 
     function setTvControlsEnabled(enabled){
-      els.tvSlider.disabled = !enabled;
       els.tvManual.disabled = !enabled;
-    }
-
-    function updateTvControls(pbw, band){
-      const {min: tvMin, max: tvMax} = window.AnesthesiaCalculations.tidalVolumeRange(pbw, band.min, band.max);
-
-      // Set slider bounds (rounded to tens for usability)
-      const sMin = Math.max(50, Math.floor(tvMin / 10) * 10);
-      const sMax = Math.max(sMin + 50, Math.ceil(tvMax / 10) * 10);
-
-      els.tvSlider.min = sMin;
-      els.tvSlider.max = sMax;
-      els.tvSlider.step = 10;
-
-      // If current slider value out of range, set to midpoint
-      const current = parseFloat(els.tvSlider.value);
-      const mid = Math.round(((tvMin + tvMax) / 2) / 10) * 10;
-
-      const next = (Number.isFinite(current) && current >= sMin && current <= sMax) ? current : mid;
-      els.tvSlider.value = next;
-      els.tvManual.value = next;
-
-      els.sliderHelp.textContent = `TV slider range: ${sMin}–${sMax} mL (recommended ${round0(tvMin)}–${round0(tvMax)} mL).`;
+      els.presetButtons.forEach((button) => { button.disabled = !enabled; });
     }
 
     function tvBadgeFor(mlPerKg){
@@ -687,6 +664,12 @@
       showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
     }
 
+    let lastPlanKey = '';
+    function markValidity(el, valid){
+      el.toggleAttribute('aria-invalid', !valid && el.value !== '');
+      return valid;
+    }
+
     function recalc(){
       const sex = els.sex.value;
       const h = parseNum(els.height);
@@ -700,9 +683,24 @@
       const mode = els.mode.value;
 
       const band = getBand();
+      const errors = [];
+      const heightValid = !els.height.value || (isNum(heightCm) && heightCm >= 80 && heightCm <= 250);
+      const rrValid = !els.rr.value || (isNum(rr) && rr >= 4 && rr <= 40);
+      const peepValid = !els.peep.value || (isNum(peep) && peep >= 0 && peep <= 30);
+      const rawFio2 = parseNum(els.fio2);
+      const fio2Valid = !els.fio2.value || (isNum(rawFio2) && ((rawFio2 >= 0.21 && rawFio2 <= 1) || (rawFio2 >= 21 && rawFio2 <= 100)));
+      markValidity(els.height, heightValid);
+      markValidity(els.rr, rrValid);
+      markValidity(els.peep, peepValid);
+      markValidity(els.fio2, fio2Valid);
+      if (!heightValid) errors.push('Height must be 80–250 cm (about 31–98 in).');
+      if (!rrValid) errors.push('RR must be 4–40/min.');
+      if (!peepValid) errors.push('PEEP must be 0–30 cm H₂O.');
+      if (!fio2Valid) errors.push('FiO₂ must be 0.21–1.0 or 21–100%.');
+      els.inputError.textContent = errors.join(' ');
 
       // Validate required inputs
-      const hasCore = (sex === 'male' || sex === 'female') && isNum(heightCm);
+      const hasCore = (sex === 'male' || sex === 'female') && isNum(heightCm) && heightValid;
 
       if (!hasCore){
         els.pbwOut.textContent = '—';
@@ -718,7 +716,8 @@
         els.tvBadge.textContent = 'Awaiting inputs…';
         els.tvBadge.className = 'badge';
         setTvControlsEnabled(false);
-        els.sliderHelp.textContent = 'Enter sex + height to enable TV selection.';
+        els.sliderHelp.textContent = 'Enter formula sex and a valid height to choose a tidal volume.';
+        recalc._summary = '';
         return;
       }
 
@@ -734,20 +733,25 @@
       els.tvRangeOut.textContent = `${round0(tvMin)}–${round0(tvMax)} mL`;
       els.tvBandOut.textContent = `Band: ${band.label}`;
 
-      // Enable and update TV controls
+      // Enable the selected-TV control. Reset to the band midpoint only when
+      // the patient or strategy changes; manual deviations remain visible.
       setTvControlsEnabled(true);
-      updateTvControls(pbw, band);
-
-      // Determine TV from manual/slider
+      const planKey = `${sex}|${round1(heightCm)}|${band.min}|${band.max}`;
+      if (planKey !== lastPlanKey || !els.tvManual.value) {
+        els.tvManual.value = Math.round(((tvMin + tvMax) / 2) / 10) * 10;
+        lastPlanKey = planKey;
+      }
       let tv = parseNum(els.tvManual);
-      if (!isNum(tv)) tv = parseFloat(els.tvSlider.value);
-
-      // Keep both in sync; clamp to slider bounds
-      const sMin = parseFloat(els.tvSlider.min);
-      const sMax = parseFloat(els.tvSlider.max);
-      tv = clamp(tv, sMin, sMax);
-      els.tvSlider.value = tv;
-      els.tvManual.value = tv;
+      const tvValid = isNum(tv) && tv >= 50 && tv <= 2000;
+      markValidity(els.tvManual, tvValid);
+      if (!tvValid) {
+        els.tvOut.textContent = '—';
+        els.tvPerKgOut.textContent = 'Enter 50–2000 mL.';
+        els.mvOut.textContent = '—';
+        els.copyPreview.textContent = '';
+        recalc._summary = '';
+        return;
+      }
 
       // Outputs
       els.tvOut.textContent = `${round0(tv)} mL`;
@@ -761,7 +765,7 @@
       els.tvBadge.textContent = b.text;
 
       // MV
-      const mv = (isNum(rr) ? (tv * rr) / 1000 : NaN);
+      const mv = (isNum(rr) && rrValid ? (tv * rr) / 1000 : NaN);
       els.mvOut.textContent = isNum(mv) ? `${round1(mv)} L/min` : '—';
 
       // Context badge (gentle prompts)
@@ -773,26 +777,29 @@
       els.contextBadge.textContent = cText;
 
       // Copy preview
-      const summary = buildSummary({
+      const canCopy = isNum(rr) && rrValid && peepValid && fio2Valid;
+      const summary = canCopy ? buildSummary({
         mode, sex, heightCm, pbw, tv,
-        rr: isNum(rr) ? rr : 0,
-        mv: isNum(mv) ? mv : 0,
+        rr,
+        mv,
         peep: isNum(peep) ? peep : NaN,
         fio2: isNum(fio2) ? fio2 : NaN,
         bandLabel: band.label
-      });
+      }) : '';
       els.copyPreview.textContent = summary;
       recalc._summary = summary;
     }
 
-    // Sync slider -> manual and manual -> slider
-    els.tvSlider.addEventListener('input', () => {
-      els.tvManual.value = els.tvSlider.value;
-      recalc();
-    });
-    els.tvManual.addEventListener('input', () => {
-      // Don't force recalc if disabled
-      recalc();
+    els.tvManual.addEventListener('input', recalc);
+    els.presetButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const sex = els.sex.value;
+        const heightCm = heightToCm(parseNum(els.height), els.heightUnit.value);
+        const pbw = pbwKg(sex, heightCm);
+        if (!isNum(pbw)) return;
+        els.tvManual.value = Math.round((pbw * Number(button.dataset.tvPreset)) / 10) * 10;
+        recalc();
+      });
     });
 
     // Recalc on any relevant input
@@ -845,6 +852,7 @@
       els.customMax.value = 8;
       els.tvSlider.value = 420;
       els.tvManual.value = '';
+      lastPlanKey = '';
       recalc();
       els.height.focus();
     });

@@ -12,12 +12,14 @@
   const formError = $('#formError');
   const actionStatus = $('#actionStatus');
   let report = null;
+  let selectedCategory = 'all';
 
   const fmt = (value, digits = 1) => Number(value).toFixed(digits);
   const range = (low, high, unit, digits = 1) => `${fmt(low, digits)}–${fmt(high, digits)} ${unit}`;
 
   function getPatient() {
     const patient = { sex: fields.sex.value, age: Number(fields.age.value), height: Number(fields.height.value), weight: Number(fields.weight.value) };
+    if (patient.sex !== 'male' && patient.sex !== 'female') throw new Error('Choose the formula sex used for weight calculations.');
     const limits = { age: [18, 120, 'Age'], height: [120, 230, 'Height'], weight: [20, 350, 'Weight'] };
     for (const [key, [min, max, label]] of Object.entries(limits)) {
       if (!Number.isFinite(patient[key]) || patient[key] < min || patient[key] > max) throw new Error(`${label} must be between ${min} and ${max}.`);
@@ -94,8 +96,8 @@
   function renderSections(sections) {
     const fragment = document.createDocumentFragment();
     sections.forEach((section) => {
-      const wrapper = document.createElement('section'); wrapper.className = 'dose-section';
-      const heading = document.createElement('h3'); heading.textContent = section.title;
+      const wrapper = document.createElement('details'); wrapper.className = 'dose-section'; wrapper.dataset.category = section.title.toLowerCase();
+      const heading = document.createElement('summary'); heading.textContent = section.title;
       const scroll = document.createElement('div'); scroll.className = 'table-scroll';
       const table = document.createElement('table'); table.className = 'dose-table';
       table.innerHTML = '<thead><tr><th scope="col">Medication</th><th scope="col">Reference range</th><th scope="col">Basis</th><th scope="col">Calculated dose</th></tr></thead>';
@@ -135,7 +137,10 @@
     document.querySelectorAll('.dose-section').forEach((section) => {
       let sectionVisible = 0;
       section.querySelectorAll('tbody tr').forEach((tr) => { const matches = !query || tr.dataset.search.includes(query); tr.hidden = !matches; if (matches) sectionVisible += 1; });
-      section.hidden = sectionVisible === 0; visible += sectionVisible;
+      const categoryMatches = selectedCategory === 'all' || section.dataset.category === selectedCategory;
+      section.hidden = sectionVisible === 0 || !categoryMatches;
+      if (categoryMatches) visible += sectionVisible;
+      if (query && categoryMatches && sectionVisible) section.open = true;
     });
     countLabel.textContent = `${visible} medication ${visible === 1 ? 'entry' : 'entries'}${query ? ` matching “${searchBox.value.trim()}”` : ''}`;
     emptyState.hidden = visible !== 0; clearSearchBtn.hidden = !query;
@@ -166,8 +171,27 @@
 
   form.addEventListener('submit', (event) => { event.preventDefault(); calculate(); });
   form.addEventListener('input', calculate); form.addEventListener('change', calculate); searchBox.addEventListener('input', filterResults);
+  document.querySelectorAll('.category-chip').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedCategory = button.dataset.category;
+      document.querySelectorAll('.category-chip').forEach((chip) => {
+        const active = chip === button;
+        chip.classList.toggle('active', active);
+        chip.setAttribute('aria-pressed', String(active));
+      });
+      filterResults();
+    });
+  });
   clearSearchBtn.addEventListener('click', () => { searchBox.value = ''; filterResults(); searchBox.focus(); });
-  $('#resetBtn').addEventListener('click', () => { form.reset(); searchBox.value = ''; calculate(); });
+  $('#resetBtn').addEventListener('click', () => {
+    form.reset(); searchBox.value = ''; selectedCategory = 'all';
+    document.querySelectorAll('.category-chip').forEach((chip) => {
+      const active = chip.dataset.category === 'all';
+      chip.classList.toggle('active', active);
+      chip.setAttribute('aria-pressed', String(active));
+    });
+    calculate();
+  });
   $('#copyBtn').addEventListener('click', copyReport); $('#csvBtn').addEventListener('click', downloadCsv); $('#printBtn').addEventListener('click', () => window.print());
   window.addEventListener('keydown', (event) => { if (event.key === '/' && !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) { event.preventDefault(); searchBox.focus(); } });
   calculate();

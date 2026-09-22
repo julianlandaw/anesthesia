@@ -335,6 +335,7 @@
 </head>
 
 <body>
+  <a class="skip-link" href="#main">Skip to calculator</a>
   <div class="container">
     <header class="topbar">
       <div class="left">
@@ -360,17 +361,13 @@
       </div>
     </header>
 
-    <section class="hero">
-      <h2>Fast structured pre-op cardiac risk snapshot</h2>
-      <p>
-        Use this as a quick, consistent way to summarize <b>surgical risk</b>, <b>functional capacity</b>,
-        and <b>RCRI</b>, and to flag <b>active cardiac condition red flags</b>.
-        Output is phrased as prompts (decision-support only).
-      </p>
-      <div class="note">
-        <b>Decision-support only.</b> This tool does not replace clinical judgment, specialty evaluation,
-        or your institution’s protocols. Timing of surgery, urgency, symptoms, and patient trajectory matter.
-      </div>
+    <main id="main">
+    <section class="hero compact-hero" aria-label="Clinical-use note">
+      <p><b>Adult decision support.</b> Check active-condition red flags, then add procedural context and RCRI factors.</p>
+      <details>
+        <summary>About this tool</summary>
+        <p>This snapshot does not replace clinical judgment, specialty evaluation, or institutional pathways. Urgency, symptoms, and trajectory matter.</p>
+      </details>
     </section>
 
     <div class="grid">
@@ -422,14 +419,13 @@
             <li>Heavy housework (scrubbing floors, moving furniture)</li>
           </ul>
         </details>
+        <p class="input-error" id="classificationWarning" role="status" aria-live="polite"></p>
 
-        <div class="hr"></div>
-
-        <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">📋 Copy summary</button>
       </section>
 
       <!-- Inputs: Risk indices -->
-      <section class="panel" aria-label="RCRI and red flags">
+      <section class="panel risk-panel" aria-label="RCRI and red flags">
+        <div class="rcri-block compact-checks">
         <h3>RCRI (Revised Cardiac Risk Index)</h3>
 
         <div class="check">
@@ -480,8 +476,13 @@
           </div>
         </div>
 
-        <div class="hr"></div>
+        <details class="secondary-details">
+          <summary>RCRI factor definitions</summary>
+          <p>High-risk surgery uses the RCRI criterion. Ischemic heart disease includes prior MI, angina, positive stress testing, or coronary intervention. Heart failure includes prior HF or pulmonary edema. Cerebrovascular disease includes stroke or TIA. The renal criterion is creatinine &gt;2 mg/dL.</p>
+        </details>
+        </div>
 
+        <div class="redflag-block compact-checks">
         <h3 style="margin-top:0;">Active cardiac condition red flags</h3>
 
         <div class="check">
@@ -515,38 +516,35 @@
             <div class="d">Syncope/angina/dyspnea with known severe AS, severe MS, etc.</div>
           </div>
         </div>
+        <details class="secondary-details">
+          <summary>Red-flag definitions</summary>
+          <p>Includes suspected ACS or unstable angina, decompensated heart failure, symptomatic or high-grade arrhythmia, and symptoms associated with known severe valvular disease.</p>
+        </details>
+        </div>
       </section>
 
       <!-- Outputs -->
       <section class="panel full" aria-label="Results">
-        <h3>Results</h3>
+        <div class="panel-heading">
+          <h3>Risk snapshot</h3>
+          <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">📋 Copy</button>
+        </div>
 
         <div id="redFlagBanner" class="banner" style="display:none;"></div>
 
         <div class="results">
-          <div class="metric">
-            <h4>RCRI score</h4>
-            <div class="value" id="rcriScoreOut">—</div>
-            <div class="sub" id="rcriSub">—</div>
-          </div>
-
-          <div class="metric">
-            <h4>Overall snapshot</h4>
-            <div class="value" id="snapshotOut">—</div>
-            <div class="sub" id="snapshotSub">—</div>
-          </div>
-
-          <div class="metric full">
+          <div class="metric full result-primary">
             <h4>What to consider next (prompts)</h4>
             <div class="value" id="nextOut">—</div>
             <div class="sub" id="nextSub">—</div>
             <div class="badge" id="nextBadge">Awaiting inputs…</div>
           </div>
 
-          <div class="metric full">
-            <h4>Copy preview</h4>
-            <div class="sub" id="copyPreview">Adjust inputs to generate a one-line summary.</div>
+          <div class="metric full result-inline two">
+            <div><span>RCRI</span><strong id="rcriScoreOut">—</strong><small id="rcriSub">—</small></div>
+            <div><span>Context</span><strong id="snapshotOut">—</strong><small id="snapshotSub">—</small></div>
           </div>
+          <span id="copyPreview" hidden></span>
         </div>
 
         <details>
@@ -560,16 +558,17 @@
         </details>
       </section>
 
-      <section class="panel full" aria-label="Notes">
-        <h3>Bedside notes (non-prescriptive)</h3>
+      <details class="panel full workflow-step" aria-label="Clinical notes">
+        <summary>Clinical notes</summary>
         <p style="margin:0;color:var(--muted);font-size:13px;max-width:105ch;">
           • If the patient has time-sensitive surgery, risk stratification may focus on stabilization/optimization rather than delays.<br/>
           • Consider baseline ECG for intermediate/high-risk surgery or known cardiac disease per local practice pathways.<br/>
           • Continue chronic beta-blockers; avoid initiating high-dose beta-blockade immediately pre-op without a plan (institution-dependent).<br/>
           • Tailor anesthetic plan, hemodynamic goals, and postoperative monitoring based on risk profile and trajectory.
         </p>
-      </section>
+      </details>
     </div>
+    </main>
 
     <div class="footer">
       <div>© <span id="year"></span> Cardiac Risk Helper • Available offline after first visit</div>
@@ -617,6 +616,7 @@
       copyPreview: document.getElementById('copyPreview'),
       copyBtn: document.getElementById('copyBtn'),
       resetBtn: document.getElementById('resetBtn'),
+      classificationWarning: document.getElementById('classificationWarning'),
 
       toast: document.getElementById('toast'),
       scrollTop: document.getElementById('scrollTop')
@@ -737,6 +737,11 @@
       const mets = els.mets.value;
       const score = rcriScore();
       const red = hasRedFlags();
+      const classificationMismatch = (surgRisk === 'low' && els.rcriHighRiskSurg.checked) ||
+        (surgRisk === 'high' && !els.rcriHighRiskSurg.checked);
+      els.classificationWarning.textContent = classificationMismatch
+        ? 'Procedural risk and the RCRI high-risk-surgery criterion differ. Confirm both selections.'
+        : '';
       const cat = rcriCategory(score);
 
       const parts = [];

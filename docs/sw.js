@@ -1,4 +1,4 @@
-const CACHE_NAME = 'anesthesia-toolkit-v1';
+const CACHE_NAME = 'anesthesia-toolkit-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -40,28 +40,18 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => (await caches.match(request)) || caches.match('./index.html'))
-    );
-    return;
-  }
-
+  // Network-first prevents an installed clinical calculator from remaining on
+  // an old script or stylesheet after a deployment. The cache remains the
+  // fallback when the device is offline.
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-      if (response.ok) {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-      }
-      return response;
-    }))
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(async () => (await caches.match(request)) || (request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))
   );
 });

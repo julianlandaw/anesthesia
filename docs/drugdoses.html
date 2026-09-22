@@ -45,10 +45,10 @@
             <button class="text-button" id="resetBtn" type="button">Reset</button>
           </div>
           <div class="form-grid">
-            <label>Formula sex<select id="sex" name="sex"><option value="male">Male</option><option value="female">Female</option></select></label>
-            <label>Age <span>years</span><input id="age" name="age" type="number" inputmode="numeric" min="18" max="120" step="1" value="40" required /></label>
-            <label>Height <span>cm</span><input id="height" name="height" type="number" inputmode="decimal" min="120" max="230" step="0.1" value="175" required /></label>
-            <label>Weight <span>kg</span><input id="weight" name="weight" type="number" inputmode="decimal" min="20" max="350" step="0.1" value="80" required /></label>
+            <label>Formula sex<select id="sex" name="sex" required><option value="" selected>Choose…</option><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label>Age <span>years</span><input id="age" name="age" type="number" inputmode="numeric" min="18" max="120" step="1" placeholder="e.g., 40" required /></label>
+            <label>Height <span>cm</span><input id="height" name="height" type="number" inputmode="decimal" min="120" max="230" step="0.1" placeholder="e.g., 175" required /></label>
+            <label>Weight <span>kg</span><input id="weight" name="weight" type="number" inputmode="decimal" min="20" max="350" step="0.1" placeholder="e.g., 80" required /></label>
           </div>
           <p class="form-error" id="formError" role="alert" aria-live="assertive"></p>
           <button class="button button-primary calculate-button" type="submit">Calculate doses</button>
@@ -70,6 +70,14 @@
           <label class="search-field"><span class="sr-only">Search medications or categories</span><span aria-hidden="true">⌕</span><input id="searchBox" type="search" placeholder="Search drug, category, or basis…" autocomplete="off" /><kbd>/</kbd></label>
         </div>
         <div class="result-summary"><span id="resultCount" role="status" aria-live="polite"></span><button class="text-button" id="clearSearchBtn" type="button" hidden>Clear search</button></div>
+        <div class="category-filters" id="categoryFilters" aria-label="Medication categories">
+          <button type="button" class="category-chip active" data-category="all" aria-pressed="true">All</button>
+          <button type="button" class="category-chip" data-category="neuromuscular blockers" aria-pressed="false">NMBs</button>
+          <button type="button" class="category-chip" data-category="opioids" aria-pressed="false">Opioids</button>
+          <button type="button" class="category-chip" data-category="anesthetics & sedatives" aria-pressed="false">Anesthetics</button>
+          <button type="button" class="category-chip" data-category="local anesthetics" aria-pressed="false">Local</button>
+          <button type="button" class="category-chip" data-category="cardiovascular & hemodynamic agents" aria-pressed="false">Hemodynamics</button>
+        </div>
         <div id="results"></div>
         <div class="empty-state" id="emptyState" hidden><strong>No matching medications</strong><span>Try a drug name, category, or dosing basis such as “TBW.”</span></div>
         <div class="export-actions" aria-label="Export options">

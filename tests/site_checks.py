@@ -65,7 +65,7 @@ def internal_target(page, raw):
 
 
 errors = []
-html_files = sorted(DOCS.glob("*.html"))
+html_files = sorted(page for page in DOCS.glob("*.html") if not page.name.startswith("."))
 for page in html_files:
     source = page.read_text(encoding="utf-8")
     parser = AuditParser()

@@ -66,8 +66,12 @@ input:invalid:not(:focus) { border-color: color-mix(in srgb,var(--danger) 55%,va
 .search-field input:focus { box-shadow: none; }
 .search-field kbd { padding: 2px 7px; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); background: var(--surface-2); font-size: .7rem; }
 .result-summary { min-height: 36px; color: var(--muted); font-size: .78rem; }
+.category-filters { display: flex; gap: 7px; overflow-x: auto; padding: 2px 0 5px; }
+.category-chip { flex: 0 0 auto; min-height: 34px; padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); background: var(--surface-2); font-size: .75rem; font-weight: 750; }
+.category-chip.active { color: #fff; border-color: var(--accent-strong); background: var(--accent-strong); }
 .dose-section { margin-top: 11px; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(255,255,255,.02); }
-.dose-section h3 { margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); font-size: .9rem; }
+.dose-section summary { margin: 0; padding: 12px 14px; background: var(--surface-2); font-size: .9rem; font-weight: 800; cursor: pointer; }
+.dose-section[open] summary { border-bottom: 1px solid var(--border); }
 .table-scroll { overflow-x: auto; }
 .dose-table { width: 100%; min-width: 710px; border-collapse: collapse; }
 .dose-table th,.dose-table td { padding: 11px 13px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
@@ -99,6 +103,18 @@ footer a { text-underline-offset: 3px; }
   .hero { gap: 16px; padding: 20px; }
   .results-header { align-items: stretch; flex-direction: column; }
   .search-field { width: 100%; }
+  .dose-table { min-width: 0; }
+  .dose-table thead { display: none; }
+  .dose-table,.dose-table tbody,.dose-table tr,.dose-table td { display: block; width: 100%; }
+  .dose-table tr { padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  .dose-table tr:last-child { border-bottom: 0; }
+  .dose-table td { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 8px; padding: 3px 0; border: 0; }
+  .dose-table td::before { color: var(--muted); font-size: .67rem; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+  .dose-table td:first-child { display: block; width: 100%; padding-bottom: 7px; font-size: .95rem; }
+  .dose-table td:first-child::before { display: none; }
+  .dose-table td:nth-child(2)::before { content: "Range"; }
+  .dose-table td:nth-child(3)::before { content: "Basis"; }
+  .dose-table td:nth-child(4)::before { content: "Calculated"; }
 }
 @media (max-width: 480px) {
   .form-grid { grid-template-columns: 1fr; }
@@ -123,6 +139,7 @@ footer a { text-underline-offset: 3px; }
   .metrics { grid-template-columns: repeat(4,1fr); }
   .results-panel { margin-top: 10px; padding: 14px; }
   .dose-section { break-inside: avoid; }
+  .dose-section:not([open]) > *:not(summary) { display: block; }
   .table-scroll { overflow: visible; }
   .dose-table { min-width: 0; }
   .dose-table th,.dose-table td { padding: 6px 8px; font-size: 9pt; }

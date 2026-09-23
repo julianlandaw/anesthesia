@@ -1,5 +1,15 @@
 (() => {
   'use strict';
+
+  // Make checkbox cards easier to use on touch screens without changing the
+  // native checkbox semantics or keyboard behavior.
+  document.addEventListener('click', (event) => {
+    const row = event.target.closest('.check, .agent');
+    if (!row || event.target.closest('input, button, a, label, select, textarea')) return;
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    if (checkbox && !checkbox.disabled) checkbox.click();
+  });
+
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     const hadController = Boolean(navigator.serviceWorker.controller);
     let updateShown = false;

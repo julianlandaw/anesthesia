@@ -21,7 +21,7 @@ Then open <http://localhost:8000>. A web server is recommended because service w
 - `docs/sw.js` and `docs/manifest.webmanifest` provide installation and offline support.
 - `tests/` contains calculation and static-site checks.
 
-When adding a page, link it from `docs/index.html`, include the shared theme/PWA assets, and add it to `APP_SHELL` in `docs/sw.js`. Increment `CACHE_NAME` whenever a deployed cached asset changes.
+When adding a page, link it from `docs/index.html`, include the shared theme/PWA assets, and add it to `APP_SHELL` in `docs/sw.js`. The service worker uses the network first and falls back to its cache offline, so deployed clinical logic is refreshed whenever the network is available. Increment `CACHE_NAME` when changing the app-shell membership or when a forced cache reset is needed.
 
 ## Validate changes
 
@@ -40,4 +40,4 @@ This project is decision support, not an order set or a substitute for clinical 
 
 ## Deploy
 
-Configure GitHub Pages to deploy from the `main` branch and `/docs` folder. After merging changes, GitHub Pages will publish the static files without a build process. Existing installations update when the browser activates the new service worker cache version.
+Configure GitHub Pages to deploy from the `main` branch and `/docs` folder. After merging changes, GitHub Pages will publish the static files without a build process. Existing installations fetch current assets while online, retain the app shell for offline use, and display a reload notice when a new service worker takes control.

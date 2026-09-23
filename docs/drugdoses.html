@@ -13,6 +13,7 @@
   <script src="pwa.js" defer></script>
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="enhancements.css" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to calculator</a>
@@ -74,9 +75,9 @@
           <button type="button" class="category-chip active" data-category="all" aria-pressed="true">All</button>
           <button type="button" class="category-chip" data-category="neuromuscular blockers" aria-pressed="false">NMBs</button>
           <button type="button" class="category-chip" data-category="opioids" aria-pressed="false">Opioids</button>
-          <button type="button" class="category-chip" data-category="anesthetics & sedatives" aria-pressed="false">Anesthetics</button>
+          <button type="button" class="category-chip" data-category="anesthetics &amp; sedatives" aria-pressed="false">Anesthetics</button>
           <button type="button" class="category-chip" data-category="local anesthetics" aria-pressed="false">Local</button>
-          <button type="button" class="category-chip" data-category="cardiovascular & hemodynamic agents" aria-pressed="false">Hemodynamics</button>
+          <button type="button" class="category-chip" data-category="cardiovascular &amp; hemodynamic agents" aria-pressed="false">Hemodynamics</button>
         </div>
         <div id="results"></div>
         <div class="empty-state" id="emptyState" hidden><strong>No matching medications</strong><span>Try a drug name, category, or dosing basis such as “TBW.”</span></div>
@@ -89,8 +90,12 @@
       </section>
 
       <section class="reference-note" aria-labelledby="reference-title">
-        <h2 id="reference-title">Esmolol references</h2>
-        <p>The SVT loading and infusion doses follow the current U.S. prescribing information. The laryngoscopy/intubation range is based on published peri-induction studies and is off-label. Titrate to clinical response and monitor for hypotension and bradycardia. <a href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=4cfdfa50-579b-43e7-bc0a-e831d3099bfd" target="_blank" rel="noopener noreferrer">DailyMed label ↗</a> <a href="https://pubmed.ncbi.nlm.nih.gov/35422539/" target="_blank" rel="noopener noreferrer">0.5 mg/kg study ↗</a> <a href="https://pubmed.ncbi.nlm.nih.gov/31198248/" target="_blank" rel="noopener noreferrer">1.5 mg/kg study ↗</a></p>
+        <h2 id="reference-title">Sources and dosing scope</h2>
+        <p><strong>Source review: September 23, 2026.</strong> Every medication row links directly to its U.S. prescribing information, professional guideline, or supporting study. Ranges were aligned to those sources during this review; off-label uses are identified in the medication name.</p>
+        <details>
+          <summary>How weight bases and references were chosen</summary>
+          <p>Product labeling is the primary source whenever it provides the displayed indication and range. Rows marked with an asterisk use an obesity-focused scalar supported by a <a href="https://pubmed.ncbi.nlm.nih.gov/29855999/" target="_blank" rel="noopener noreferrer">systematic review of perioperative dosing in adults with obesity ↗</a> or <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5029585/" target="_blank" rel="noopener noreferrer">Association of Anaesthetists guidance ↗</a>; this scalar may differ from product labeling and is not a substitute for titration, neuromuscular monitoring, or local policy. Remifentanil follows its label-specific obesity and geriatric adjustments. Local-anesthetic rows show calculated maxima capped at the cited adult maximum total dose. The esmolol laryngoscopy/intubation entry remains off-label and links to its supporting studies.</p>
+        </details>
       </section>
     </main>
 

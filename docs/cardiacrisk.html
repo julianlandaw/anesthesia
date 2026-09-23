@@ -425,6 +425,46 @@
 
       <!-- Inputs: Risk indices -->
       <section class="panel risk-panel" aria-label="RCRI and red flags">
+        <div class="redflag-block compact-checks">
+        <h3 style="margin-top:0;">Active cardiac condition red flags</h3>
+
+        <div class="check">
+          <input type="checkbox" id="rfACS" aria-label="Unstable angina or suspected acute coronary syndrome" />
+          <div>
+            <div class="t">Unstable angina / suspected ACS</div>
+            <div class="d">New/worsening chest pain, ischemic symptoms, or concern for acute coronary syndrome.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rfDecompHF" aria-label="Decompensated heart failure" />
+          <div>
+            <div class="t">Decompensated heart failure</div>
+            <div class="d">Pulmonary edema, escalating diuretics, new orthopnea/PND, or significant volume overload.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rfArrhythmia" aria-label="Significant arrhythmia" />
+          <div>
+            <div class="t">Significant arrhythmia</div>
+            <div class="d">Symptomatic brady/tachyarrhythmia, high-grade AV block, or poorly controlled rate.</div>
+          </div>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="rfValve" aria-label="Severe valvular disease symptoms" />
+          <div>
+            <div class="t">Severe valvular disease symptoms</div>
+            <div class="d">Syncope/angina/dyspnea with known severe AS, severe MS, etc.</div>
+          </div>
+        </div>
+        <details class="secondary-details">
+          <summary>Red-flag definitions</summary>
+          <p>Includes suspected ACS or unstable angina, decompensated heart failure, symptomatic or high-grade arrhythmia, and symptoms associated with known severe valvular disease.</p>
+        </details>
+        </div>
+
         <div class="rcri-block compact-checks">
         <h3>RCRI (Revised Cardiac Risk Index)</h3>
 
@@ -482,45 +522,6 @@
         </details>
         </div>
 
-        <div class="redflag-block compact-checks">
-        <h3 style="margin-top:0;">Active cardiac condition red flags</h3>
-
-        <div class="check">
-          <input type="checkbox" id="rfACS" aria-label="Unstable angina or suspected acute coronary syndrome" />
-          <div>
-            <div class="t">Unstable angina / suspected ACS</div>
-            <div class="d">New/worsening chest pain, ischemic symptoms, or concern for acute coronary syndrome.</div>
-          </div>
-        </div>
-
-        <div class="check">
-          <input type="checkbox" id="rfDecompHF" aria-label="Decompensated heart failure" />
-          <div>
-            <div class="t">Decompensated heart failure</div>
-            <div class="d">Pulmonary edema, escalating diuretics, new orthopnea/PND, or significant volume overload.</div>
-          </div>
-        </div>
-
-        <div class="check">
-          <input type="checkbox" id="rfArrhythmia" aria-label="Significant arrhythmia" />
-          <div>
-            <div class="t">Significant arrhythmia</div>
-            <div class="d">Symptomatic brady/tachyarrhythmia, high-grade AV block, or poorly controlled rate.</div>
-          </div>
-        </div>
-
-        <div class="check">
-          <input type="checkbox" id="rfValve" aria-label="Severe valvular disease symptoms" />
-          <div>
-            <div class="t">Severe valvular disease symptoms</div>
-            <div class="d">Syncope/angina/dyspnea with known severe AS, severe MS, etc.</div>
-          </div>
-        </div>
-        <details class="secondary-details">
-          <summary>Red-flag definitions</summary>
-          <p>Includes suspected ACS or unstable angina, decompensated heart failure, symptomatic or high-grade arrhythmia, and symptoms associated with known severe valvular disease.</p>
-        </details>
-        </div>
       </section>
 
       <!-- Outputs -->

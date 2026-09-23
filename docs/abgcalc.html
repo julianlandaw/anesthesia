@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark" />
   <meta name="theme-color" content="#f6f7fb" />
   <title>ABG Interpreter</title>
-  <meta name="description" content="ABG interpreter: primary disorder, compensation checks, and optional A–a gradient & anion gap tools (decision-support only)." />
+  <meta name="description" content="ABG interpreter: primary disorder, compensation checks, and optional A–a gradient &amp; anion gap tools (decision-support only)." />
 
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -397,7 +397,7 @@
         </details>
 
         <details>
-          <summary>Anion gap & delta gap (optional labs)</summary>
+          <summary>Anion gap &amp; delta gap (optional labs)</summary>
           <p style="margin-top:10px;">
             Enter sodium and chloride to calculate anion gap: <b>AG = Na − (Cl + HCO₃)</b>.
             Albumin can provide an albumin-corrected AG (rule-of-thumb correction).
@@ -882,8 +882,10 @@
 
       // Copy preview
       const hasCore = isNum(ph) && isNum(paco2) && isNum(hco3);
-      if (!hasCore){
-        els.copyPreview.textContent = 'Fill in pH, PaCO₂, and HCO₃⁻ to generate a summary.';
+      if (!hasCore || validationErrors.length){
+        els.copyPreview.textContent = validationErrors.length
+          ? 'Correct the highlighted input before copying a summary.'
+          : 'Fill in pH, PaCO₂, and HCO₃⁻ to generate a summary.';
         recalc._summary = '';
         return;
       }
@@ -906,7 +908,7 @@
     // Copy summary
     els.copyBtn.addEventListener('click', async () => {
       const text = recalc._summary || els.copyPreview.textContent || '';
-      if (!text || text.startsWith('Fill in')){
+      if (!text || text.startsWith('Fill in') || text.startsWith('Correct the')){
         showToast('Nothing to copy yet.');
         return;
       }

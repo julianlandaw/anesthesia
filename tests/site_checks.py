@@ -22,9 +22,13 @@ class AuditParser(HTMLParser):
         self.meta_names = set()
         self.rel_values = set()
         self.scripts = []
+        self.tag_stack = []
+        self.tag_errors = []
 
     def handle_starttag(self, tag, attrs):
         values = dict(attrs)
+        if tag not in VOID:
+            self.tag_stack.append(tag)
         if tag == "label":
             self.label_depth += 1
             if values.get("for"):
@@ -46,9 +50,28 @@ class AuditParser(HTMLParser):
         if tag == "script" and values.get("src"):
             self.scripts.append(values["src"])
 
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in VOID and self.tag_stack and self.tag_stack[-1] == tag:
+            self.tag_stack.pop()
+
     def handle_endtag(self, tag):
         if tag == "label":
             self.label_depth = max(0, self.label_depth - 1)
+        if tag in VOID:
+            return
+        if not self.tag_stack:
+            self.tag_errors.append(f"unexpected </{tag}>")
+            return
+        expected = self.tag_stack[-1]
+        if expected != tag:
+            self.tag_errors.append(f"expected </{expected}> before </{tag}>")
+            if tag in self.tag_stack:
+                while self.tag_stack and self.tag_stack[-1] != tag:
+                    self.tag_stack.pop()
+                self.tag_stack.pop()
+            return
+        self.tag_stack.pop()
 
 
 def internal_target(page, raw):
@@ -71,6 +94,10 @@ for page in html_files:
     parser = AuditParser()
     parser.feed(source)
 
+    for error in parser.tag_errors:
+        errors.append(f"{page.name}: {error}")
+    if parser.tag_stack:
+        errors.append(f"{page.name}: unclosed tags: {', '.join(parser.tag_stack)}")
     if not source.rstrip().endswith("</html>"):
         errors.append(f"{page.name}: content appears after </html>")
     if len(parser.ids) != len(set(parser.ids)):
@@ -108,6 +135,61 @@ expected_cache = {page.name for page in html_files} | {
 missing_cache = sorted(expected_cache - cached)
 if missing_cache:
     errors.append(f"sw.js: missing cached files: {', '.join(missing_cache)}")
+
+dose_script = (DOCS / "script.js").read_text(encoding="utf-8")
+source_block_match = re.search(r"const SOURCES = Object\.freeze\(\{(.*?)\n  \}\);", dose_script, re.DOTALL)
+if not source_block_match:
+    errors.append("script.js: could not find medication source registry")
+    source_keys = set()
+else:
+    source_keys = set(re.findall(r"^\s{4}([A-Za-z0-9]+): \{", source_block_match.group(1), re.MULTILINE))
+    source_urls = dict(re.findall(
+        r"^\s{4}([A-Za-z0-9]+): \{[^\n]+url: '(https://[^']+)' \},?$",
+        source_block_match.group(1),
+        re.MULTILINE,
+    ))
+    missing_urls = sorted(source_keys - source_urls.keys())
+    if missing_urls:
+        errors.append(f"script.js: medication sources without HTTPS URLs: {', '.join(missing_urls)}")
+
+used_source_keys = set()
+for line_number, line in enumerate(dose_script.splitlines(), start=1):
+    if not line.lstrip().startswith("row("):
+        continue
+    source_list_match = re.search(r", \[([^\]]+)\]\),?$", line.strip())
+    if not source_list_match:
+        errors.append(f"script.js:{line_number}: medication row has no source list")
+        continue
+    row_sources = set(re.findall(r"'([A-Za-z0-9]+)'", source_list_match.group(1)))
+    if not row_sources:
+        errors.append(f"script.js:{line_number}: medication row has an empty source list")
+    used_source_keys.update(row_sources)
+
+undefined_sources = sorted(used_source_keys - source_keys)
+if undefined_sources:
+    errors.append(f"script.js: undefined medication sources: {', '.join(undefined_sources)}")
+unused_sources = sorted(source_keys - used_source_keys)
+if unused_sources:
+    errors.append(f"script.js: unused medication sources: {', '.join(unused_sources)}")
+
+for required in (
+    "Esmolol (laryngoscopy/intubation response; off-label)",
+    "0.5–1.5 mg/kg IV before induction/intubation",
+    "Esmolol (optional SVT loading dose)",
+    "500 mcg/kg over 1 min",
+    "Esmolol (SVT maintenance infusion)",
+    "50–200 mcg/kg/min",
+    "patient.age > 65 ? 0.5 : 1",
+    "m.TBW > 1.3 * m.IBW",
+    "IBW (label obesity threshold)",
+):
+    if required not in dose_script:
+        errors.append(f"script.js: missing required dosing logic: {required}")
+
+dose_page = (DOCS / "drugdoses.html").read_text(encoding="utf-8")
+for source in ("dailymed.nlm.nih.gov", "pubmed.ncbi.nlm.nih.gov"):
+    if source not in f"{dose_page}\n{dose_script}":
+        errors.append(f"drugdoses.html: missing esmolol source link for {source}")
 
 if errors:
     print("Site checks failed:", file=sys.stderr)

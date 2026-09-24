@@ -183,7 +183,7 @@ for required in (
     "m.TBW > 1.3 * m.IBW",
     "IBW (label obesity threshold)",
     "Propofol (induction, age ≥65)",
-    "Dexmedetomidine (sedation loading, age ≥65)",
+    "Dexmedetomidine (sedation loading, age >65)",
     "anesthesia-dose-favorites",
 ):
     if required not in dose_script:
@@ -247,7 +247,7 @@ for helper in ("devineIdealBodyWeight", "respiratoryCompensation", "deltaRatio",
         errors.append(f"calculations.js: missing shared clinical helper {helper}")
 
 pwa_source = (DOCS / "pwa.js").read_text(encoding="utf-8")
-for required in ("September 23, 2026", "December 23, 2026", "navigator.onLine"):
+for required in ("September 24, 2026", "December 24, 2026", "navigator.onLine"):
     if required not in pwa_source:
         errors.append(f"pwa.js: missing review/offline metadata: {required}")
 if "anesthesia-toolkit-v3" not in service_worker:

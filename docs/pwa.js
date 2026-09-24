@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const SOURCE_REVIEW_DATE = 'September 23, 2026';
-  const NEXT_REVIEW_DATE = 'December 23, 2026';
+  const SOURCE_REVIEW_DATE = 'September 24, 2026';
+  const NEXT_REVIEW_DATE = 'December 24, 2026';
 
   function addClinicalStatus() {
     const footer = document.querySelector('footer, .footer');

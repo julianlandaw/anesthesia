@@ -93,6 +93,8 @@ input, select, output, .value, .big { font-variant-numeric: tabular-nums; }
 .risk-panel .redflag-block { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 .compact-checks .check .d { display: none; }
 .compact-checks .check { min-height: 42px; }
+.check input[type="checkbox"],
+.agent input[type="checkbox"] { width: auto; flex: 0 0 auto; }
 .check:has(input[type="checkbox"]),
 .agent:has(input[type="checkbox"]) { cursor: pointer; }
 .preset-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 9px; }

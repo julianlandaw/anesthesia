@@ -5,11 +5,11 @@ This checklist is for maintaining the anesthesia toolkit’s clinical content. I
 ## Review cadence
 
 - Review clinical sources every three months and after any major guideline or drug-label update.
-- Next scheduled review: **December 23, 2026**.
+- Next scheduled review: **December 24, 2026**.
 - Record the reviewer, date, source version, material changes, tests run, and unresolved questions below.
 - Increment the service-worker cache name whenever deployed clinical content or shared assets change.
 
-## Current review — September 23, 2026
+## Current review — September 24, 2026
 
 | Area | Primary source set | Review status |
 |---|---|---|
@@ -35,4 +35,4 @@ This checklist is for maintaining the anesthesia toolkit’s clinical content. I
 
 | Date | Reviewer | Summary | Verification |
 |---|---|---|---|
-| 2026-09-23 | Repository maintainer / Codex-assisted review | Added medication citations and favorites; updated weight formulas and age-aware rows; aligned PONV/cardiac/ventilation guidance; corrected ABG compensation logic; added shared calculations and review metadata | Automated checks pending final run |
+| 2026-09-24 | Repository maintainer / Codex-assisted review | Added medication citations and favorites; updated weight formulas and age-aware rows; aligned PONV/cardiac/ventilation guidance; corrected ABG compensation logic; added shared calculations and review metadata | Static, syntax, calculation, and local HTTP checks |

@@ -78,6 +78,7 @@
     const remiDosingWeight = remiUsesIBW ? m.IBW : m.TBW;
     const remiBasis = `${remiUsesIBW ? 'IBW (label obesity threshold)' : 'TBW'}, age adjusted`;
     const olderAdult = patient.age >= 65;
+    const dexOlderAdult = patient.age > 65;
     const row = (drug, doseRange, basis, calculated, sources) => ({ drug, range: doseRange, basis, value: calculated, sources });
     return [
       { title: 'Neuromuscular blockers', rows: [
@@ -103,8 +104,8 @@
         row('Propofol (adult GA maintenance)', '50–200 mcg/kg/min; context dependent', 'TBW*', range(0.05 * m.TBW, 0.2 * m.TBW, 'mg/min', 2), ['propofol', 'obesity']),
         row('Ketamine (IV induction)', '1–2 mg/kg over 60 sec', 'TBW', range(m.TBW, 2 * m.TBW, 'mg'), ['ketamine']),
         row('Etomidate (induction)', '0.2–0.6 mg/kg; usual 0.3 mg/kg', 'TBW', range(0.2 * m.TBW, 0.6 * m.TBW, 'mg'), ['etomidate']),
-        olderAdult
-          ? row('Dexmedetomidine (sedation loading, age ≥65)', '0.5 mcg/kg over 10 min', 'TBW', `${fmt(0.5 * m.TBW)} mcg`, ['dexmedetomidine'])
+        dexOlderAdult
+          ? row('Dexmedetomidine (sedation loading, age >65)', '0.5 mcg/kg over 10 min', 'TBW', `${fmt(0.5 * m.TBW)} mcg`, ['dexmedetomidine'])
           : row('Dexmedetomidine (adult sedation loading)', '0.5–1 mcg/kg over 10 min; indication dependent', 'TBW', range(0.5 * m.TBW, m.TBW, 'mcg'), ['dexmedetomidine']),
         row('Dexmedetomidine (ICU maintenance)', '0.2–0.7 mcg/kg/hr', 'TBW', range(0.2 * m.TBW, 0.7 * m.TBW, 'mcg/hr'), ['dexmedetomidine'])
       ] },

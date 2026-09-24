@@ -341,7 +341,7 @@
     <div class="grid">
       <!-- Inputs -->
       <section class="panel" aria-label="Inputs">
-        <h3>Inputs</h3>
+        <h3>Core inputs</h3>
 
         <div class="row three">
           <div>
@@ -359,7 +359,7 @@
         </div>
 
         <details class="secondary-details">
-          <summary>Add oxygenation analysis</summary>
+          <summary>Advanced mode: oxygenation analysis</summary>
         <div class="row three details-body">
           <div>
             <label for="pao2">PaO₂ (mmHg)</label>
@@ -378,7 +378,7 @@
         </details>
 
         <details>
-          <summary>Advanced oxygenation settings (optional)</summary>
+          <summary>Advanced mode: oxygenation assumptions</summary>
           <div class="row three" style="margin-top:10px;">
             <div>
               <label for="pb">Barometric pressure Pb (mmHg)</label>
@@ -397,7 +397,7 @@
         </details>
 
         <details>
-          <summary>Anion gap &amp; delta gap (optional labs)</summary>
+          <summary>Advanced mode: anion gap &amp; delta ratio</summary>
           <p style="margin-top:10px;">
             Enter sodium and chloride to calculate anion gap: <b>AG = Na − (Cl + HCO₃)</b>.
             Albumin can provide an albumin-corrected AG (rule-of-thumb correction).
@@ -418,11 +418,12 @@
           </div>
           <p>
             Albumin correction (rule-of-thumb): <b>AG<sub>corr</sub> ≈ AG + 2.5 × (4.0 − albumin)</b>.
-            Delta gap (rule-of-thumb): <b>(AG − 12) / (24 − HCO₃)</b>.
+            Delta ratio (when an elevated-gap metabolic acidosis is present): <b>(AG − 12) / (24 − HCO₃)</b>.
           </p>
         </details>
 
         <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
+        <p class="input-error" id="consistencyWarning" role="status" aria-live="polite"></p>
 
         <details>
           <summary>Compensation formulas used</summary>
@@ -436,6 +437,7 @@
             <li><b>A–a gradient:</b> PAO₂ = FiO₂×(Pb−PH₂O) − (PaCO₂/RQ); A–a = PAO₂ − PaO₂.</li>
             <li><b>Expected A–a (age rule-of-thumb):</b> ≈ age/4 + 4 (mmHg).</li>
           </ul>
+          <p>Clinical formula reference: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5260542/" target="_blank" rel="noopener noreferrer">review of expected acid–base compensation ↗</a>. Anion-gap limitations and albumin correction: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3817910/" target="_blank" rel="noopener noreferrer">serum anion-gap review ↗</a>.</p>
         </details>
       </section>
 
@@ -543,6 +545,7 @@
 
       copyPreview: document.getElementById('copyPreview'),
       inputError: document.getElementById('inputError'),
+      consistencyWarning: document.getElementById('consistencyWarning'),
       copyBtn: document.getElementById('copyBtn'),
       resetBtn: document.getElementById('resetBtn'),
       toast: document.getElementById('toast')
@@ -610,14 +613,11 @@
       const respSupports = acid ? (dCO2 > 0) : alk ? (dCO2 < 0) : null;
       const metSupports  = acid ? (dHCO3 < 0) : alk ? (dHCO3 > 0) : null;
 
-      // Near-normal pH: choose by larger deviation magnitude; flag mixed.
+      // A near-normal pH with abnormal components should not be assigned a
+      // primary process by comparing unlike PaCO2 and bicarbonate units.
       if (!acid && !alk){
-        const co2Mag = Math.abs(dCO2);
-        const hco3Mag = Math.abs(dHCO3);
-        const likely = (co2Mag > hco3Mag)
-          ? (dCO2 > 0 ? 'Respiratory acidosis predominance' : 'Respiratory alkalosis predominance')
-          : (dHCO3 > 0 ? 'Metabolic alkalosis predominance' : 'Metabolic acidosis predominance');
-        return {primary:likely, sub:'Near-normal pH: consider mixed disorders (both processes may be present).'};
+        if (Math.abs(dCO2) <= 2 && Math.abs(dHCO3) <= 2) return {primary:'No major acid–base disturbance identified', sub:'Values are near common reference points.'};
+        return {primary:'Mixed or compensated process — review required', sub:'Near-normal pH with abnormal PaCO₂ or HCO₃⁻ cannot be assigned reliably by a simple heuristic.'};
       }
 
       if (respSupports && metSupports){
@@ -690,19 +690,12 @@
 
       // Respiratory disorders: compute expected HCO3 for acute and chronic
       if (t.includes('respiratory acidosis') || t.includes('respiratory alkalosis')){
-        const dCO2 = paco2 - 40;
-        const per10 = dCO2 / 10;
-
         let acuteExp, chronicExp, label;
         if (t.includes('acidosis')){
-          // acute: +1 per +10; chronic: +3.5 per +10
-          acuteExp = 24 + 1.0*per10;
-          chronicExp = 24 + 3.5*per10;
+          ({acute: acuteExp, chronic: chronicExp} = window.AnesthesiaCalculations.respiratoryCompensation(paco2, 'acidosis'));
           label = 'Respiratory acidosis';
         } else {
-          // acute: -2 per -10; chronic: -4 per -10
-          acuteExp = 24 + (-2.0*per10);
-          chronicExp = 24 + (-4.0*per10);
+          ({acute: acuteExp, chronic: chronicExp} = window.AnesthesiaCalculations.respiratoryCompensation(paco2, 'alkalosis'));
           label = 'Respiratory alkalosis';
         }
 
@@ -800,18 +793,13 @@
         sub += ` AGcorr ≈ ${round(agc,1)} (albumin ${round(alb,1)} g/dL).`;
         val = `${round(ag,1)} (corr ${round(agc,1)})`;
 
-        // delta gap
-        const delta = (ag - 12) / (24 - hco3);
-        if (isNum(delta) && (24 - hco3) !== 0){
-          sub += ` Δgap ≈ ${round(delta,2)} (rule-of-thumb).`;
+        const delta = window.AnesthesiaCalculations.deltaRatio({anionGap: ag, correctedAnionGap: agc, hco3});
+        if (isNum(delta)){
+          sub += ` Delta ratio ≈ ${round(delta,2)} (using corrected AG).`;
         }
       } else {
-        // delta gap still possible without albumin (less refined)
-        const denom = (24 - hco3);
-        if (denom !== 0){
-          const delta = (ag - 12) / denom;
-          if (isNum(delta)) sub += ` Δgap ≈ ${round(delta,2)} (rule-of-thumb).`;
-        }
+        const delta = window.AnesthesiaCalculations.deltaRatio({anionGap: ag, hco3});
+        if (isNum(delta)) sub += ` Delta ratio ≈ ${round(delta,2)}.`;
       }
       return {val, sub};
     }
@@ -847,6 +835,15 @@
       const cl = n(els.cl);
       const alb = n(els.alb);
       els.inputError.textContent = [...new Set(validationErrors)].join(' ');
+      if (isNum(ph) && isNum(paco2) && isNum(hco3)) {
+        const calculatedPh = window.AnesthesiaCalculations.hendersonHasselbalchPh({paco2, hco3});
+        const difference = Math.abs(calculatedPh - ph);
+        els.consistencyWarning.textContent = difference > 0.05
+          ? `Input consistency check: pH calculated from PaCO₂ and HCO₃⁻ is approximately ${round(calculatedPh, 2)}. Confirm that all three values came from the same sample and that bicarbonate type is appropriate.`
+          : '';
+      } else {
+        els.consistencyWarning.textContent = '';
+      }
 
       // Status
       const status = acidBaseStatus(ph);

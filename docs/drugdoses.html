@@ -59,8 +59,8 @@
           <div class="section-heading"><div><p class="eyebrow">Calculated weights</p><h2 id="metrics-title">Patient metrics</h2></div></div>
           <div class="metrics" id="metrics" aria-live="polite"></div>
           <dl class="abbreviations">
-            <div><dt>TBW</dt><dd>Total body weight</dd></div><div><dt>IBW</dt><dd>Ideal body weight</dd></div>
-            <div><dt>LBW</dt><dd>Lean body weight</dd></div><div><dt>FFM</dt><dd>Fat-free mass</dd></div>
+            <div><dt>TBW</dt><dd>Total body weight</dd></div>
+            <div><dt>IBW</dt><dd>Devine ideal body weight</dd></div><div><dt>LBW</dt><dd>Janmahasatian lean body weight</dd></div>
           </dl>
         </aside>
       </section>
@@ -73,6 +73,7 @@
         <div class="result-summary"><span id="resultCount" role="status" aria-live="polite"></span><button class="text-button" id="clearSearchBtn" type="button" hidden>Clear search</button></div>
         <div class="category-filters" id="categoryFilters" aria-label="Medication categories">
           <button type="button" class="category-chip active" data-category="all" aria-pressed="true">All</button>
+          <button type="button" class="category-chip" data-category="favorites" aria-pressed="false">★ Favorites</button>
           <button type="button" class="category-chip" data-category="neuromuscular blockers" aria-pressed="false">NMBs</button>
           <button type="button" class="category-chip" data-category="opioids" aria-pressed="false">Opioids</button>
           <button type="button" class="category-chip" data-category="anesthetics &amp; sedatives" aria-pressed="false">Anesthetics</button>
@@ -94,7 +95,7 @@
         <p><strong>Source review: September 23, 2026.</strong> Every medication row links directly to its U.S. prescribing information, professional guideline, or supporting study. Ranges were aligned to those sources during this review; off-label uses are identified in the medication name.</p>
         <details>
           <summary>How weight bases and references were chosen</summary>
-          <p>Product labeling is the primary source whenever it provides the displayed indication and range. Rows marked with an asterisk use an obesity-focused scalar supported by a <a href="https://pubmed.ncbi.nlm.nih.gov/29855999/" target="_blank" rel="noopener noreferrer">systematic review of perioperative dosing in adults with obesity ↗</a> or <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5029585/" target="_blank" rel="noopener noreferrer">Association of Anaesthetists guidance ↗</a>; this scalar may differ from product labeling and is not a substitute for titration, neuromuscular monitoring, or local policy. Remifentanil follows its label-specific obesity and geriatric adjustments. Local-anesthetic rows show calculated maxima capped at the cited adult maximum total dose. The esmolol laryngoscopy/intubation entry remains off-label and links to its supporting studies.</p>
+          <p>Product labeling is the primary source whenever it provides the displayed indication and range. IBW uses the Devine formula (male 50 kg; female 45.5 kg, plus 2.3 kg per inch over 5 ft). LBW uses the Janmahasatian sex-specific formula. Rows marked with an asterisk use an obesity-focused scalar supported by a <a href="https://pubmed.ncbi.nlm.nih.gov/29855999/" target="_blank" rel="noopener noreferrer">systematic review of perioperative dosing in adults with obesity ↗</a> or <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5029585/" target="_blank" rel="noopener noreferrer">Association of Anaesthetists guidance ↗</a>; this scalar may differ from product labeling and is not a substitute for titration, neuromuscular monitoring, or local policy. Remifentanil, propofol, and dexmedetomidine apply their displayed geriatric adjustments. Local-anesthetic rows show calculated maxima capped at the cited adult maximum total dose. The esmolol laryngoscopy/intubation entry remains off-label and links to its supporting studies.</p>
         </details>
       </section>
     </main>

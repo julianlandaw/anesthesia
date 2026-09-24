@@ -18,6 +18,7 @@ Then open <http://localhost:8000>. A web server is recommended because service w
 - `docs/*.html` contains the individual calculators and guidance pages.
 - `docs/theme.css` and `docs/theme.js` provide the shared light, dark, and system theme.
 - `docs/calculations.js` contains pure calculation helpers shared by the tools and tests.
+- `docs/CLINICAL_REVIEW.md` records the quarterly source-review checklist and review log.
 - `docs/sw.js` and `docs/manifest.webmanifest` provide installation and offline support.
 - `tests/` contains calculation and static-site checks.
 

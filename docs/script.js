@@ -13,6 +13,8 @@
   const actionStatus = $('#actionStatus');
   let report = null;
   let selectedCategory = 'all';
+  let favoriteDrugs = new Set();
+  try { favoriteDrugs = new Set(JSON.parse(localStorage.getItem('anesthesia-dose-favorites') || '[]')); } catch { favoriteDrugs = new Set(); }
 
   const SOURCES = Object.freeze({
     obesity: { label: 'Weight basis', title: 'Peri-operative medication dosing in adults with obesity — systematic review', url: 'https://pubmed.ncbi.nlm.nih.gov/29855999/' },
@@ -75,6 +77,7 @@
     const remiUsesIBW = m.TBW > 1.3 * m.IBW;
     const remiDosingWeight = remiUsesIBW ? m.IBW : m.TBW;
     const remiBasis = `${remiUsesIBW ? 'IBW (label obesity threshold)' : 'TBW'}, age adjusted`;
+    const olderAdult = patient.age >= 65;
     const row = (drug, doseRange, basis, calculated, sources) => ({ drug, range: doseRange, basis, value: calculated, sources });
     return [
       { title: 'Neuromuscular blockers', rows: [
@@ -94,11 +97,15 @@
         row('Sufentanil (maintenance ceiling)', '≤1 mcg/kg/hr of expected surgical time', 'LBW*', `≤${fmt(m.LBW)} mcg/hr`, ['sufentanil', 'obesityGuidance'])
       ] },
       { title: 'Anesthetics & sedatives', rows: [
-        row('Propofol (induction, healthy adult <65)', '2–2.5 mg/kg', 'LBW*', range(2 * m.LBW, 2.5 * m.LBW, 'mg'), ['propofol', 'obesity']),
+        olderAdult
+          ? row('Propofol (induction, age ≥65)', '1–1.5 mg/kg; titrate to response', 'LBW*', range(m.LBW, 1.5 * m.LBW, 'mg'), ['propofol', 'obesity'])
+          : row('Propofol (induction, healthy adult <65)', '2–2.5 mg/kg', 'LBW*', range(2 * m.LBW, 2.5 * m.LBW, 'mg'), ['propofol', 'obesity']),
         row('Propofol (adult GA maintenance)', '50–200 mcg/kg/min; context dependent', 'TBW*', range(0.05 * m.TBW, 0.2 * m.TBW, 'mg/min', 2), ['propofol', 'obesity']),
         row('Ketamine (IV induction)', '1–2 mg/kg over 60 sec', 'TBW', range(m.TBW, 2 * m.TBW, 'mg'), ['ketamine']),
         row('Etomidate (induction)', '0.2–0.6 mg/kg; usual 0.3 mg/kg', 'TBW', range(0.2 * m.TBW, 0.6 * m.TBW, 'mg'), ['etomidate']),
-        row('Dexmedetomidine (adult sedation loading)', '0.5–1 mcg/kg over 10 min; indication and age dependent', 'TBW', range(0.5 * m.TBW, m.TBW, 'mcg'), ['dexmedetomidine']),
+        olderAdult
+          ? row('Dexmedetomidine (sedation loading, age ≥65)', '0.5 mcg/kg over 10 min', 'TBW', `${fmt(0.5 * m.TBW)} mcg`, ['dexmedetomidine'])
+          : row('Dexmedetomidine (adult sedation loading)', '0.5–1 mcg/kg over 10 min; indication dependent', 'TBW', range(0.5 * m.TBW, m.TBW, 'mcg'), ['dexmedetomidine']),
         row('Dexmedetomidine (ICU maintenance)', '0.2–0.7 mcg/kg/hr', 'TBW', range(0.2 * m.TBW, 0.7 * m.TBW, 'mcg/hr'), ['dexmedetomidine'])
       ] },
       { title: 'Local anesthetics', rows: [
@@ -132,7 +139,22 @@
     item.append(name, result); return item;
   }
   function renderMetrics(m) {
-    metrics.replaceChildren(makeMetric('BMI', `${fmt(m.BMI)} kg/m²`), makeMetric('TBW', `${fmt(m.TBW)} kg`), makeMetric('IBW', `${fmt(m.IBW)} kg`), makeMetric('LBW', `${fmt(m.LBW)} kg`), makeMetric('FFM', `${fmt(m.FFM)} kg`));
+    metrics.replaceChildren(makeMetric('BMI', `${fmt(m.BMI)} kg/m²`), makeMetric('TBW', `${fmt(m.TBW)} kg`), makeMetric('IBW', `${fmt(m.IBW)} kg`), makeMetric('LBW', `${fmt(m.LBW)} kg`));
+  }
+
+  function saveFavorites() {
+    try { localStorage.setItem('anesthesia-dose-favorites', JSON.stringify([...favoriteDrugs])); } catch { /* Storage may be unavailable in private browsing. */ }
+  }
+
+  function syncFavoriteButtons() {
+    document.querySelectorAll('.favorite-button').forEach((button) => {
+      const active = favoriteDrugs.has(button.dataset.drug);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+      button.title = active ? 'Remove from favorites' : 'Add to favorites';
+      button.setAttribute('aria-label', `${active ? 'Remove' : 'Add'} ${button.dataset.drug} ${active ? 'from' : 'to'} favorites`);
+      button.textContent = active ? '★' : '☆';
+    });
   }
 
   function renderSections(sections) {
@@ -147,9 +169,18 @@
       const body = document.createElement('tbody');
       section.rows.forEach((item) => {
         const tr = document.createElement('tr');
+        tr.dataset.drug = item.drug;
         const sourceTitles = item.sources.map((key) => SOURCES[key].title).join(' ');
         tr.dataset.search = `${section.title} ${item.drug} ${item.range} ${item.basis} ${sourceTitles}`.toLowerCase();
-        [item.drug, item.range, item.basis, item.value].forEach((value) => { const td = document.createElement('td'); td.textContent = value; tr.append(td); });
+        const drugCell = document.createElement('td');
+        const drugName = document.createElement('span'); drugName.textContent = item.drug;
+        const favorite = document.createElement('button'); favorite.type = 'button'; favorite.className = 'favorite-button'; favorite.dataset.drug = item.drug;
+        favorite.addEventListener('click', () => {
+          if (favoriteDrugs.has(item.drug)) favoriteDrugs.delete(item.drug); else favoriteDrugs.add(item.drug);
+          saveFavorites(); syncFavoriteButtons(); filterResults();
+        });
+        drugCell.append(drugName, favorite); tr.append(drugCell);
+        [item.range, item.basis, item.value].forEach((value) => { const td = document.createElement('td'); td.textContent = value; tr.append(td); });
         const sourceCell = document.createElement('td'); sourceCell.className = 'source-links';
         const sourceList = document.createElement('div');
         item.sources.forEach((key) => {
@@ -167,6 +198,7 @@
       table.append(body); scroll.append(table); wrapper.append(heading, scroll); fragment.append(wrapper);
     });
     results.replaceChildren(fragment);
+    syncFavoriteButtons();
   }
 
   function calculate(silent = false) {
@@ -193,8 +225,13 @@
     const query = searchBox.value.trim().toLowerCase(); let visible = 0;
     document.querySelectorAll('.dose-section').forEach((section) => {
       let sectionVisible = 0;
-      section.querySelectorAll('tbody tr').forEach((tr) => { const matches = !query || tr.dataset.search.includes(query); tr.hidden = !matches; if (matches) sectionVisible += 1; });
-      const categoryMatches = selectedCategory === 'all' || section.dataset.category === selectedCategory;
+      section.querySelectorAll('tbody tr').forEach((tr) => {
+        const queryMatches = !query || tr.dataset.search.includes(query);
+        const favoriteMatches = selectedCategory !== 'favorites' || favoriteDrugs.has(tr.dataset.drug);
+        const matches = queryMatches && favoriteMatches;
+        tr.hidden = !matches; if (matches) sectionVisible += 1;
+      });
+      const categoryMatches = selectedCategory === 'all' || selectedCategory === 'favorites' || section.dataset.category === selectedCategory;
       section.hidden = sectionVisible === 0 || !categoryMatches;
       if (categoryMatches) visible += sectionVisible;
       if ((query || selectedCategory !== 'all') && categoryMatches && sectionVisible) section.open = true;
@@ -205,7 +242,7 @@
 
   function reportText() {
     const { patient, metrics: m, sections } = report;
-    const lines = ['Medication Dosing Report', `Patient: ${patient.sex}; age ${patient.age}; ${fmt(patient.height)} cm; ${fmt(patient.weight)} kg`, `Metrics: BMI ${fmt(m.BMI)} kg/m²; IBW ${fmt(m.IBW)} kg; LBW ${fmt(m.LBW)} kg; FFM ${fmt(m.FFM)} kg`, ''];
+    const lines = ['Medication Dosing Report', `Patient: ${patient.sex}; age ${patient.age}; ${fmt(patient.height)} cm; ${fmt(patient.weight)} kg`, `Metrics: BMI ${fmt(m.BMI)} kg/m²; IBW ${fmt(m.IBW)} kg; LBW ${fmt(m.LBW)} kg`, ''];
     sections.forEach((section) => {
       lines.push(section.title, 'Medication\tReference range\tBasis\tCalculated dose\tSources');
       section.rows.forEach((item) => lines.push(`${item.drug}\t${item.range}\t${item.basis}\t${item.value}\t${item.sources.map((key) => SOURCES[key].url).join(' ')}`));

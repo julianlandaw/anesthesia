@@ -154,7 +154,7 @@ else:
 
 used_source_keys = set()
 for line_number, line in enumerate(dose_script.splitlines(), start=1):
-    if not line.lstrip().startswith("row("):
+    if "row(" not in line:
         continue
     source_list_match = re.search(r", \[([^\]]+)\]\),?$", line.strip())
     if not source_list_match:
@@ -182,6 +182,9 @@ for required in (
     "patient.age > 65 ? 0.5 : 1",
     "m.TBW > 1.3 * m.IBW",
     "IBW (label obesity threshold)",
+    "Propofol (induction, age ≥65)",
+    "Dexmedetomidine (sedation loading, age ≥65)",
+    "anesthesia-dose-favorites",
 ):
     if required not in dose_script:
         errors.append(f"script.js: missing required dosing logic: {required}")
@@ -190,6 +193,67 @@ dose_page = (DOCS / "drugdoses.html").read_text(encoding="utf-8")
 for source in ("dailymed.nlm.nih.gov", "pubmed.ncbi.nlm.nih.gov"):
     if source not in f"{dose_page}\n{dose_script}":
         errors.append(f"drugdoses.html: missing esmolol source link for {source}")
+
+content_requirements = {
+    "abgcalc.html": (
+        "deltaRatio",
+        "hendersonHasselbalchPh",
+        "Input consistency check",
+        "PMC5260542",
+    ),
+    "cardiacrisk.html": (
+        "Low risk (&lt;1% MACE)",
+        "Elevated risk (≥1% MACE)",
+        "data-dasi=",
+        "CIR.0000000000001285",
+    ),
+    "ponv.html": (
+        "2026 Fifth Consensus Guidelines",
+        "use two prophylactic interventions",
+        "Drug choices remain manual",
+        "ANE.0000000000007816",
+    ),
+    "venthelper.html": (
+        "ARDS: 4–8 (start at 6)",
+        "drivingPressure",
+        "plateau pressure &lt;30",
+        "ards-guidelines.pdf",
+    ),
+    "preopguidelines.html": (
+        "ADA Standards of Care in Diabetes—2026",
+        "ASRA 2025 antithrombotic guideline",
+        "CHEST 2022 Perioperative Management",
+    ),
+}
+for filename, requirements in content_requirements.items():
+    source = (DOCS / filename).read_text(encoding="utf-8")
+    for required in requirements:
+        if required not in source:
+            errors.append(f"{filename}: missing reviewed clinical content: {required}")
+
+for filename in ("ponv.html", "cardiacrisk.html"):
+    source = (DOCS / filename).read_text(encoding="utf-8")
+    if "Avoid identifiers" not in source and "Avoid names/MRNs" not in source:
+        errors.append(f"{filename}: free-text notes need an identifier warning")
+
+preop_source = (DOCS / "preopguidelines.html").read_text(encoding="utf-8").lower()
+for placeholder in ("placeholder reference", "example.com", "citation needed"):
+    if placeholder in preop_source:
+        errors.append(f"preopguidelines.html: unresolved source placeholder: {placeholder}")
+
+calculations = (DOCS / "calculations.js").read_text(encoding="utf-8")
+for helper in ("devineIdealBodyWeight", "respiratoryCompensation", "deltaRatio", "hendersonHasselbalchPh", "drivingPressure"):
+    if helper not in calculations:
+        errors.append(f"calculations.js: missing shared clinical helper {helper}")
+
+pwa_source = (DOCS / "pwa.js").read_text(encoding="utf-8")
+for required in ("September 23, 2026", "December 23, 2026", "navigator.onLine"):
+    if required not in pwa_source:
+        errors.append(f"pwa.js: missing review/offline metadata: {required}")
+if "anesthesia-toolkit-v3" not in service_worker:
+    errors.append("sw.js: expected cache version v3")
+if not (DOCS / "CLINICAL_REVIEW.md").exists():
+    errors.append("docs: missing quarterly clinical review log")
 
 if errors:
     print("Site checks failed:", file=sys.stderr)

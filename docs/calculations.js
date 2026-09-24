@@ -15,14 +15,18 @@
     if (sex !== 'male' && sex !== 'female') throw new TypeError('sex must be male or female.');
     const TBW = weight;
     const BMI = TBW / ((height / 100) ** 2);
-    const IBW = sex === 'male' ? 50 + 0.91 * (height - 152.4) : 45.5 + 0.91 * (height - 152.4);
+    const IBW = devineIdealBodyWeight(sex, height);
     const LBW = sex === 'male'
-      ? 1.10 * TBW - 128 * ((TBW / height) ** 2)
-      : 1.07 * TBW - 148 * ((TBW / height) ** 2);
-    const FFM = sex === 'male'
       ? (9270 * TBW) / (6680 + 216 * BMI)
       : (9270 * TBW) / (8780 + 244 * BMI);
-    return { TBW, BMI, IBW, LBW, FFM };
+    return { TBW, BMI, IBW, LBW, FFM: LBW };
+  }
+
+  function devineIdealBodyWeight(sex, heightCm) {
+    requireFinite('heightCm', heightCm);
+    if (sex !== 'male' && sex !== 'female') throw new TypeError('sex must be male or female.');
+    const inchesOverFiveFeet = (heightCm / 2.54) - 60;
+    return (sex === 'male' ? 50 : 45.5) + 2.3 * inchesOverFiveFeet;
   }
 
   function heightToCm(height, unit = 'cm') {
@@ -84,8 +88,41 @@
     return { value, corrected };
   }
 
+  function respiratoryCompensation(paco2, disorder) {
+    requireFinite('paco2', paco2);
+    const deltaTens = (paco2 - 40) / 10;
+    if (disorder === 'acidosis') {
+      return { acute: 24 + deltaTens, chronic: 24 + 3.5 * deltaTens };
+    }
+    if (disorder === 'alkalosis') {
+      return { acute: 24 + 2 * deltaTens, chronic: 24 + 4 * deltaTens };
+    }
+    throw new TypeError('disorder must be acidosis or alkalosis.');
+  }
+
+  function deltaRatio({ anionGap: gap, correctedAnionGap, hco3, normalGap = 12, normalHco3 = 24 }) {
+    [gap, hco3, normalGap, normalHco3].forEach((value, index) => requireFinite(['anionGap', 'hco3', 'normalGap', 'normalHco3'][index], value));
+    const selectedGap = Number.isFinite(correctedAnionGap) ? correctedAnionGap : gap;
+    const denominator = normalHco3 - hco3;
+    if (selectedGap <= normalGap || denominator <= 0) return null;
+    return (selectedGap - normalGap) / denominator;
+  }
+
+  function hendersonHasselbalchPh({ paco2, hco3 }) {
+    [paco2, hco3].forEach((value, index) => requireFinite(['paco2', 'hco3'][index], value));
+    if (paco2 <= 0 || hco3 <= 0) throw new RangeError('paco2 and hco3 must be greater than zero.');
+    return 6.1 + Math.log10(hco3 / (0.03 * paco2));
+  }
+
+  function drivingPressure(plateauPressure, peep) {
+    requireFinite('plateauPressure', plateauPressure);
+    requireFinite('peep', peep);
+    return plateauPressure - peep;
+  }
+
   return {
     bodyMetrics,
+    devineIdealBodyWeight,
     heightToCm,
     predictedBodyWeight,
     tidalVolumeRange,
@@ -94,6 +131,10 @@
     rcriScore,
     winterExpectedPaco2,
     alveolarGas,
-    anionGap
+    anionGap,
+    respiratoryCompensation,
+    deltaRatio,
+    hendersonHasselbalchPh,
+    drivingPressure
   };
 });

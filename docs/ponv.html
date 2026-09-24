@@ -402,7 +402,7 @@
       <p><b>Adult decision support.</b> Score the four Apfel factors, then build a prophylaxis plan only if needed.</p>
       <details>
         <summary>About this tool</summary>
-        <p>Verify patient-specific contraindications, QT risk, interactions, institutional protocols, and current labeling or guidance.</p>
+        <p>Based on the 2026 Fifth Consensus Guidelines. Verify patient-specific contraindications, QT risk, interactions, institutional protocols, and current labeling. <a href="https://doi.org/10.1213/ANE.0000000000007816" target="_blank" rel="noopener noreferrer">Guideline ↗</a></p>
       </details>
     </section>
 
@@ -479,7 +479,8 @@
           </div>
           <div>
             <label for="notes">Notes (optional)</label>
-            <input id="notes" type="text" placeholder="e.g., QT risk, scopolamine contraindication…" />
+            <input id="notes" type="text" placeholder="Avoid identifiers; e.g., QT risk or contraindication…" />
+            <div class="help">Avoid patient names, record numbers, or other identifiers.</div>
           </div>
         </div>
         </div>
@@ -497,7 +498,7 @@
       <!-- Results -->
       <section class="panel" aria-label="Results">
         <div class="panel-heading">
-          <h3>Risk and suggestion</h3>
+          <h3>Risk and guidance</h3>
           <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">📋 Copy</button>
         </div>
 
@@ -515,7 +516,7 @@
           </div>
 
           <div class="metric full result-primary">
-            <h4>Suggested prophylaxis intensity (non-prescriptive)</h4>
+            <h4>Guideline prophylaxis guidance</h4>
             <div class="value" id="tierOut">—</div>
             <div class="sub" id="tierSub">—</div>
             <div class="badge" id="tierBadge">Awaiting inputs…</div>
@@ -539,8 +540,8 @@
         <div class="details-body">
         <h3>Prophylaxis plan builder</h3>
         <p style="margin:0;color:var(--muted);font-size:13px;max-width:100ch;">
-          Select agents/classes appropriate for the patient and your local practice. The “Suggested set” highlights typical
-          multi-modal approaches by risk tier (you can override freely).
+          Select agents/classes appropriate for the patient and your local practice. This tool does not auto-select drugs because
+          contraindications and interactions are not captured here.
         </p>
 
         <div class="planGrid" id="agentGrid">
@@ -603,18 +604,8 @@
 
         <div class="row">
           <div>
-            <label for="suggestSet">Plan intensity</label>
-            <select id="suggestSet">
-              <option value="auto" selected>Based on current score</option>
-              <option value="minimal">Minimal</option>
-              <option value="moderate">Moderate</option>
-              <option value="aggressive">Aggressive</option>
-              <option value="none">No auto-selection</option>
-            </select>
-            <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="btn ghost" id="applySuggestedBtn" type="button">✨ Apply suggested</button>
-              <button class="btn ghost" id="clearAgentsBtn" type="button">✖ Clear agents</button>
-            </div>
+            <div class="note"><strong>2026 guidance:</strong> use two prophylactic interventions in adults at any PONV risk. For high risk, maximize baseline-risk mitigation; additional agents should follow contraindications and local protocol. Drug choices remain manual in this tool.</div>
+            <button class="btn ghost" id="clearAgentsBtn" type="button" style="margin-top:10px;">Clear selected interventions</button>
           </div>
 
           <div>
@@ -627,7 +618,7 @@
         </div>
 
         <details>
-          <summary>Common adult prophylaxis dose references (optional; verify locally)</summary>
+          <summary>Common adult prophylaxis dose references</summary>
           <p>
             These are <b>reference reminders</b> only. Always check contraindications, QT risk, interactions, renal/hepatic status,
             and local policies.
@@ -639,6 +630,7 @@
             <li><b>Scopolamine patch</b>: typically applied pre-op with adequate lead time; avoid in susceptible patients.</li>
             <li><b>NK1 antagonist</b> (e.g., aprepitant): dosing varies by protocol; used mainly for higher-risk cases.</li>
           </ul>
+          <p><a href="https://doi.org/10.1213/ANE.0000000000007816" target="_blank" rel="noopener noreferrer">Fifth Consensus Guidelines for PONV (2026) ↗</a></p>
         </details>
         </div>
       </details>
@@ -695,8 +687,6 @@
       agNK1: document.getElementById('agNK1'),
       agTIVA: document.getElementById('agTIVA'),
 
-      suggestSet: document.getElementById('suggestSet'),
-      applySuggestedBtn: document.getElementById('applySuggestedBtn'),
       clearAgentsBtn: document.getElementById('clearAgentsBtn'),
       planSummary: document.getElementById('planSummary')
     };
@@ -721,9 +711,9 @@
     const riskMap = window.AnesthesiaCalculations.apfelRisk;
 
     function tierFor(score){
-      if (score <= 1) return {tier: 'Minimal–light', sub: 'Often 0–1 agent; focus on technique & opioid-sparing when possible.', cls: 'ok'};
-      if (score === 2) return {tier: 'Moderate', sub: 'Often 2 agents from different classes; consider technique choices.', cls: 'warn'};
-      return {tier: 'High', sub: 'Often 3+ agents (different classes) + technique optimization (e.g., consider TIVA, avoid nitrous) when appropriate.', cls: 'danger'};
+      if (score === 0) return {tier: 'Low', sub: 'Use 2 prophylactic interventions; apply patient-specific contraindications.', cls: 'ok'};
+      if (score <= 2) return {tier: 'Medium', sub: 'Use 2 prophylactic interventions plus appropriate baseline-risk mitigation.', cls: 'warn'};
+      return {tier: 'High', sub: 'Use 2 prophylactic interventions and maximize baseline-risk mitigation; consider additional therapy per local protocol.', cls: 'danger'};
     }
 
     function modifiablePrompts(){
@@ -769,41 +759,6 @@
       els.agScop.checked = false;
       els.agNK1.checked = false;
       els.agTIVA.checked = false;
-    }
-
-    function applySuggested(mode){
-      // mode: minimal | moderate | aggressive | auto
-      const score = apfelScore();
-      const effectiveMode = (mode === 'auto')
-        ? (score <= 1 ? 'minimal' : score === 2 ? 'moderate' : 'aggressive')
-        : mode;
-
-      // Start clean, then set
-      clearAgents();
-
-      if (effectiveMode === 'none') return;
-
-      if (effectiveMode === 'minimal'){
-        // Often 0–1 agent; pick a common foundational option
-        els.agDex.checked = true;
-      }
-      if (effectiveMode === 'moderate'){
-        // Two different classes
-        els.agDex.checked = true;
-        els.ag5ht3.checked = true;
-      }
-      if (effectiveMode === 'aggressive'){
-        // Three+ different classes + technique prompt
-        els.agDex.checked = true;
-        els.ag5ht3.checked = true;
-        els.agDroperidol.checked = true;
-        // add scop for very high risk or longer case; keep optional
-        if (score >= 4 || els.duration.value === 'long') els.agScop.checked = true;
-        // technique prompt
-        if (els.anesthetic.value === 'volatile') els.agTIVA.checked = true;
-        // NK1 optional if very high risk
-        if (score >= 4) els.agNK1.checked = true;
-      }
     }
 
     function buildSummary(){
@@ -874,14 +829,6 @@
       updateUI._summary = summary;
     }
 
-    // Apply suggested based on dropdown state (without forcing)
-    function maybeAutoSuggest(){
-      const mode = els.suggestSet.value;
-      if (mode === 'none') return;
-      applySuggested(mode);
-      updateUI();
-    }
-
     // Event wiring
     const apfelInputs = [els.rfFemale, els.rfNonsmoker, els.rfHx, els.rfOpioids];
     apfelInputs.forEach(cb => cb.addEventListener('change', () => {
@@ -900,22 +847,10 @@
       cb.addEventListener('change', updateUI);
     });
 
-    // Suggested set controls
-    els.applySuggestedBtn.addEventListener('click', () => {
-      maybeAutoSuggest();
-      showToast('Applied suggested set');
-    });
     els.clearAgentsBtn.addEventListener('click', () => {
       clearAgents();
       updateUI();
       showToast('Cleared agents');
-    });
-    els.suggestSet.addEventListener('change', () => {
-      // Do not auto-change selections unless user clicks Apply,
-      // except for "auto" where many prefer it to track: we still keep it conservative.
-      if (els.suggestSet.value === 'auto') {
-        // optional: do nothing until user clicks Apply; but user asked for useful tool—keep it gentle
-      }
     });
 
     // Copy summary
@@ -948,7 +883,6 @@
       els.duration.value = 'unknown';
       els.notes.value = '';
 
-      els.suggestSet.value = 'auto';
       clearAgents();
 
       updateUI();
@@ -964,8 +898,6 @@
 
     // Initial state
     updateUI();
-    // Optional: if you want initial auto-suggest selection, uncomment:
-    // maybeAutoSuggest();
   </script>
 </body>
 </html>

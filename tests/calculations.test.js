@@ -9,15 +9,20 @@ const closeTo = (actual, expected, tolerance = 0.01) => {
 test('body metrics reproduce standard male and female reference cases', () => {
   const male = calc.bodyMetrics({ sex: 'male', height: 175, weight: 80 });
   closeTo(male.BMI, 26.1224);
-  closeTo(male.IBW, 70.566);
-  closeTo(male.LBW, 61.2506);
+  closeTo(male.IBW, 70.4646);
+  closeTo(male.LBW, 60.1828);
   closeTo(male.FFM, 60.1828);
 
   const female = calc.bodyMetrics({ sex: 'female', height: 160, weight: 60 });
   closeTo(female.BMI, 23.4375);
-  closeTo(female.IBW, 52.416);
-  closeTo(female.LBW, 43.3875);
+  closeTo(female.IBW, 52.3819);
+  closeTo(female.LBW, 38.3619);
   closeTo(female.FFM, 38.3619);
+});
+
+test('drug-weight metrics use named Devine IBW and Janmahasatian lean body weight formulas', () => {
+  closeTo(calc.devineIdealBodyWeight('male', 177.8), 73);
+  closeTo(calc.devineIdealBodyWeight('female', 162.56), 54.7);
 });
 
 test('height conversion and predicted body weight use total inches correctly', () => {
@@ -51,6 +56,22 @@ test('alveolar gas equation accepts fraction and percentage FiO2', () => {
 test('anion gap includes optional albumin correction', () => {
   assert.deepEqual(calc.anionGap({ na: 140, cl: 104, hco3: 20 }), { value: 16, corrected: null });
   assert.deepEqual(calc.anionGap({ na: 140, cl: 104, hco3: 20, albumin: 2 }), { value: 16, corrected: 21 });
+});
+
+test('respiratory compensation moves bicarbonate in the physiologic direction', () => {
+  assert.deepEqual(calc.respiratoryCompensation(60, 'acidosis'), { acute: 26, chronic: 31 });
+  assert.deepEqual(calc.respiratoryCompensation(30, 'alkalosis'), { acute: 22, chronic: 20 });
+});
+
+test('delta ratio uses corrected anion gap when available and only when interpretable', () => {
+  closeTo(calc.deltaRatio({ anionGap: 16, correctedAnionGap: 20, hco3: 18 }), 8 / 6);
+  assert.equal(calc.deltaRatio({ anionGap: 10, hco3: 18 }), null);
+  assert.equal(calc.deltaRatio({ anionGap: 20, hco3: 25 }), null);
+});
+
+test('Henderson-Hasselbalch and driving pressure helpers produce expected values', () => {
+  closeTo(calc.hendersonHasselbalchPh({ paco2: 40, hco3: 24 }), 7.401, 0.002);
+  assert.equal(calc.drivingPressure(24, 8), 16);
 });
 
 test('calculation helpers reject invalid values', () => {

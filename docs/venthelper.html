@@ -366,7 +366,7 @@
       <p><b>Adult decision support.</b> Enter PBW inputs, choose a volume band, and adjust the resulting plan clinically.</p>
       <details>
         <summary>About this tool</summary>
-        <p>Verify against lung compliance, dead space, ARDS status, acid–base goals, delivered volumes and pressures, and local protocols.</p>
+        <p>Verify against lung compliance, dead space, ARDS status, acid–base goals, delivered volumes and pressures, and local protocols. ARDS targets reflect the <a href="https://www.thoracic.org/statements/resources/cc/ards-guidelines.pdf" target="_blank" rel="noopener">ATS/ESICM/SCCM guideline</a>.</p>
       </details>
     </section>
 
@@ -388,8 +388,8 @@
           <div>
             <label for="strategy">TV Strategy (mL/kg PBW)</label>
             <select id="strategy">
-              <option value="standard" selected>Standard: 6–8</option>
-              <option value="protective">Lung-protective: 4–6</option>
+              <option value="routine" selected>Routine protective: 6–8</option>
+              <option value="ards">ARDS: 4–8 (start at 6)</option>
               <option value="custom">Custom band…</option>
             </select>
           </div>
@@ -417,10 +417,15 @@
 
         <details class="secondary-details">
           <summary>Add charting details</summary>
-        <div class="row three details-body">
+        <p class="help details-body">These optional fields add context to the pressure check and copied summary; they do not set the tidal-volume target.</p>
+        <div class="row details-body">
           <div>
             <label for="peep">PEEP (optional)</label>
             <input id="peep" type="number" inputmode="decimal" placeholder="e.g., 5" min="0" max="30" step="1" />
+          </div>
+          <div>
+            <label for="plateau">Plateau pressure (optional)</label>
+            <input id="plateau" type="number" inputmode="decimal" placeholder="e.g., 24" min="0" max="60" step="1" />
           </div>
           <div>
             <label for="fio2">FiO₂ (optional)</label>
@@ -455,7 +460,7 @@
               <input id="customMax" type="number" inputmode="decimal" min="2" max="12" step="0.5" value="8" />
             </div>
           </div>
-          <p>Tip: A common “standard adult” band is 6–8; lung-protective is 4–6.</p>
+          <p>Tip: routine protective ventilation commonly uses 6–8 mL/kg PBW. For ARDS, use 4–8 mL/kg PBW, generally starting at 6 and titrating to plateau pressure and clinical goals.</p>
         </details>
 
         <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
@@ -465,7 +470,8 @@
           <p>
             <b>PBW</b> (kg): Male = 50 + 0.91×(height_cm − 152.4); Female = 45.5 + 0.91×(height_cm − 152.4).<br/>
             <b>TV range</b> (mL): PBW×(mL/kg).<br/>
-            <b>Minute ventilation</b> (L/min): (TV_mL × RR)/1000.
+            <b>Minute ventilation</b> (L/min): (TV_mL × RR)/1000.<br/>
+            <b>Driving pressure</b> (cm H₂O): plateau pressure − PEEP.
           </p>
         </details>
       </section>
@@ -518,6 +524,11 @@
             <h4>Context</h4>
             <div class="badge" id="contextBadge">—</div>
           </div>
+          <div class="metric">
+            <h4>Pressure check</h4>
+            <div class="value" id="pressureOut">—</div>
+            <div class="sub" id="pressureSub">Add plateau pressure and PEEP for driving pressure.</div>
+          </div>
           <span id="copyPreview" hidden></span>
         </div>
       </section>
@@ -530,6 +541,7 @@
           • In obesity/recruitment issues, PEEP titration and positioning matter; avoid over-distension.<br/>
           • Always confirm actual delivered TV (especially in PC/PS modes) and monitor plateau/driving pressures when relevant.
         </p>
+        <p><a href="https://www.thoracic.org/statements/resources/cc/ards-guidelines.pdf" target="_blank" rel="noopener">Source: mechanical ventilation in adult ARDS guideline</a> — ARDS target 4–8 mL/kg PBW (initial 6) and plateau pressure &lt;30 cm H₂O.</p>
       </details>
     </div>
     </main>
@@ -556,6 +568,7 @@
       heightUnit: document.getElementById('heightUnit'),
       rr: document.getElementById('rr'),
       peep: document.getElementById('peep'),
+      plateau: document.getElementById('plateau'),
       fio2: document.getElementById('fio2'),
       mode: document.getElementById('mode'),
       customMin: document.getElementById('customMin'),
@@ -574,6 +587,8 @@
       tvBadge: document.getElementById('tvBadge'),
       mvOut: document.getElementById('mvOut'),
       contextBadge: document.getElementById('contextBadge'),
+      pressureOut: document.getElementById('pressureOut'),
+      pressureSub: document.getElementById('pressureSub'),
       copyPreview: document.getElementById('copyPreview'),
       inputError: document.getElementById('inputError'),
       presetButtons: Array.from(document.querySelectorAll('[data-tv-preset]')),
@@ -605,8 +620,8 @@
 
     function getBand(){
       const strat = els.strategy.value;
-      if (strat === 'standard') return {min: 6, max: 8, label: 'Standard 6–8 mL/kg PBW'};
-      if (strat === 'protective') return {min: 4, max: 6, label: 'Lung-protective 4–6 mL/kg PBW'};
+      if (strat === 'routine') return {min: 6, max: 8, label: 'Routine protective 6–8 mL/kg PBW'};
+      if (strat === 'ards') return {min: 4, max: 8, label: 'ARDS 4–8 mL/kg PBW (initial 6)'};
       // custom
       let mn = parseNum(els.customMin);
       let mx = parseNum(els.customMax);
@@ -643,7 +658,7 @@
       return v.toFixed(2);
     }
 
-    function buildSummary({mode, sex, heightCm, pbw, tv, rr, mv, peep, fio2, bandLabel}){
+    function buildSummary({mode, sex, heightCm, pbw, tv, rr, mv, peep, plateau, fio2, bandLabel}){
       const parts = [];
       parts.push('Vent:');
       if (mode) parts.push(`${mode}`);
@@ -652,6 +667,8 @@
       parts.push(`RR ${round0(rr)}`);
       parts.push(`MV ${round1(mv)} L/min`);
       if (isNum(peep)) parts.push(`PEEP ${round0(peep)}`);
+      if (isNum(plateau)) parts.push(`Pplat ${round0(plateau)}`);
+      if (isNum(peep) && isNum(plateau)) parts.push(`driving pressure ${round0(window.AnesthesiaCalculations.drivingPressure(plateau, peep))}`);
       if (isNum(fio2)) parts.push(`FiO₂ ${formatFiO2(fio2)}`);
       parts.push(`[${bandLabel}]`);
       return parts.join(' • ');
@@ -678,6 +695,7 @@
 
       const rr = parseNum(els.rr);
       const peep = parseNum(els.peep);
+      const plateau = parseNum(els.plateau);
       let fio2 = parseNum(els.fio2);
       if (isNum(fio2) && fio2 > 1) fio2 = fio2 / 100; // interpret percent entry
       const mode = els.mode.value;
@@ -687,15 +705,18 @@
       const heightValid = !els.height.value || (isNum(heightCm) && heightCm >= 80 && heightCm <= 250);
       const rrValid = !els.rr.value || (isNum(rr) && rr >= 4 && rr <= 40);
       const peepValid = !els.peep.value || (isNum(peep) && peep >= 0 && peep <= 30);
+      const plateauValid = !els.plateau.value || (isNum(plateau) && plateau >= 0 && plateau <= 60);
       const rawFio2 = parseNum(els.fio2);
       const fio2Valid = !els.fio2.value || (isNum(rawFio2) && ((rawFio2 >= 0.21 && rawFio2 <= 1) || (rawFio2 >= 21 && rawFio2 <= 100)));
       markValidity(els.height, heightValid);
       markValidity(els.rr, rrValid);
       markValidity(els.peep, peepValid);
+      markValidity(els.plateau, plateauValid);
       markValidity(els.fio2, fio2Valid);
       if (!heightValid) errors.push('Height must be 80–250 cm (about 31–98 in).');
       if (!rrValid) errors.push('RR must be 4–40/min.');
       if (!peepValid) errors.push('PEEP must be 0–30 cm H₂O.');
+      if (!plateauValid) errors.push('Plateau pressure must be 0–60 cm H₂O.');
       if (!fio2Valid) errors.push('FiO₂ must be 0.21–1.0 or 21–100%.');
       els.inputError.textContent = errors.join(' ');
 
@@ -713,6 +734,8 @@
         els.copyPreview.textContent = 'Fill inputs to generate a one-line summary.';
         els.contextBadge.textContent = '—';
         els.contextBadge.className = 'badge';
+        els.pressureOut.textContent = '—';
+        els.pressureSub.textContent = 'Add plateau pressure and PEEP for driving pressure.';
         els.tvBadge.textContent = 'Awaiting inputs…';
         els.tvBadge.className = 'badge';
         setTvControlsEnabled(false);
@@ -776,13 +799,23 @@
       els.contextBadge.className = `badge ${cCls}`.trim();
       els.contextBadge.textContent = cText;
 
+      if (isNum(plateau) && plateauValid) {
+        const driving = isNum(peep) && peepValid ? window.AnesthesiaCalculations.drivingPressure(plateau, peep) : NaN;
+        els.pressureOut.textContent = isNum(driving) ? `${round1(driving)} cm H₂O driving` : `Pplat ${round1(plateau)} cm H₂O`;
+        els.pressureSub.textContent = `${plateau < 30 ? 'Plateau below' : 'Plateau at/above'} 30 cm H₂O${isNum(driving) && driving < 0 ? ' • verify Pplat and PEEP entries' : ''}.`;
+      } else {
+        els.pressureOut.textContent = '—';
+        els.pressureSub.textContent = 'Add plateau pressure and PEEP for driving pressure.';
+      }
+
       // Copy preview
-      const canCopy = isNum(rr) && rrValid && peepValid && fio2Valid;
+      const canCopy = isNum(rr) && rrValid && peepValid && plateauValid && fio2Valid;
       const summary = canCopy ? buildSummary({
         mode, sex, heightCm, pbw, tv,
         rr,
         mv,
         peep: isNum(peep) ? peep : NaN,
+        plateau: isNum(plateau) ? plateau : NaN,
         fio2: isNum(fio2) ? fio2 : NaN,
         bandLabel: band.label
       }) : '';
@@ -810,6 +843,7 @@
       els.heightUnit.addEventListener(evt, recalc);
       els.rr.addEventListener(evt, recalc);
       els.peep.addEventListener(evt, recalc);
+      els.plateau.addEventListener(evt, recalc);
       els.fio2.addEventListener(evt, recalc);
       els.mode.addEventListener(evt, recalc);
       els.customMin.addEventListener(evt, recalc);
@@ -841,11 +875,12 @@
     // Reset
     els.resetBtn.addEventListener('click', () => {
       els.sex.value = '';
-      els.strategy.value = 'standard';
+      els.strategy.value = 'routine';
       els.height.value = '';
       els.heightUnit.value = 'cm';
       els.rr.value = 14;
       els.peep.value = '';
+      els.plateau.value = '';
       els.fio2.value = '';
       els.mode.value = '';
       els.customMin.value = 6;

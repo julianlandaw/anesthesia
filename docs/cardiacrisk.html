@@ -366,7 +366,7 @@
       <p><b>Adult decision support.</b> Check active-condition red flags, then add procedural context and RCRI factors.</p>
       <details>
         <summary>About this tool</summary>
-        <p>This snapshot does not replace clinical judgment, specialty evaluation, or institutional pathways. Urgency, symptoms, and trajectory matter.</p>
+        <p>This snapshot follows the <a href="https://www.ahajournals.org/doi/full/10.1161/CIR.0000000000001285" target="_blank" rel="noopener">2024 AHA/ACC perioperative guideline</a>. It does not replace clinical judgment, specialty evaluation, or institutional pathways. Urgency, symptoms, and trajectory matter.</p>
       </details>
     </section>
 
@@ -388,9 +388,8 @@
           <div>
             <label for="surgRisk">Surgical risk category</label>
             <select id="surgRisk">
-              <option value="low" selected>Low risk</option>
-              <option value="intermediate">Intermediate risk</option>
-              <option value="high">High risk</option>
+              <option value="low" selected>Low risk (&lt;1% MACE)</option>
+              <option value="elevated">Elevated risk (≥1% MACE)</option>
             </select>
           </div>
         </div>
@@ -407,7 +406,7 @@
 
           <div>
             <label for="notes">Notes (optional)</label>
-            <input id="notes" type="text" placeholder="e.g., COPD baseline, recent cath, device, timing constraints…" />
+            <input id="notes" type="text" placeholder="Avoid names/MRNs; note only relevant context…" />
           </div>
         </div>
 
@@ -418,6 +417,27 @@
             <li>Walking up a hill, brisk walking</li>
             <li>Heavy housework (scrubbing floors, moving furniture)</li>
           </ul>
+        </details>
+        <details>
+          <summary>Optional structured DASI assessment (12 items)</summary>
+          <p>Check every activity the patient can currently perform. A DASI score &gt;34 is associated with adequate functional capacity; clinical context still matters.</p>
+          <label class="check"><input id="useDasi" type="checkbox" /> Use DASI result for this snapshot</label>
+          <div class="compact-checks" id="dasiItems">
+            <label class="check"><input type="checkbox" data-dasi="2.75" /> Personal care</label>
+            <label class="check"><input type="checkbox" data-dasi="1.75" /> Walk indoors</label>
+            <label class="check"><input type="checkbox" data-dasi="2.75" /> Walk 1–2 blocks on level ground</label>
+            <label class="check"><input type="checkbox" data-dasi="5.5" /> Climb a flight of stairs or walk uphill</label>
+            <label class="check"><input type="checkbox" data-dasi="8" /> Run a short distance</label>
+            <label class="check"><input type="checkbox" data-dasi="2.7" /> Light housework</label>
+            <label class="check"><input type="checkbox" data-dasi="3.5" /> Moderate housework</label>
+            <label class="check"><input type="checkbox" data-dasi="8" /> Heavy housework</label>
+            <label class="check"><input type="checkbox" data-dasi="4.5" /> Yard work</label>
+            <label class="check"><input type="checkbox" data-dasi="5.25" /> Sexual relations</label>
+            <label class="check"><input type="checkbox" data-dasi="6" /> Moderate recreation</label>
+            <label class="check"><input type="checkbox" data-dasi="7.5" /> Strenuous sports</label>
+          </div>
+          <p id="dasiOut" aria-live="polite">DASI: 0 / 58.2</p>
+          <p><a href="https://pubmed.ncbi.nlm.nih.gov/2782256/" target="_blank" rel="noopener">Original DASI validation</a></p>
         </details>
         <p class="input-error" id="classificationWarning" role="status" aria-live="polite"></p>
 
@@ -471,8 +491,8 @@
         <div class="check">
           <input type="checkbox" id="rcriHighRiskSurg" aria-label="High-risk surgery" />
           <div>
-            <div class="t">High-risk surgery</div>
-            <div class="d">Major intraperitoneal, intrathoracic, or suprainguinal vascular (institution definitions vary).</div>
+            <div class="t">RCRI high-risk-procedure criterion</div>
+            <div class="d">This historical RCRI item is distinct from the overall low/elevated perioperative-risk selection above.</div>
           </div>
         </div>
 
@@ -518,7 +538,7 @@
 
         <details class="secondary-details">
           <summary>RCRI factor definitions</summary>
-          <p>High-risk surgery uses the RCRI criterion. Ischemic heart disease includes prior MI, angina, positive stress testing, or coronary intervention. Heart failure includes prior HF or pulmonary edema. Cerebrovascular disease includes stroke or TIA. The renal criterion is creatinine &gt;2 mg/dL.</p>
+          <p>The high-risk-procedure checkbox is the original RCRI criterion; it is not interchangeable with the overall guideline risk category. Ischemic heart disease includes prior MI, angina, positive stress testing, or coronary intervention. Heart failure includes prior HF or pulmonary edema. Cerebrovascular disease includes stroke or TIA. The renal criterion is creatinine &gt;2 mg/dL.</p>
         </details>
         </div>
 
@@ -552,7 +572,7 @@
           <summary>How this tool is intended to be used</summary>
           <ul>
             <li><b>RCRI</b> is one risk index; it does not capture everything (frailty, pulmonary HTN, severe valvular lesions, etc.).</li>
-            <li><b>Functional capacity</b> and <b>surgical risk</b> often drive the “do we need more info?” question.</li>
+            <li><b>Functional capacity</b> and <b>overall perioperative risk</b> often drive the “do we need more info?” question.</li>
             <li><b>Red flags</b> should prompt heightened attention; urgency matters.</li>
             <li>Use your institution’s pathway for ECG, echo, biomarkers, stress testing, and cardiology input.</li>
           </ul>
@@ -563,10 +583,11 @@
         <summary>Clinical notes</summary>
         <p style="margin:0;color:var(--muted);font-size:13px;max-width:105ch;">
           • If the patient has time-sensitive surgery, risk stratification may focus on stabilization/optimization rather than delays.<br/>
-          • Consider baseline ECG for intermediate/high-risk surgery or known cardiac disease per local practice pathways.<br/>
+          • Consider baseline ECG for elevated-risk surgery or known cardiac disease per local practice pathways.<br/>
           • Continue chronic beta-blockers; avoid initiating high-dose beta-blockade immediately pre-op without a plan (institution-dependent).<br/>
           • Tailor anesthetic plan, hemodynamic goals, and postoperative monitoring based on risk profile and trajectory.
         </p>
+        <p><a href="https://www.ahajournals.org/doi/full/10.1161/CIR.0000000000001285" target="_blank" rel="noopener">Source: 2024 AHA/ACC guideline for perioperative cardiovascular management</a></p>
       </details>
     </div>
     </main>
@@ -587,10 +608,13 @@
     // CARDIAC RISK LOGIC
     // =============================
     const els = {
-      urgency: document.getElementById('urgency'),
+     urgency: document.getElementById('urgency'),
       surgRisk: document.getElementById('surgRisk'),
       mets: document.getElementById('mets'),
       notes: document.getElementById('notes'),
+      useDasi: document.getElementById('useDasi'),
+      dasiItems: [...document.querySelectorAll('[data-dasi]')],
+      dasiOut: document.getElementById('dasiOut'),
 
       rcriHighRiskSurg: document.getElementById('rcriHighRiskSurg'),
       rcriIHD: document.getElementById('rcriIHD'),
@@ -655,8 +679,7 @@
 
     function surgRiskText(v){
       if (v === 'low') return 'Low surgical risk';
-      if (v === 'intermediate') return 'Intermediate surgical risk';
-      return 'High surgical risk';
+      return 'Elevated surgical risk';
     }
 
     function metsText(v){
@@ -665,11 +688,19 @@
       return 'METs unknown';
     }
 
+    function functionalAssessment(){
+      if (!els.useDasi.checked) return {category: els.mets.value, text: metsText(els.mets.value)};
+      const score = els.dasiItems.reduce((sum, item) => sum + (item.checked ? Number(item.dataset.dasi) : 0), 0);
+      const estimatedMets = (0.43 * score + 9.6) / 3.5;
+      const category = score > 34 ? 'good' : 'poor';
+      return {category, text: `DASI ${score.toFixed(2)} (~${estimatedMets.toFixed(1)} METs)`};
+    }
+
     function guidance({urgency, surgRisk, mets, score, red}){
       // Non-prescriptive prompt logic:
       // 1) Red flags dominate for elective; for urgent/emergent, focus on stabilization and plan
       // 2) Low surgery risk usually minimal testing prompts
-      // 3) Intermediate/high + poor/unknown METs + RCRI >=1 => consider more evaluation per pathway
+      // 3) Elevated risk + poor/unknown capacity + RCRI >=1 => consider more evaluation per pathway
       let title = '—', sub = '—', cls = '';
 
       const elective = urgency === 'elective';
@@ -694,7 +725,7 @@
         return {title, sub, cls};
       }
 
-      // Intermediate/high risk
+      // Elevated risk
       if (mets === 'good' && score <= 1){
         title = 'Adequate functional capacity with low–mild RCRI — often proceed with planned surgery';
         sub = 'Consider baseline ECG/other testing per institutional pathway and patient history; tailor monitoring to comorbidities.';
@@ -710,16 +741,15 @@
       }
 
       // Poor or unknown METs
-      if (mets !== 'good' && surgRisk === 'high'){
-        title = 'High-risk surgery + poor/unknown METs — consider further assessment if it would change management';
+      if (mets !== 'good' && surgRisk === 'elevated'){
+        title = 'Elevated-risk surgery + poor/unknown capacity — consider further assessment if it would change management';
         sub = 'Consider evaluation per local pathways (ECG, echo if indicated, biomarkers, stress testing, cardiology) depending on symptoms and time available.';
         cls = 'warn';
         return {title, sub, cls};
       }
 
-      // Intermediate risk + poor/unknown METs
       if (mets !== 'good' && score >= 1){
-        title = 'Intermediate/high risk context — consider evaluation based on symptoms, time, and pathway';
+        title = 'Elevated-risk context — consider evaluation based on symptoms, time, and pathway';
         sub = 'If poor/unknown METs and RCRI ≥1, consider whether additional information would change periop management or disposition.';
         cls = 'warn';
         return {title, sub, cls};
@@ -735,18 +765,18 @@
     function buildSummary(){
       const urgency = els.urgency.value;
       const surgRisk = els.surgRisk.value;
-      const mets = els.mets.value;
+      const functional = functionalAssessment();
+      const mets = functional.category;
       const score = rcriScore();
       const red = hasRedFlags();
-      const classificationMismatch = (surgRisk === 'low' && els.rcriHighRiskSurg.checked) ||
-        (surgRisk === 'high' && !els.rcriHighRiskSurg.checked);
+      const classificationMismatch = surgRisk === 'low' && els.rcriHighRiskSurg.checked;
       els.classificationWarning.textContent = classificationMismatch
         ? 'Procedural risk and the RCRI high-risk-surgery criterion differ. Confirm both selections.'
         : '';
       const cat = rcriCategory(score);
 
       const parts = [];
-      parts.push(`Cardiac risk: ${urgency}, ${surgRiskText(surgRisk)}, METs ${metsText(mets)}.`);
+      parts.push(`Cardiac risk: ${urgency}, ${surgRiskText(surgRisk)}, functional capacity ${functional.text}.`);
       parts.push(`RCRI ${score}/6 (${cat.label}).`);
       parts.push(`Red flags: ${red ? 'YES' : 'no'}.`);
 
@@ -762,11 +792,16 @@
     function recalc(){
       const urgency = els.urgency.value;
       const surgRisk = els.surgRisk.value;
-      const mets = els.mets.value;
+      const functional = functionalAssessment();
+      const mets = functional.category;
 
       const score = rcriScore();
       const cat = rcriCategory(score);
       const red = hasRedFlags();
+      const dasiScore = els.dasiItems.reduce((sum, item) => sum + (item.checked ? Number(item.dataset.dasi) : 0), 0);
+      const dasiMets = (0.43 * dasiScore + 9.6) / 3.5;
+      els.dasiOut.textContent = `DASI: ${dasiScore.toFixed(2)} / 58.2 • estimated ${dasiMets.toFixed(1)} METs${dasiScore > 34 ? ' • >34 (adequate)' : ''}`;
+      els.mets.disabled = els.useDasi.checked;
 
       // Red flag banner
       if (red){
@@ -784,7 +819,7 @@
       els.rcriSub.textContent = cat.sub;
 
       // Snapshot
-      els.snapshotOut.textContent = `${surgRiskText(surgRisk)} • ${metsText(mets)}`;
+      els.snapshotOut.textContent = `${surgRiskText(surgRisk)} • ${functional.text}`;
       els.snapshotSub.textContent =
         `Urgency: ${urgency.charAt(0).toUpperCase() + urgency.slice(1)}\n` +
         `RCRI category: ${cat.label}${red ? '\nRed flags: present' : ''}`;
@@ -808,7 +843,7 @@
 
     // Wire events
     const inputs = [
-      els.urgency, els.surgRisk, els.mets, els.notes,
+      els.urgency, els.surgRisk, els.mets, els.notes, els.useDasi, ...els.dasiItems,
       els.rcriHighRiskSurg, els.rcriIHD, els.rcriCHF, els.rcriCVA, els.rcriInsulin, els.rcriCr,
       els.rfACS, els.rfDecompHF, els.rfArrhythmia, els.rfValve
     ];
@@ -844,6 +879,8 @@
       els.surgRisk.value = 'low';
       els.mets.value = 'good';
       els.notes.value = '';
+      els.useDasi.checked = false;
+      els.dasiItems.forEach(cb => cb.checked = false);
 
       [
         els.rcriHighRiskSurg, els.rcriIHD, els.rcriCHF, els.rcriCVA, els.rcriInsulin, els.rcriCr,

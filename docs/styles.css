@@ -79,6 +79,9 @@ input:invalid:not(:focus) { border-color: color-mix(in srgb,var(--danger) 55%,va
 .dose-table th { color: var(--muted); font-size: .67rem; letter-spacing: .06em; text-transform: uppercase; }
 .dose-table td { font-size: .82rem; }
 .dose-table td:first-child { width: 27%; font-weight: 750; }
+.dose-table td:first-child > span { display: inline; }
+.favorite-button { float: right; width: 30px; height: 30px; margin: -5px -4px 0 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); background: transparent; font-size: 1rem; line-height: 1; cursor: pointer; }
+.favorite-button:hover,.favorite-button.active { color: #f4b400; border-color: color-mix(in srgb,#f4b400 55%,var(--border)); background: color-mix(in srgb,#f4b400 10%,transparent); }
 .dose-table td:nth-child(2) { width: 23%; color: var(--muted); }
 .dose-table td:nth-child(3) { width: 10%; color: var(--accent-2); font-weight: 800; }
 .dose-table td:nth-child(4) { width: 22%; font-variant-numeric: tabular-nums; font-weight: 750; }

@@ -41,6 +41,7 @@
 
   function applyTheme(mode, persist = true) {
     const normalized = modes.includes(mode) ? mode : 'system';
+    activeTheme = normalized;
     if (normalized === 'system') {
       document.documentElement.removeAttribute('data-theme');
       document.documentElement.style.colorScheme = '';
@@ -55,16 +56,16 @@
     updateButton(normalized);
   }
 
-  const initialTheme = savedTheme();
-  applyTheme(initialTheme, false);
+  let activeTheme = savedTheme();
+  applyTheme(activeTheme, false);
 
   function connectThemeButton() {
     const button = document.getElementById('themeBtn');
     if (!button || button.dataset.themeConnected === 'true') return;
     button.dataset.themeConnected = 'true';
-    updateButton(savedTheme());
+    updateButton(activeTheme);
     button.addEventListener('click', () => {
-      const current = savedTheme();
+      const current = activeTheme;
       applyTheme(modes[(modes.indexOf(current) + 1) % modes.length]);
     });
   }
@@ -76,8 +77,11 @@
   }
 
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
-    if (savedTheme() === 'system') applyTheme('system', false);
+    if (activeTheme === 'system') applyTheme('system', false);
   });
 
-  window.AnesthesiaTheme = { apply: applyTheme, current: savedTheme };
+  window.addEventListener('storage', (event) => {
+    if (event.key === storageKey || event.key === null) applyTheme(savedTheme(), false);
+  });
+  window.AnesthesiaTheme = { apply: applyTheme, current: () => activeTheme };
 })();

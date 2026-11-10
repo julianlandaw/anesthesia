@@ -13,20 +13,30 @@
     status.title = `Next scheduled clinical source review: ${NEXT_REVIEW_DATE}`;
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
-    const update = () => {
-      status.textContent = navigator.onLine
-        ? `Sources reviewed ${SOURCE_REVIEW_DATE} • Online`
-        : `Offline copy • Sources reviewed ${SOURCE_REVIEW_DATE}`;
-      status.classList.toggle('offline', !navigator.onLine);
-    };
+    status.textContent = `Sources reviewed ${SOURCE_REVIEW_DATE}`;
     footer.append(status);
-    update();
-    window.addEventListener('online', update);
-    window.addEventListener('offline', update);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addClinicalStatus);
-  else addClinicalStatus();
+  let offlineState = 'Preparing offline access…';
+  function renderOfflineStatus() {
+    let status = document.getElementById('offlineStatus');
+    if (!status) {
+      const footer = document.querySelector('footer, .footer') || document.querySelector('main');
+      if (!footer) return;
+      status = document.createElement('span');
+      status.id = 'offlineStatus';
+      status.className = 'clinical-status';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      footer.append(status);
+    }
+    status.textContent = offlineState + (navigator.onLine ? '' : ' • Device appears offline');
+  }
+  function initializeStatus() { addClinicalStatus(); renderOfflineStatus(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeStatus);
+  else initializeStatus();
+  window.addEventListener('online', renderOfflineStatus);
+  window.addEventListener('offline', renderOfflineStatus);
 
   // Make checkbox cards easier to use on touch screens without changing the
   // native checkbox semantics or keyboard behavior.
@@ -52,11 +62,41 @@
       document.body.append(notice);
     }
 
-    navigator.serviceWorker.addEventListener('controllerchange', showUpdateNotice);
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch((error) => {
-        console.warn('Offline support could not be enabled.', error);
-      });
+    async function checkOfflineStatus() {
+      try {
+        const registration = await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Setup timeout')), 15000))
+        ]);
+        const ready = await new Promise((resolve) => {
+          const channel = new MessageChannel();
+          const timeout = setTimeout(() => { channel.port1.close(); resolve(false); }, 5000);
+          channel.port1.onmessage = (event) => {
+            clearTimeout(timeout);
+            channel.port1.close();
+            resolve(event.data?.ready === true);
+          };
+          registration.active.postMessage({ type: 'OFFLINE_STATUS' }, [channel.port2]);
+        });
+        offlineState = ready ? 'Ready offline' : 'Offline setup unavailable';
+      } catch (_) { offlineState = 'Offline setup unavailable'; }
+      renderOfflineStatus();
+    }
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      showUpdateNotice();
+      checkOfflineStatus();
     });
+    window.addEventListener('load', async () => {
+      try {
+        await navigator.serviceWorker.register(new URL('./sw.js', document.baseURI));
+        await checkOfflineStatus();
+      } catch (_) {
+        offlineState = 'Offline setup unavailable';
+        renderOfflineStatus();
+      }
+    });
+  } else {
+    offlineState = 'Offline setup unavailable';
   }
 })();

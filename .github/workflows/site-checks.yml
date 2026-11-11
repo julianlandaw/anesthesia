@@ -22,3 +22,5 @@ jobs:
         run: node --test tests/calculations.test.js
       - name: Check site structure, accessibility, and links
         run: python3 tests/site_checks.py
+      - name: Check browser interactions and offline behavior
+        run: python3 tests/browser_checks.py

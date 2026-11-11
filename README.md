@@ -26,14 +26,17 @@ When adding a page, link it from `docs/index.html`, include the shared theme/PWA
 
 ## Validate changes
 
-Run both checks before publishing:
+Run these checks before publishing (the browser check requires Chromium or Google Chrome):
 
 ```sh
 node --test tests/calculations.test.js
 python3 tests/site_checks.py
+python3 tests/browser_checks.py
 ```
 
-GitHub Actions runs the same checks for pushes and pull requests. The static audit verifies local links, required metadata and shared assets, unique IDs, one main heading per page, form-control labels, and offline cache coverage.
+GitHub Actions runs the same checks for pushes and pull requests. The static audit verifies local links, required metadata and shared assets, unique IDs, one main heading per page, form-control labels, and offline cache coverage. Browser checks cover mobile reflow, search, themes with blocked storage, nested 404 links, offline installation and readiness, cache isolation, and server failures. They use a temporary local server and an isolated browser profile.
+
+Offline readiness is displayed only after the service worker confirms that all required assets are cached. Failed requests, server errors, and network waits longer than three seconds fall back to cached content when available.
 
 ## Clinical-content maintenance
 

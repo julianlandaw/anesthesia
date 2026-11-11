@@ -81,6 +81,9 @@ def internal_target(page, raw):
     path = unquote(parsed.path)
     if not path:
         return None
+    if path.startswith('/anesthesia/'):
+        path = path[len('/anesthesia/'):]
+        page = DOCS / 'index.html'
     target = (page.parent / path).resolve()
     if path.endswith("/"):
         target /= "index.html"
@@ -250,8 +253,8 @@ pwa_source = (DOCS / "pwa.js").read_text(encoding="utf-8")
 for required in ("September 24, 2026", "December 24, 2026", "navigator.onLine"):
     if required not in pwa_source:
         errors.append(f"pwa.js: missing review/offline metadata: {required}")
-if "anesthesia-toolkit-v3" not in service_worker:
-    errors.append("sw.js: expected cache version v3")
+if not re.search(r"const CACHE_NAME = 'anesthesia-toolkit-v\d+'", service_worker):
+    errors.append("sw.js: missing versioned toolkit cache")
 if not (DOCS / "CLINICAL_REVIEW.md").exists():
     errors.append("docs: missing quarterly clinical review log")
 

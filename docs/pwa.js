@@ -31,6 +31,8 @@
       footer.append(status);
     }
     status.textContent = offlineState + (navigator.onLine ? '' : ' • Device appears offline');
+    status.dataset.state = offlineState === 'Ready offline' ? 'ready' : offlineState.startsWith('Preparing') ? 'preparing' : 'unavailable';
+    status.classList.toggle('offline', !navigator.onLine || status.dataset.state === 'unavailable');
   }
   function initializeStatus() { addClinicalStatus(); renderOfflineStatus(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeStatus);
@@ -63,11 +65,13 @@
     }
 
     async function checkOfflineStatus() {
+      let setupTimeout;
       try {
         const registration = await Promise.race([
           navigator.serviceWorker.ready,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Setup timeout')), 15000))
+          new Promise((_, reject) => { setupTimeout = setTimeout(() => reject(new Error('Setup timeout')), 15000); })
         ]);
+        clearTimeout(setupTimeout);
         const ready = await new Promise((resolve) => {
           const channel = new MessageChannel();
           const timeout = setTimeout(() => { channel.port1.close(); resolve(false); }, 5000);
@@ -80,6 +84,7 @@
         });
         offlineState = ready ? 'Ready offline' : 'Offline setup unavailable';
       } catch (_) { offlineState = 'Offline setup unavailable'; }
+      finally { clearTimeout(setupTimeout); }
       renderOfflineStatus();
     }
 
@@ -98,5 +103,6 @@
     });
   } else {
     offlineState = 'Offline setup unavailable';
+    renderOfflineStatus();
   }
 })();

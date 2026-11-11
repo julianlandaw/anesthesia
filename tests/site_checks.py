@@ -91,6 +91,36 @@ def internal_target(page, raw):
 
 
 errors = []
+
+
+def javascript_calls(source, function_name):
+    """Extract balanced calls without depending on line wrapping or indentation."""
+    for match in re.finditer(r"\b" + re.escape(function_name) + r"\s*\(", source):
+        start = match.end()
+        depth = 1
+        quote = None
+        escaped = False
+        for index in range(start, len(source)):
+            char = source[index]
+            if quote:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    quote = None
+                continue
+            if char in "'\"`":
+                quote = char
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    yield source.count("\n", 0, match.start()) + 1, source[start:index]
+                    break
+
+
 html_files = sorted(page for page in DOCS.glob("*.html") if not page.name.startswith("."))
 for page in html_files:
     source = page.read_text(encoding="utf-8")
@@ -145,21 +175,24 @@ if not source_block_match:
     errors.append("script.js: could not find medication source registry")
     source_keys = set()
 else:
-    source_keys = set(re.findall(r"^\s{4}([A-Za-z0-9]+): \{", source_block_match.group(1), re.MULTILINE))
-    source_urls = dict(re.findall(
-        r"^\s{4}([A-Za-z0-9]+): \{[^\n]+url: '(https://[^']+)' \},?$",
+    source_entries = dict(re.findall(
+        r"\b([A-Za-z0-9]+):\s*\{([^{}]*)\}",
         source_block_match.group(1),
-        re.MULTILINE,
+        re.DOTALL,
     ))
+    source_keys = set(source_entries)
+    source_urls = {
+        key: match.group(1)
+        for key, entry in source_entries.items()
+        if (match := re.search(r"\burl:\s*'(https://[^']+)'", entry))
+    }
     missing_urls = sorted(source_keys - source_urls.keys())
     if missing_urls:
         errors.append(f"script.js: medication sources without HTTPS URLs: {', '.join(missing_urls)}")
 
 used_source_keys = set()
-for line_number, line in enumerate(dose_script.splitlines(), start=1):
-    if "row(" not in line:
-        continue
-    source_list_match = re.search(r", \[([^\]]+)\]\),?$", line.strip())
+for line_number, arguments in javascript_calls(dose_script, "row"):
+    source_list_match = re.search(r",\s*\[([^\]]+)\]\s*$", arguments)
     if not source_list_match:
         errors.append(f"script.js:{line_number}: medication row has no source list")
         continue
@@ -229,7 +262,7 @@ content_requirements = {
     ),
 }
 for filename, requirements in content_requirements.items():
-    source = (DOCS / filename).read_text(encoding="utf-8")
+    source = re.sub(r"\s+", " ", (DOCS / filename).read_text(encoding="utf-8"))
     for required in requirements:
         if required not in source:
             errors.append(f"{filename}: missing reviewed clinical content: {required}")

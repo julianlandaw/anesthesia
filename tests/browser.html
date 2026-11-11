@@ -1,146 +1,294 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Toolkit browser checks</title></head>
-<body><pre id="report">Running browser checks…</pre>
-<iframe id="site" title="Toolkit under test" style="width:390px;height:844px;border:0"></iframe>
-<script>
-(async () => {
-  const results = [];
-  const assert = (condition, message) => { if (!condition) throw new Error(message); };
-  const check = async (name, action) => {
-    try { await action(); results.push({name, passed:true}); }
-    catch (error) { results.push({name, passed:false, error:String(error)}); }
-  };
-  const frame = document.getElementById('site');
-  const load = (path) => new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Page load timeout: ' + path)), 20000);
-    frame.onload = () => { clearTimeout(timer); resolve(frame.contentWindow); };
-    frame.src = path;
-  });
-  const until = async (predicate) => {
-    for (let i=0; i<400; i++) { if (await predicate()) return; await new Promise(resolve=>setTimeout(resolve,50)); }
-    throw new Error('Condition timed out');
-  };
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Toolkit browser checks</title>
+  </head>
+  <body>
+    <pre id="report">Running browser checks…</pre>
+    <iframe
+      id="site"
+      title="Toolkit under test"
+      style="width: 390px; height: 844px; border: 0"
+    ></iframe>
+    <script>
+      (async () => {
+        const results = [];
+        const assert = (condition, message) => {
+          if (!condition) throw new Error(message);
+        };
+        const check = async (name, action) => {
+          try {
+            await action();
+            results.push({ name, passed: true });
+          } catch (error) {
+            results.push({ name, passed: false, error: String(error) });
+          }
+        };
+        const frame = document.getElementById('site');
+        const load = (path) =>
+          new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('Page load timeout: ' + path)), 20000);
+            frame.onload = () => {
+              clearTimeout(timer);
+              resolve(frame.contentWindow);
+            };
+            frame.src = path;
+          });
+        const until = async (predicate) => {
+          for (let i = 0; i < 400; i++) {
+            if (await predicate()) return;
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+          throw new Error('Condition timed out');
+        };
 
-  await caches.open('another-project-cache');
-  let w = await load('/anesthesia/index.html');
-  let d = w.document;
-  await check('mobile reflow and card labels at 320, 390, and 768px', async () => {
-    for (const width of [320,390,768]) {
-      frame.style.width=width+'px';
-      await new Promise(resolve=>setTimeout(resolve,50));
-      assert(d.documentElement.scrollWidth<=d.documentElement.clientWidth, 'Page overflows at '+width);
-      for (const card of d.querySelectorAll('.tool')) {
-        const range=d.createRange(); range.selectNodeContents(card.querySelector('h4'));
-        const badge=card.querySelector('.go').getBoundingClientRect();
-        assert(![...range.getClientRects()].some(rect=>rect.right>badge.left&&rect.left<badge.right&&rect.top<badge.bottom&&rect.bottom>badge.top),'Badge overlaps '+card.dataset.title+' at '+width);
-      }
-    }
-    frame.style.width='390px';
-  });
-  await check('search punctuation, multiple words, empty state, and reset', () => {
-    const q=d.getElementById('q');
-    for (const [term,title] of [['acid-base','ABG Interpreter'],['drug dosing','Drug Doses'],['NPO','Pre-op Guidelines']]) {
-      q.value=term;q.dispatchEvent(new w.Event('input'));
-      assert([...d.querySelectorAll('.tool:not(.hidden)')].some(card=>card.dataset.title===title),'Missing '+term);
-    }
-    q.value='zzzz';q.dispatchEvent(new w.Event('input'));
-    assert(!d.getElementById('emptySearch').hidden,'Missing empty state');
-    assert(d.getElementById('searchStatus').textContent==='0 tools found','Missing announced count');
-    d.getElementById('resetSearch').click();
-    assert(d.querySelectorAll('.tool:not(.hidden)').length===6,'Reset did not restore tools');
-  });
-  await check('theme cycles with blocked browser storage', () => {
-    w.AnesthesiaTheme.apply('system',false);
-    Object.defineProperty(w,'localStorage',{configurable:true,value:{getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}}});
-    const button=d.getElementById('themeBtn');
-    for (const mode of ['dark','light','system']) {
-      button.click();assert(w.AnesthesiaTheme.current()===mode,'Theme stuck before '+mode);
-    }
-  });
-  await check('real service worker installs and verifies offline assets', async () => {
-    try {
-      await until(()=>d.getElementById('offlineStatus')?.textContent.includes('Ready offline'));
-    } catch (error) {
-      const registrations=await w.navigator.serviceWorker.getRegistrations();
-      const cacheNames=await caches.keys();
-      const details={status:d.getElementById('offlineStatus')?.textContent,registrations:registrations.map(r=>({scope:r.scope,active:r.active?.state,installing:r.installing?.state})),caches:cacheNames};
-      throw new Error(error.message+' '+JSON.stringify(details));
-    }
-    assert((await caches.keys()).includes('another-project-cache'),'Unrelated cache deleted');
-    const registration=await w.navigator.serviceWorker.ready;
-    assert(registration.active,'Worker not active');
-  });
-  await check('installed worker serves the homepage during a real HTTP 503 outage', async () => {
-    await fetch('/__fault',{method:'POST',body:'on'});
-    try {
-      const cachedWindow=await load('/anesthesia/index.html');
-      assert(cachedWindow.document.querySelector('h1')?.textContent==='Anesthesia Toolkit','Server error replaced cached homepage');
-      assert(cachedWindow.AnesthesiaTheme,'Cached scripts did not load');
-    } finally { await fetch('/__fault',{method:'POST',body:'off'}); }
-  });
-  await check('offline readiness detects an incomplete cache', async () => {
-    const registration=await navigator.serviceWorker.getRegistration('/anesthesia/');
-    assert(registration?.active,'Missing worker for readiness check');
-    const name=(await caches.keys()).find(name=>name.startsWith('anesthesia-toolkit-'));
-    const cache=await caches.open(name),url=location.origin+'/anesthesia/social-card.png';
-    const saved=await cache.match(url);
-    assert(saved,'Required asset missing before test');
-    await cache.delete(url);
-    try {
-      const response=await new Promise(resolve=>{
-        const channel=new MessageChannel();
-        channel.port1.onmessage=event=>{channel.port1.close();resolve(event.data);};
-        registration.active.postMessage({type:'OFFLINE_STATUS'},[channel.port2]);
+        await caches.open('another-project-cache');
+        let w = await load('/anesthesia/index.html');
+        let d = w.document;
+        await check('mobile reflow and card labels at 320, 390, and 768px', async () => {
+          for (const width of [320, 390, 768]) {
+            frame.style.width = width + 'px';
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            assert(
+              d.documentElement.scrollWidth <= d.documentElement.clientWidth,
+              'Page overflows at ' + width
+            );
+            for (const card of d.querySelectorAll('.tool')) {
+              const range = d.createRange();
+              range.selectNodeContents(card.querySelector('h4'));
+              const badge = card.querySelector('.go').getBoundingClientRect();
+              assert(
+                ![...range.getClientRects()].some(
+                  (rect) =>
+                    rect.right > badge.left &&
+                    rect.left < badge.right &&
+                    rect.top < badge.bottom &&
+                    rect.bottom > badge.top
+                ),
+                'Badge overlaps ' + card.dataset.title + ' at ' + width
+              );
+            }
+          }
+          frame.style.width = '390px';
+        });
+        await check('search punctuation, multiple words, empty state, and reset', () => {
+          const q = d.getElementById('q');
+          for (const [term, title] of [
+            ['acid-base', 'ABG Interpreter'],
+            ['drug dosing', 'Drug Doses'],
+            ['NPO', 'Pre-op Guidelines']
+          ]) {
+            q.value = term;
+            q.dispatchEvent(new w.Event('input'));
+            assert(
+              [...d.querySelectorAll('.tool:not(.hidden)')].some(
+                (card) => card.dataset.title === title
+              ),
+              'Missing ' + term
+            );
+          }
+          q.value = 'zzzz';
+          q.dispatchEvent(new w.Event('input'));
+          assert(!d.getElementById('emptySearch').hidden, 'Missing empty state');
+          assert(
+            d.getElementById('searchStatus').textContent === '0 tools found',
+            'Missing announced count'
+          );
+          d.getElementById('resetSearch').click();
+          assert(
+            d.querySelectorAll('.tool:not(.hidden)').length === 6,
+            'Reset did not restore tools'
+          );
+        });
+        await check('theme cycles with blocked browser storage', () => {
+          w.AnesthesiaTheme.apply('system', false);
+          Object.defineProperty(w, 'localStorage', {
+            configurable: true,
+            value: {
+              getItem() {
+                throw Error('blocked');
+              },
+              setItem() {
+                throw Error('blocked');
+              }
+            }
+          });
+          const button = d.getElementById('themeBtn');
+          for (const mode of ['dark', 'light', 'system']) {
+            button.click();
+            assert(w.AnesthesiaTheme.current() === mode, 'Theme stuck before ' + mode);
+          }
+        });
+        await check('real service worker installs and verifies offline assets', async () => {
+          try {
+            await until(() =>
+              d.getElementById('offlineStatus')?.textContent.includes('Ready offline')
+            );
+          } catch (error) {
+            const registrations = await w.navigator.serviceWorker.getRegistrations();
+            const cacheNames = await caches.keys();
+            const details = {
+              status: d.getElementById('offlineStatus')?.textContent,
+              registrations: registrations.map((r) => ({
+                scope: r.scope,
+                active: r.active?.state,
+                installing: r.installing?.state
+              })),
+              caches: cacheNames
+            };
+            throw new Error(error.message + ' ' + JSON.stringify(details));
+          }
+          assert(
+            (await caches.keys()).includes('another-project-cache'),
+            'Unrelated cache deleted'
+          );
+          const registration = await w.navigator.serviceWorker.ready;
+          assert(registration.active, 'Worker not active');
+        });
+        await check(
+          'installed worker serves the homepage during a real HTTP 503 outage',
+          async () => {
+            await fetch('/__fault', { method: 'POST', body: 'on' });
+            try {
+              const cachedWindow = await load('/anesthesia/index.html');
+              assert(
+                cachedWindow.document.querySelector('h1')?.textContent === 'Anesthesia Toolkit',
+                'Server error replaced cached homepage'
+              );
+              assert(cachedWindow.AnesthesiaTheme, 'Cached scripts did not load');
+            } finally {
+              await fetch('/__fault', { method: 'POST', body: 'off' });
+            }
+          }
+        );
+        await check('offline readiness detects an incomplete cache', async () => {
+          const registration = await navigator.serviceWorker.getRegistration('/anesthesia/');
+          assert(registration?.active, 'Missing worker for readiness check');
+          const name = (await caches.keys()).find((name) => name.startsWith('anesthesia-toolkit-'));
+          const cache = await caches.open(name),
+            url = location.origin + '/anesthesia/social-card.png';
+          const saved = await cache.match(url);
+          assert(saved, 'Required asset missing before test');
+          await cache.delete(url);
+          try {
+            const response = await new Promise((resolve) => {
+              const channel = new MessageChannel();
+              channel.port1.onmessage = (event) => {
+                channel.port1.close();
+                resolve(event.data);
+              };
+              registration.active.postMessage({ type: 'OFFLINE_STATUS' }, [channel.port2]);
+            });
+            assert(response.ready === false, 'Incomplete cache reported ready');
+          } finally {
+            await cache.put(url, saved);
+          }
+        });
+        await check('nested 404 retains assets and valid home navigation', async () => {
+          const errorWindow = await load('/anesthesia/missing/page');
+          const errorDoc = errorWindow.document;
+          assert(errorDoc.querySelector('h1').textContent === 'Page not found', 'Wrong error page');
+          assert(
+            errorDoc.querySelector('a').href === location.origin + '/anesthesia/index.html',
+            'Broken nested home link'
+          );
+          assert(
+            errorWindow.getComputedStyle(errorDoc.body).backgroundColor !== 'rgba(0, 0, 0, 0)',
+            'Missing theme CSS'
+          );
+          assert(errorWindow.AnesthesiaTheme, 'Missing theme script');
+        });
+
+        const source = await (await fetch('/anesthesia/sw.js')).text();
+        async function workerFixture(networkFetch, instantTimeout = false) {
+          const handlers = {},
+            deleted = [],
+            writes = [];
+          const fakeCache = {
+            match: async () => new Response('cached toolkit'),
+            put: async (request, response) => {
+              writes.push(await response.text());
+            }
+          };
+          const fakeSelf = {
+            registration: { scope: location.origin + '/anesthesia/' },
+            location: { origin: location.origin },
+            clients: { claim: async () => {} },
+            addEventListener(type, fn) {
+              handlers[type] = fn;
+            }
+          };
+          const fakeCaches = {
+            keys: async () => ['anesthesia-toolkit-v0', 'another-project-cache'],
+            delete: async (key) => deleted.push(key),
+            open: async () => fakeCache
+          };
+          new Function('self', 'caches', 'fetch', 'setTimeout', 'clearTimeout', source)(
+            fakeSelf,
+            fakeCaches,
+            networkFetch,
+            (fn, ms) => setTimeout(fn, instantTimeout ? 0 : ms),
+            clearTimeout
+          );
+          let activation;
+          handlers.activate({
+            waitUntil(promise) {
+              activation = promise;
+            }
+          });
+          await activation;
+          const request = new Request(location.origin + '/anesthesia/index.html');
+          let response, lifetime;
+          handlers.fetch({
+            request,
+            respondWith(promise) {
+              response = promise;
+            },
+            waitUntil(promise) {
+              lifetime = promise;
+            }
+          });
+          return { response: await response, lifetime, deleted, writes };
+        }
+        await check(
+          'worker preserves other apps and serves cached pages for HTTP 503',
+          async () => {
+            const fixture = await workerFixture(
+              async () => new Response('unavailable', { status: 503 })
+            );
+            assert(!fixture.deleted.includes('another-project-cache'), 'Deleted foreign cache');
+            assert(fixture.deleted.includes('anesthesia-toolkit-v0'), 'Old toolkit cache retained');
+            assert((await fixture.response.text()) === 'cached toolkit', '503 bypassed cache');
+            await fixture.lifetime;
+          }
+        );
+        await check('worker bounds a stalled request and falls back offline', async () => {
+          const fixture = await workerFixture(() => new Promise(() => {}), true);
+          assert(
+            (await fixture.response.text()) === 'cached toolkit',
+            'Slow network bypassed cache'
+          );
+          await fixture.lifetime;
+        });
+        await check('worker keeps successful cache writes alive', async () => {
+          const fixture = await workerFixture(async () => new Response('fresh toolkit'));
+          assert(fixture.lifetime instanceof Promise, 'No worker lifetime promise');
+          await fixture.lifetime;
+          assert(fixture.writes.includes('fresh toolkit'), 'Fresh response not cached');
+        });
+        const passed = results.every((result) => result.passed);
+        document.body.dataset.result = passed ? 'pass' : 'fail';
+        document.getElementById('report').textContent = JSON.stringify(results, null, 2);
+        await fetch('/__results', { method: 'POST', body: JSON.stringify({ passed, results }) });
+      })().catch(async (error) => {
+        document.body.dataset.result = 'fail';
+        document.getElementById('report').textContent = error.stack;
+        await fetch('/__results', {
+          method: 'POST',
+          body: JSON.stringify({ passed: false, error: error.stack })
+        });
       });
-      assert(response.ready===false,'Incomplete cache reported ready');
-    } finally { await cache.put(url,saved); }
-  });
-  await check('nested 404 retains assets and valid home navigation', async () => {
-    const errorWindow=await load('/anesthesia/missing/page');
-    const errorDoc=errorWindow.document;
-    assert(errorDoc.querySelector('h1').textContent==='Page not found','Wrong error page');
-    assert(errorDoc.querySelector('a').href===location.origin+'/anesthesia/index.html','Broken nested home link');
-    assert(errorWindow.getComputedStyle(errorDoc.body).backgroundColor!=='rgba(0, 0, 0, 0)','Missing theme CSS');
-    assert(errorWindow.AnesthesiaTheme,'Missing theme script');
-  });
-
-  const source=await (await fetch('/anesthesia/sw.js')).text();
-  async function workerFixture(networkFetch, instantTimeout=false) {
-    const handlers={},deleted=[],writes=[];
-    const fakeCache={match:async()=>new Response('cached toolkit'),put:async(request,response)=>{writes.push(await response.text());}};
-    const fakeSelf={registration:{scope:location.origin+'/anesthesia/'},location:{origin:location.origin},clients:{claim:async()=>{}},addEventListener(type,fn){handlers[type]=fn;}};
-    const fakeCaches={keys:async()=>['anesthesia-toolkit-v0','another-project-cache'],delete:async(key)=>deleted.push(key),open:async()=>fakeCache};
-    new Function('self','caches','fetch','setTimeout','clearTimeout',source)(fakeSelf,fakeCaches,networkFetch,(fn,ms)=>setTimeout(fn,instantTimeout?0:ms),clearTimeout);
-    let activation;handlers.activate({waitUntil(promise){activation=promise}});await activation;
-    const request=new Request(location.origin+'/anesthesia/index.html');
-    let response,lifetime;
-    handlers.fetch({request,respondWith(promise){response=promise},waitUntil(promise){lifetime=promise}});
-    return {response:await response,lifetime,deleted,writes};
-  }
-  await check('worker preserves other apps and serves cached pages for HTTP 503', async () => {
-    const fixture=await workerFixture(async()=>new Response('unavailable',{status:503}));
-    assert(!fixture.deleted.includes('another-project-cache'),'Deleted foreign cache');
-    assert(fixture.deleted.includes('anesthesia-toolkit-v0'),'Old toolkit cache retained');
-    assert(await fixture.response.text()==='cached toolkit','503 bypassed cache');
-    await fixture.lifetime;
-  });
-  await check('worker bounds a stalled request and falls back offline', async () => {
-    const fixture=await workerFixture(()=>new Promise(()=>{}),true);
-    assert(await fixture.response.text()==='cached toolkit','Slow network bypassed cache');
-    await fixture.lifetime;
-  });
-  await check('worker keeps successful cache writes alive', async () => {
-    const fixture=await workerFixture(async()=>new Response('fresh toolkit'));
-    assert(fixture.lifetime instanceof Promise,'No worker lifetime promise');
-    await fixture.lifetime;
-    assert(fixture.writes.includes('fresh toolkit'),'Fresh response not cached');
-  });
-  const passed=results.every(result=>result.passed);
-  document.body.dataset.result=passed?'pass':'fail';
-  document.getElementById('report').textContent=JSON.stringify(results,null,2);
-  await fetch('/__results',{method:'POST',body:JSON.stringify({passed,results})});
-})().catch(async error=>{
-  document.body.dataset.result='fail';document.getElementById('report').textContent=error.stack;
-  await fetch('/__results',{method:'POST',body:JSON.stringify({passed:false,error:error.stack})});
-});
-</script></body></html>
+    </script>
+  </body>
+</html>

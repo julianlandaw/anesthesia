@@ -50,7 +50,11 @@
       document.documentElement.style.colorScheme = normalized;
     }
     if (persist) {
-      try { localStorage.setItem(storageKey, normalized); } catch (_) { /* Storage can be disabled. */ }
+      try {
+        localStorage.setItem(storageKey, normalized);
+      } catch (_) {
+        /* Storage can be disabled. */
+      }
     }
     updateThemeColor(normalized);
     updateButton(normalized);

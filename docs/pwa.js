@@ -31,11 +31,20 @@
       footer.append(status);
     }
     status.textContent = offlineState + (navigator.onLine ? '' : ' • Device appears offline');
-    status.dataset.state = offlineState === 'Ready offline' ? 'ready' : offlineState.startsWith('Preparing') ? 'preparing' : 'unavailable';
+    status.dataset.state =
+      offlineState === 'Ready offline'
+        ? 'ready'
+        : offlineState.startsWith('Preparing')
+          ? 'preparing'
+          : 'unavailable';
     status.classList.toggle('offline', !navigator.onLine || status.dataset.state === 'unavailable');
   }
-  function initializeStatus() { addClinicalStatus(); renderOfflineStatus(); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeStatus);
+  function initializeStatus() {
+    addClinicalStatus();
+    renderOfflineStatus();
+  }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', initializeStatus);
   else initializeStatus();
   window.addEventListener('online', renderOfflineStatus);
   window.addEventListener('offline', renderOfflineStatus);
@@ -59,7 +68,8 @@
       const notice = document.createElement('div');
       notice.className = 'update-notice';
       notice.setAttribute('role', 'status');
-      notice.innerHTML = '<span><strong>Toolkit updated.</strong> Reload to use the latest calculators.</span><button type="button">Reload</button>';
+      notice.innerHTML =
+        '<span><strong>Toolkit updated.</strong> Reload to use the latest calculators.</span><button type="button">Reload</button>';
       notice.querySelector('button').addEventListener('click', () => location.reload());
       document.body.append(notice);
     }
@@ -69,12 +79,17 @@
       try {
         const registration = await Promise.race([
           navigator.serviceWorker.ready,
-          new Promise((_, reject) => { setupTimeout = setTimeout(() => reject(new Error('Setup timeout')), 15000); })
+          new Promise((_, reject) => {
+            setupTimeout = setTimeout(() => reject(new Error('Setup timeout')), 15000);
+          })
         ]);
         clearTimeout(setupTimeout);
         const ready = await new Promise((resolve) => {
           const channel = new MessageChannel();
-          const timeout = setTimeout(() => { channel.port1.close(); resolve(false); }, 5000);
+          const timeout = setTimeout(() => {
+            channel.port1.close();
+            resolve(false);
+          }, 5000);
           channel.port1.onmessage = (event) => {
             clearTimeout(timeout);
             channel.port1.close();
@@ -83,8 +98,11 @@
           registration.active.postMessage({ type: 'OFFLINE_STATUS' }, [channel.port2]);
         });
         offlineState = ready ? 'Ready offline' : 'Offline setup unavailable';
-      } catch (_) { offlineState = 'Offline setup unavailable'; }
-      finally { clearTimeout(setupTimeout); }
+      } catch (_) {
+        offlineState = 'Offline setup unavailable';
+      } finally {
+        clearTimeout(setupTimeout);
+      }
       renderOfflineStatus();
     }
 

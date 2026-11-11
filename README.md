@@ -38,6 +38,16 @@ GitHub Actions runs the same checks for pushes and pull requests. The static aud
 
 Offline readiness is displayed only after the service worker confirms that all required assets are cached. Failed requests, server errors, and network waits longer than three seconds fall back to cached content when available.
 
+## Source formatting
+
+HTML, CSS, JavaScript, and browser fixtures use the settings in `.prettierrc.json`. With Node.js installed, format them using:
+
+```sh
+npx --yes prettier@3.6.2 --write "docs/*.{html,css,js}" "tests/*.{html,js}"
+```
+
+Use `--check` instead of `--write` to verify formatting. The formatter is a development tool; the website still runs directly from its static files.
+
 ## Clinical-content maintenance
 
 This project is decision support, not an order set or a substitute for clinical judgment. Clinical formulas, dose ranges, recommendations, contraindications, and source material should be independently reviewed before deployment and whenever guidance changes. Keep clinical-content review separate from layout or refactoring changes so reviewers can clearly identify changes that affect patient-facing output.

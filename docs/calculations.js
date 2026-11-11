@@ -14,18 +14,17 @@
     requireFinite('weight', weight);
     if (sex !== 'male' && sex !== 'female') throw new TypeError('sex must be male or female.');
     const TBW = weight;
-    const BMI = TBW / ((height / 100) ** 2);
+    const BMI = TBW / (height / 100) ** 2;
     const IBW = devineIdealBodyWeight(sex, height);
-    const LBW = sex === 'male'
-      ? (9270 * TBW) / (6680 + 216 * BMI)
-      : (9270 * TBW) / (8780 + 244 * BMI);
+    const LBW =
+      sex === 'male' ? (9270 * TBW) / (6680 + 216 * BMI) : (9270 * TBW) / (8780 + 244 * BMI);
     return { TBW, BMI, IBW, LBW, FFM: LBW };
   }
 
   function devineIdealBodyWeight(sex, heightCm) {
     requireFinite('heightCm', heightCm);
     if (sex !== 'male' && sex !== 'female') throw new TypeError('sex must be male or female.');
-    const inchesOverFiveFeet = (heightCm / 2.54) - 60;
+    const inchesOverFiveFeet = heightCm / 2.54 - 60;
     return (sex === 'male' ? 50 : 45.5) + 2.3 * inchesOverFiveFeet;
   }
 
@@ -42,7 +41,9 @@
   }
 
   function tidalVolumeRange(pbwKg, minMlKg, maxMlKg) {
-    [pbwKg, minMlKg, maxMlKg].forEach((value, index) => requireFinite(['pbwKg', 'minMlKg', 'maxMlKg'][index], value));
+    [pbwKg, minMlKg, maxMlKg].forEach((value, index) =>
+      requireFinite(['pbwKg', 'minMlKg', 'maxMlKg'][index], value)
+    );
     const low = Math.min(minMlKg, maxMlKg);
     const high = Math.max(minMlKg, maxMlKg);
     return { min: pbwKg * low, max: pbwKg * high };
@@ -75,9 +76,11 @@
   }
 
   function alveolarGas({ paco2, fio2, pao2, pb = 760, ph2o = 47, rq = 0.8 }) {
-    [paco2, fio2, pao2, pb, ph2o, rq].forEach((value, index) => requireFinite(['paco2', 'fio2', 'pao2', 'pb', 'ph2o', 'rq'][index], value));
+    [paco2, fio2, pao2, pb, ph2o, rq].forEach((value, index) =>
+      requireFinite(['paco2', 'fio2', 'pao2', 'pb', 'ph2o', 'rq'][index], value)
+    );
     const fraction = fio2 > 1 ? fio2 / 100 : fio2;
-    const PAO2 = fraction * (pb - ph2o) - (paco2 / rq);
+    const PAO2 = fraction * (pb - ph2o) - paco2 / rq;
     return { PAO2, Aa: PAO2 - pao2 };
   }
 
@@ -101,7 +104,9 @@
   }
 
   function deltaRatio({ anionGap: gap, correctedAnionGap, hco3, normalGap = 12, normalHco3 = 24 }) {
-    [gap, hco3, normalGap, normalHco3].forEach((value, index) => requireFinite(['anionGap', 'hco3', 'normalGap', 'normalHco3'][index], value));
+    [gap, hco3, normalGap, normalHco3].forEach((value, index) =>
+      requireFinite(['anionGap', 'hco3', 'normalGap', 'normalHco3'][index], value)
+    );
     const selectedGap = Number.isFinite(correctedAnionGap) ? correctedAnionGap : gap;
     const denominator = normalHco3 - hco3;
     if (selectedGap <= normalGap || denominator <= 0) return null;

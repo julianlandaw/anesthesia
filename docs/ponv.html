@@ -1,903 +1,1144 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f6f7fb" />
-  <title>PONV Risk + Prophylaxis</title>
-  <meta name="description" content="Adult PONV helper: Apfel score, risk estimate, and prophylaxis plan builder (decision-support only)." />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>PONV Risk + Prophylaxis</title>
+    <meta
+      name="description"
+      content="Adult PONV helper: Apfel score, risk estimate, and prophylaxis plan builder (decision-support only)."
+    />
 
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <script src="theme.js"></script>
-  <script src="pwa.js" defer></script>
-  <script src="calculations.js"></script>
-  <link rel="stylesheet" href="theme.css" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <script src="theme.js"></script>
+    <script src="pwa.js" defer></script>
+    <script src="calculations.js"></script>
+    <link rel="stylesheet" href="theme.css" />
 
-  <style>
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: var(--font);
-      color: var(--text);
-      background:
-        radial-gradient(900px 400px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
-        radial-gradient(900px 400px at 90% 0%, rgba(22,194,161,.28), transparent 55%),
-        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.15), transparent 60%),
-        var(--bg);
-      line-height: 1.35;
-    }
-    a{color:inherit; text-decoration:none}
-    .container{max-width:var(--max); margin:0 auto; padding:22px 16px 44px;}
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--text);
+        background:
+          radial-gradient(900px 400px at 20% -10%, rgba(124, 92, 255, 0.35), transparent 60%),
+          radial-gradient(900px 400px at 90% 0%, rgba(22, 194, 161, 0.28), transparent 55%),
+          radial-gradient(900px 700px at 50% 120%, rgba(255, 204, 102, 0.15), transparent 60%),
+          var(--bg);
+        line-height: 1.35;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .container {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 22px 16px 44px;
+      }
 
-    /* Header */
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding:14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .left{display:flex; align-items:center; gap:10px; min-width: 220px;}
-    .logo{
-      width:38px; height:38px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 10px 18px rgba(0,0,0,.18);
-      display:grid; place-items:center;
-      flex:0 0 auto;
-    }
-    .logo svg{opacity:.95}
-    .titles h1{font-size:15px; margin:0; letter-spacing:.2px}
-    .titles p{margin:2px 0 0; font-size:12px; color:var(--muted)}
-    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+      /* Header */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      .left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 220px;
+      }
+      .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+      }
+      .logo svg {
+        opacity: 0.95;
+      }
+      .titles h1 {
+        font-size: 15px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .titles p {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
 
-    .btn{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 9px 12px;
-      cursor:pointer;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
-      display:flex; align-items:center; gap:8px;
-      white-space:nowrap;
-    }
-    .btn:hover{background: rgba(255,255,255,.06)}
-    .btn:active{transform: translateY(1px)}
-    .btn[data-mode]::after{
-      content: attr(data-mode);
-      margin-left: 2px;
-      font-size: 12px;
-      line-height: 1;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-    }
-    .ghost{
-      border:1px solid var(--border);
-      background:transparent;
-      color: var(--muted);
-    }
-    .ghost:hover{color: var(--text)}
-    .linkpill{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      padding: 9px 12px;
-      border-radius:999px;
-      color: var(--muted);
-      display:flex; align-items:center; gap:8px;
-    }
-    .linkpill:hover{color: var(--text); background: rgba(255,255,255,.06)}
+      .btn {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 9px 12px;
+        cursor: pointer;
+        transition:
+          transform 0.06s ease,
+          background 0.15s ease,
+          border-color 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn[data-mode]::after {
+        content: attr(data-mode);
+        margin-left: 2px;
+        font-size: 12px;
+        line-height: 1;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+      }
+      .ghost {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+      }
+      .ghost:hover {
+        color: var(--text);
+      }
+      .linkpill {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 9px 12px;
+        border-radius: 999px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .linkpill:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+      }
 
-    /* Hero */
-    .hero{
-      margin-top:14px;
-      padding:18px 18px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-    }
-    .hero h2{margin:0; font-size: 18px;}
-    .hero p{margin:8px 0 0; color: var(--muted); max-width: 90ch; font-size: 13.5px;}
-    .note{
-      margin-top:10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px dashed var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-      font-size: 12.5px;
-    }
+      /* Hero */
+      .hero {
+        margin-top: 14px;
+        padding: 18px 18px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        box-shadow: var(--shadow);
+      }
+      .hero h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .hero p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        max-width: 90ch;
+        font-size: 13.5px;
+      }
+      .note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-size: 12.5px;
+      }
 
-    /* Layout */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .panel{
-      grid-column: span 6;
-      padding: 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .panel.full{grid-column: span 12;}
-    @media (max-width: 900px){
-      .panel{grid-column: span 12;}
-      .left{min-width:unset}
-    }
+      /* Layout */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .panel {
+        grid-column: span 6;
+        padding: 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      .panel.full {
+        grid-column: span 12;
+      }
+      @media (max-width: 900px) {
+        .panel {
+          grid-column: span 12;
+        }
+        .left {
+          min-width: unset;
+        }
+      }
 
-    .panel h3{
-      margin:0 0 10px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: .25px;
-      color: var(--muted);
-    }
+      .panel h3 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.25px;
+        color: var(--muted);
+      }
 
-    /* Inputs */
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    @media (max-width: 680px){
-      .row{grid-template-columns: 1fr;}
-    }
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 0 0 6px;
-    }
-    input[type="text"], input[type="number"], select{
-      width:100%;
-      padding: 10px 11px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--text);
-      outline: none;
-    }
-    input::placeholder{color: var(--muted)}
-    input:focus, select:focus{
-      border-color: rgba(124,92,255,.45);
-      box-shadow: 0 0 0 3px rgba(124,92,255,.12);
-    }
+      /* Inputs */
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      @media (max-width: 680px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 6px;
+      }
+      input[type='text'],
+      input[type='number'],
+      select {
+        width: 100%;
+        padding: 10px 11px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        outline: none;
+      }
+      input::placeholder {
+        color: var(--muted);
+      }
+      input:focus,
+      select:focus {
+        border-color: rgba(124, 92, 255, 0.45);
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.12);
+      }
 
-    .check{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      padding: 10px 10px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      margin-top: 10px;
-    }
-    .check input{margin-top: 3px;}
-    .check .t{
-      font-size: 13px;
-      color: var(--text);
-      font-weight: 650;
-    }
-    .check .d{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+      .check {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 10px 10px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        margin-top: 10px;
+      }
+      .check input {
+        margin-top: 3px;
+      }
+      .check .t {
+        font-size: 13px;
+        color: var(--text);
+        font-weight: 650;
+      }
+      .check .d {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
 
-    /* Results */
-    .results{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .metric{
-      grid-column: span 6;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      position:relative;
-      overflow:hidden;
-    }
-    .metric.full{grid-column: span 12;}
-    .metric h4{
-      margin:0;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 700;
-      letter-spacing: .2px;
-      text-transform: uppercase;
-    }
-    .metric .value{
-      margin-top:6px;
-      font-size: 18px;
-      font-weight: 800;
-    }
-    .metric .sub{
-      margin-top:4px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.35;
-    }
+      /* Results */
+      .results {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .metric {
+        grid-column: span 6;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        position: relative;
+        overflow: hidden;
+      }
+      .metric.full {
+        grid-column: span 12;
+      }
+      .metric h4 {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+      }
+      .metric .value {
+        margin-top: 6px;
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .metric .sub {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
 
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      margin-top: 10px;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-      width: fit-content;
-    }
-    .badge.ok{border-color: rgba(22,194,161,.35); color: var(--text)}
-    .badge.warn{border-color: rgba(255,204,102,.35); color: var(--text)}
-    .badge.danger{border-color: rgba(255,107,107,.35); color: var(--text)}
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        width: fit-content;
+      }
+      .badge.ok {
+        border-color: rgba(22, 194, 161, 0.35);
+        color: var(--text);
+      }
+      .badge.warn {
+        border-color: rgba(255, 204, 102, 0.35);
+        color: var(--text);
+      }
+      .badge.danger {
+        border-color: rgba(255, 107, 107, 0.35);
+        color: var(--text);
+      }
 
-    .pillrow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top: 10px;
-    }
-    .pill{
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-    }
-    .pill.on{
-      border-color: rgba(124,92,255,.38);
-      color: var(--text);
-    }
+      .pillrow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .pill {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+      }
+      .pill.on {
+        border-color: rgba(124, 92, 255, 0.38);
+        color: var(--text);
+      }
 
-    /* Plan builder */
-    .planGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    @media (max-width: 680px){
-      .planGrid{grid-template-columns: 1fr;}
-    }
-    .agent{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      border-radius: 14px;
-      padding: 10px 10px;
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-    }
-    .agent input{margin-top: 3px;}
-    .agent .name{font-size: 13px; font-weight: 700;}
-    .agent .desc{font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35;}
-    .agent .tag{
-      display:inline-block;
-      margin-top: 6px;
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-    }
+      /* Plan builder */
+      .planGrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      @media (max-width: 680px) {
+        .planGrid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .agent {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 14px;
+        padding: 10px 10px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .agent input {
+        margin-top: 3px;
+      }
+      .agent .name {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .agent .desc {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+        line-height: 1.35;
+      }
+      .agent .tag {
+        display: inline-block;
+        margin-top: 6px;
+        font-size: 12px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+      }
 
-    details{
-      margin-top: 10px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(255,255,255,.02);
-      padding: 10px 12px;
-    }
-    summary{
-      cursor:pointer;
-      color: var(--muted);
-      font-size: 12.5px;
-      list-style: none;
-    }
-    summary::-webkit-details-marker{display:none;}
-    details p, details li{
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 12.5px;
-      line-height: 1.45;
-    }
-    ul{margin: 6px 0 0 18px; padding:0;}
+      details {
+        margin-top: 10px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 10px 12px;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 12.5px;
+        list-style: none;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      details p,
+      details li {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.45;
+      }
+      ul {
+        margin: 6px 0 0 18px;
+        padding: 0;
+      }
 
-    .hr{
-      height: 1px;
-      background: var(--border);
-      margin: 14px 0;
-    }
+      .hr {
+        height: 1px;
+        background: var(--border);
+        margin: 14px 0;
+      }
 
-    .footer{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      display:flex;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-      padding: 0 2px;
-    }
+      .footer {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 0 2px;
+      }
 
-    .toast{
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.55);
-      color: rgba(255,255,255,.92);
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 10px 12px;
-      border-radius: 14px;
-      font-size: 12.5px;
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .18s ease;
-      backdrop-filter: blur(10px);
-    }
-    :root[data-theme="light"] .toast{
-      background: rgba(17,24,39,.75);
-      border-color: rgba(255,255,255,.12);
-    }
-    .toast.show{opacity:1;}
-  </style>
-  <link rel="stylesheet" href="enhancements.css" />
-</head>
+      .toast {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.55);
+        color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 12.5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+        backdrop-filter: blur(10px);
+      }
+      :root[data-theme='light'] .toast {
+        background: rgba(17, 24, 39, 0.75);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .toast.show {
+        opacity: 1;
+      }
+    </style>
+    <link rel="stylesheet" href="enhancements.css" />
+  </head>
 
-<body>
-  <a class="skip-link" href="#main">Skip to calculator</a>
-  <div class="container">
-    <header class="topbar">
-      <div class="left">
-        <div class="logo" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M6 14c0-4.5 3.6-8 8-8h3" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <path d="M6 14c0 3.3 2.7 6 6 6h5" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            <path d="M16.5 6.5h3v3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="6" cy="14" r="2" fill="white" opacity=".95"/>
-          </svg>
-        </div>
-        <div class="titles">
-          <h1>PONV Risk + Prophylaxis</h1>
-          <p>Apfel score + prophylaxis builder (adult-focused)</p>
-        </div>
-      </div>
-
-      <div class="actions">
-        <a class="linkpill" href="index.html" title="Back to Home">← Home</a>
-        <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
-        <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
-        </button>
-      </div>
-    </header>
-
-    <main id="main">
-    <section class="hero compact-hero" aria-label="Clinical-use note">
-      <p><b>Adult decision support.</b> Score the four Apfel factors, then build a prophylaxis plan only if needed.</p>
-      <details>
-        <summary>About this tool</summary>
-        <p>Based on the 2026 Fifth Consensus Guidelines. Verify patient-specific contraindications, QT risk, interactions, institutional protocols, and current labeling. <a href="https://doi.org/10.1213/ANE.0000000000007816" target="_blank" rel="noopener noreferrer">Guideline ↗</a></p>
-      </details>
-    </section>
-
-    <div class="grid">
-      <!-- Inputs -->
-      <section class="panel" aria-label="Apfel inputs">
-        <h3>Apfel risk factors (adult)</h3>
-
-        <div class="check">
-          <input type="checkbox" id="rfFemale" aria-label="Female sex" />
-          <div>
-            <div class="t">Female sex</div>
-            <div class="d">Apfel risk factor</div>
+  <body>
+    <a class="skip-link" href="#main">Skip to calculator</a>
+    <div class="container">
+      <header class="topbar">
+        <div class="left">
+          <div class="logo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 14c0-4.5 3.6-8 8-8h3"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M6 14c0 3.3 2.7 6 6 6h5"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                opacity=".9"
+              />
+              <path
+                d="M16.5 6.5h3v3"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="6" cy="14" r="2" fill="white" opacity=".95" />
+            </svg>
+          </div>
+          <div class="titles">
+            <h1>PONV Risk + Prophylaxis</h1>
+            <p>Apfel score + prophylaxis builder (adult-focused)</p>
           </div>
         </div>
 
-        <div class="check">
-          <input type="checkbox" id="rfNonsmoker" aria-label="Non-smoker" />
-          <div>
-            <div class="t">Non-smoker</div>
-            <div class="d">Current non-smoker / no active smoking</div>
-          </div>
+        <div class="actions">
+          <a class="linkpill" href="index.html" title="Back to Home">← Home</a>
+          <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">
+            ↺ Reset
+          </button>
+          <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
+            <span data-theme-icon aria-hidden="true">🖥️</span> Theme
+          </button>
         </div>
+      </header>
 
-        <div class="check">
-          <input type="checkbox" id="rfHx" aria-label="History of postoperative nausea and vomiting or motion sickness" />
-          <div>
-            <div class="t">History of PONV or motion sickness</div>
-            <div class="d">Prior PONV, or significant motion sickness</div>
-          </div>
-        </div>
-
-        <div class="check">
-          <input type="checkbox" id="rfOpioids" aria-label="Postoperative opioids planned or likely" />
-          <div>
-            <div class="t">Post-op opioids planned/likely</div>
-            <div class="d">Expected need for opioids in PACU/early post-op</div>
-          </div>
-        </div>
-
-        <details class="secondary-details">
-        <summary>Modify baseline risk and add notes</summary>
-        <div class="details-body">
-        <h3 style="margin-top:0;">Anesthesia choices</h3>
-
-        <div class="row">
-          <div>
-            <label for="anesthetic">Primary anesthetic</label>
-            <select id="anesthetic">
-              <option value="volatile">Volatile-based</option>
-              <option value="tiva">TIVA/propofol-heavy</option>
-              <option value="mixed" selected>Mixed/unsure</option>
-            </select>
-          </div>
-          <div>
-            <label for="nitrous">Nitrous planned?</label>
-            <select id="nitrous">
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-              <option value="unknown" selected>Unknown</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label for="duration">Case duration (optional)</label>
-            <select id="duration">
-              <option value="unknown" selected>Unknown</option>
-              <option value="short">&lt; 1 hour</option>
-              <option value="medium">1–3 hours</option>
-              <option value="long">&gt; 3 hours</option>
-            </select>
-          </div>
-          <div>
-            <label for="notes">Notes (optional)</label>
-            <input id="notes" type="text" placeholder="Avoid identifiers; e.g., QT risk or contraindication…" />
-            <div class="help">Avoid patient names, record numbers, or other identifiers.</div>
-          </div>
-        </div>
-        </div>
-        </details>
-
-        <details>
-          <summary>About Apfel risk (how score maps to risk)</summary>
+      <main id="main">
+        <section class="hero compact-hero" aria-label="Clinical-use note">
           <p>
-            The simplified Apfel score uses 4 predictors. Reported PONV risk rises with score; many references cite
-            approximate risks around <b>10/20/40/60/80%</b> for scores 0–4. Local populations and practice patterns vary.
+            <b>Adult decision support.</b> Score the four Apfel factors, then build a prophylaxis
+            plan only if needed.
           </p>
-        </details>
-      </section>
+          <details>
+            <summary>About this tool</summary>
+            <p>
+              Based on the 2026 Fifth Consensus Guidelines. Verify patient-specific
+              contraindications, QT risk, interactions, institutional protocols, and current
+              labeling.
+              <a
+                href="https://doi.org/10.1213/ANE.0000000000007816"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Guideline ↗</a
+              >
+            </p>
+          </details>
+        </section>
 
-      <!-- Results -->
-      <section class="panel" aria-label="Results">
-        <div class="panel-heading">
-          <h3>Risk and guidance</h3>
-          <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">📋 Copy</button>
-        </div>
+        <div class="grid">
+          <!-- Inputs -->
+          <section class="panel" aria-label="Apfel inputs">
+            <h3>Apfel risk factors (adult)</h3>
 
-        <div class="results">
-          <div class="metric">
-            <h4>Apfel score</h4>
-            <div class="value" id="scoreOut">—</div>
-            <div class="sub">0–4 (higher = higher risk)</div>
-          </div>
+            <div class="check">
+              <input type="checkbox" id="rfFemale" aria-label="Female sex" />
+              <div>
+                <div class="t">Female sex</div>
+                <div class="d">Apfel risk factor</div>
+              </div>
+            </div>
 
-          <div class="metric">
-            <h4>Estimated risk (approx.)</h4>
-            <div class="value" id="riskOut">—</div>
-            <div class="sub" id="riskSub">Varies by population &amp; practice</div>
-          </div>
+            <div class="check">
+              <input type="checkbox" id="rfNonsmoker" aria-label="Non-smoker" />
+              <div>
+                <div class="t">Non-smoker</div>
+                <div class="d">Current non-smoker / no active smoking</div>
+              </div>
+            </div>
 
-          <div class="metric full result-primary">
-            <h4>Guideline prophylaxis guidance</h4>
-            <div class="value" id="tierOut">—</div>
-            <div class="sub" id="tierSub">—</div>
-            <div class="badge" id="tierBadge">Awaiting inputs…</div>
-          </div>
+            <div class="check">
+              <input
+                type="checkbox"
+                id="rfHx"
+                aria-label="History of postoperative nausea and vomiting or motion sickness"
+              />
+              <div>
+                <div class="t">History of PONV or motion sickness</div>
+                <div class="d">Prior PONV, or significant motion sickness</div>
+              </div>
+            </div>
 
-          <details class="metric full secondary-details">
-            <summary>Modifiable-factor prompts</summary>
+            <div class="check">
+              <input
+                type="checkbox"
+                id="rfOpioids"
+                aria-label="Postoperative opioids planned or likely"
+              />
+              <div>
+                <div class="t">Post-op opioids planned/likely</div>
+                <div class="d">Expected need for opioids in PACU/early post-op</div>
+              </div>
+            </div>
+
+            <details class="secondary-details">
+              <summary>Modify baseline risk and add notes</summary>
+              <div class="details-body">
+                <h3 style="margin-top: 0">Anesthesia choices</h3>
+
+                <div class="row">
+                  <div>
+                    <label for="anesthetic">Primary anesthetic</label>
+                    <select id="anesthetic">
+                      <option value="volatile">Volatile-based</option>
+                      <option value="tiva">TIVA/propofol-heavy</option>
+                      <option value="mixed" selected>Mixed/unsure</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="nitrous">Nitrous planned?</label>
+                    <select id="nitrous">
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                      <option value="unknown" selected>Unknown</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div>
+                    <label for="duration">Case duration (optional)</label>
+                    <select id="duration">
+                      <option value="unknown" selected>Unknown</option>
+                      <option value="short">&lt; 1 hour</option>
+                      <option value="medium">1–3 hours</option>
+                      <option value="long">&gt; 3 hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="notes">Notes (optional)</label>
+                    <input
+                      id="notes"
+                      type="text"
+                      placeholder="Avoid identifiers; e.g., QT risk or contraindication…"
+                    />
+                    <div class="help">
+                      Avoid patient names, record numbers, or other identifiers.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <details>
+              <summary>About Apfel risk (how score maps to risk)</summary>
+              <p>
+                The simplified Apfel score uses 4 predictors. Reported PONV risk rises with score;
+                many references cite approximate risks around <b>10/20/40/60/80%</b> for scores 0–4.
+                Local populations and practice patterns vary.
+              </p>
+            </details>
+          </section>
+
+          <!-- Results -->
+          <section class="panel" aria-label="Results">
+            <div class="panel-heading">
+              <h3>Risk and guidance</h3>
+              <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">
+                📋 Copy
+              </button>
+            </div>
+
+            <div class="results">
+              <div class="metric">
+                <h4>Apfel score</h4>
+                <div class="value" id="scoreOut">—</div>
+                <div class="sub">0–4 (higher = higher risk)</div>
+              </div>
+
+              <div class="metric">
+                <h4>Estimated risk (approx.)</h4>
+                <div class="value" id="riskOut">—</div>
+                <div class="sub" id="riskSub">Varies by population &amp; practice</div>
+              </div>
+
+              <div class="metric full result-primary">
+                <h4>Guideline prophylaxis guidance</h4>
+                <div class="value" id="tierOut">—</div>
+                <div class="sub" id="tierSub">—</div>
+                <div class="badge" id="tierBadge">Awaiting inputs…</div>
+              </div>
+
+              <details class="metric full secondary-details">
+                <summary>Modifiable-factor prompts</summary>
+                <div class="details-body">
+                  <h4>Modifiable factors (prompts)</h4>
+                  <div class="pillrow" id="modsRow"></div>
+                  <div class="sub" id="modsText" style="margin-top: 8px">—</div>
+                </div>
+              </details>
+              <span id="copyPreview" hidden></span>
+            </div>
+          </section>
+
+          <!-- Plan builder -->
+          <details class="panel full workflow-step" id="planBuilder" aria-label="Plan builder">
+            <summary>Build prophylaxis plan</summary>
             <div class="details-body">
-            <h4>Modifiable factors (prompts)</h4>
-            <div class="pillrow" id="modsRow"></div>
-            <div class="sub" id="modsText" style="margin-top:8px;">—</div>
+              <h3>Prophylaxis plan builder</h3>
+              <p style="margin: 0; color: var(--muted); font-size: 13px; max-width: 100ch">
+                Select agents/classes appropriate for the patient and your local practice. This tool
+                does not auto-select drugs because contraindications and interactions are not
+                captured here.
+              </p>
+
+              <div class="planGrid" id="agentGrid">
+                <div class="agent">
+                  <input type="checkbox" id="agDex" aria-label="Dexamethasone" />
+                  <div>
+                    <div class="name">Dexamethasone</div>
+                    <div class="desc">Steroid class (often given after induction).</div>
+                    <span class="tag">Steroid</span>
+                  </div>
+                </div>
+
+                <div class="agent">
+                  <input
+                    type="checkbox"
+                    id="ag5ht3"
+                    aria-label="5-HT3 antagonist such as ondansetron"
+                  />
+                  <div>
+                    <div class="name">5‑HT3 antagonist (e.g., ondansetron)</div>
+                    <div class="desc">Serotonin antagonist class (often near end of case).</div>
+                    <span class="tag">5‑HT3</span>
+                  </div>
+                </div>
+
+                <div class="agent">
+                  <input
+                    type="checkbox"
+                    id="agDroperidol"
+                    aria-label="Butyrophenone such as droperidol"
+                  />
+                  <div>
+                    <div class="name">Butyrophenone (e.g., droperidol)</div>
+                    <div class="desc">Useful adjunct; consider QT risk and local policy.</div>
+                    <span class="tag">D2</span>
+                  </div>
+                </div>
+
+                <div class="agent">
+                  <input type="checkbox" id="agScop" aria-label="Scopolamine patch" />
+                  <div>
+                    <div class="name">Scopolamine patch</div>
+                    <div class="desc">
+                      Anticholinergic (often pre-op); avoid when contraindicated.
+                    </div>
+                    <span class="tag">Anticholinergic</span>
+                  </div>
+                </div>
+
+                <div class="agent">
+                  <input
+                    type="checkbox"
+                    id="agNK1"
+                    aria-label="NK1 antagonist such as aprepitant"
+                  />
+                  <div>
+                    <div class="name">NK1 antagonist (e.g., aprepitant)</div>
+                    <div class="desc">
+                      High-risk cases / rescue prevention; consider cost/local pathways.
+                    </div>
+                    <span class="tag">NK1</span>
+                  </div>
+                </div>
+
+                <div class="agent">
+                  <input
+                    type="checkbox"
+                    id="agTIVA"
+                    aria-label="TIVA or propofol-forward strategy"
+                  />
+                  <div>
+                    <div class="name">TIVA/propofol-forward strategy</div>
+                    <div class="desc">
+                      Technique choice that can reduce baseline risk (where appropriate).
+                    </div>
+                    <span class="tag">Technique</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hr"></div>
+
+              <div class="row">
+                <div>
+                  <div class="note">
+                    <strong>2026 guidance:</strong> use two prophylactic interventions in adults at
+                    any PONV risk. For high risk, maximize baseline-risk mitigation; additional
+                    agents should follow contraindications and local protocol. Drug choices remain
+                    manual in this tool.
+                  </div>
+                  <button
+                    class="btn ghost"
+                    id="clearAgentsBtn"
+                    type="button"
+                    style="margin-top: 10px"
+                  >
+                    Clear selected interventions
+                  </button>
+                </div>
+
+                <div>
+                  <label for="planSummary">Selected plan summary</label>
+                  <input id="planSummary" type="text" readonly />
+                  <div class="note" style="margin-top: 10px">
+                    Tip: For rescue, avoid repeating same class; choose a different mechanism when
+                    possible (context-dependent).
+                  </div>
+                </div>
+              </div>
+
+              <details>
+                <summary>Common adult prophylaxis dose references</summary>
+                <p>
+                  These are <b>reference reminders</b> only. Always check contraindications, QT
+                  risk, interactions, renal/hepatic status, and local policies.
+                </p>
+                <ul>
+                  <li><b>Dexamethasone</b>: commonly 4–8 mg IV (often after induction).</li>
+                  <li><b>Ondansetron</b> (5‑HT3 class): commonly 4 mg IV near end of case.</li>
+                  <li>
+                    <b>Droperidol</b>: commonly small-dose IV (e.g., 0.625–1.25 mg) per local
+                    practice/QT policy.
+                  </li>
+                  <li>
+                    <b>Scopolamine patch</b>: typically applied pre-op with adequate lead time;
+                    avoid in susceptible patients.
+                  </li>
+                  <li>
+                    <b>NK1 antagonist</b> (e.g., aprepitant): dosing varies by protocol; used mainly
+                    for higher-risk cases.
+                  </li>
+                </ul>
+                <p>
+                  <a
+                    href="https://doi.org/10.1213/ANE.0000000000007816"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Fifth Consensus Guidelines for PONV (2026) ↗</a
+                  >
+                </p>
+              </details>
             </div>
           </details>
-          <span id="copyPreview" hidden></span>
         </div>
-      </section>
+      </main>
 
-      <!-- Plan builder -->
-      <details class="panel full workflow-step" id="planBuilder" aria-label="Plan builder">
-        <summary>Build prophylaxis plan</summary>
-        <div class="details-body">
-        <h3>Prophylaxis plan builder</h3>
-        <p style="margin:0;color:var(--muted);font-size:13px;max-width:100ch;">
-          Select agents/classes appropriate for the patient and your local practice. This tool does not auto-select drugs because
-          contraindications and interactions are not captured here.
-        </p>
-
-        <div class="planGrid" id="agentGrid">
-          <div class="agent">
-            <input type="checkbox" id="agDex" aria-label="Dexamethasone" />
-            <div>
-              <div class="name">Dexamethasone</div>
-              <div class="desc">Steroid class (often given after induction).</div>
-              <span class="tag">Steroid</span>
-            </div>
-          </div>
-
-          <div class="agent">
-            <input type="checkbox" id="ag5ht3" aria-label="5-HT3 antagonist such as ondansetron" />
-            <div>
-              <div class="name">5‑HT3 antagonist (e.g., ondansetron)</div>
-              <div class="desc">Serotonin antagonist class (often near end of case).</div>
-              <span class="tag">5‑HT3</span>
-            </div>
-          </div>
-
-          <div class="agent">
-            <input type="checkbox" id="agDroperidol" aria-label="Butyrophenone such as droperidol" />
-            <div>
-              <div class="name">Butyrophenone (e.g., droperidol)</div>
-              <div class="desc">Useful adjunct; consider QT risk and local policy.</div>
-              <span class="tag">D2</span>
-            </div>
-          </div>
-
-          <div class="agent">
-            <input type="checkbox" id="agScop" aria-label="Scopolamine patch" />
-            <div>
-              <div class="name">Scopolamine patch</div>
-              <div class="desc">Anticholinergic (often pre-op); avoid when contraindicated.</div>
-              <span class="tag">Anticholinergic</span>
-            </div>
-          </div>
-
-          <div class="agent">
-            <input type="checkbox" id="agNK1" aria-label="NK1 antagonist such as aprepitant" />
-            <div>
-              <div class="name">NK1 antagonist (e.g., aprepitant)</div>
-              <div class="desc">High-risk cases / rescue prevention; consider cost/local pathways.</div>
-              <span class="tag">NK1</span>
-            </div>
-          </div>
-
-          <div class="agent">
-            <input type="checkbox" id="agTIVA" aria-label="TIVA or propofol-forward strategy" />
-            <div>
-              <div class="name">TIVA/propofol-forward strategy</div>
-              <div class="desc">Technique choice that can reduce baseline risk (where appropriate).</div>
-              <span class="tag">Technique</span>
-            </div>
-          </div>
+      <div class="footer">
+        <div>© <span id="year"></span> PONV Helper • Available offline after first visit</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a class="linkpill" href="index.html">← Back to Home</a>
+          <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
         </div>
-
-        <div class="hr"></div>
-
-        <div class="row">
-          <div>
-            <div class="note"><strong>2026 guidance:</strong> use two prophylactic interventions in adults at any PONV risk. For high risk, maximize baseline-risk mitigation; additional agents should follow contraindications and local protocol. Drug choices remain manual in this tool.</div>
-            <button class="btn ghost" id="clearAgentsBtn" type="button" style="margin-top:10px;">Clear selected interventions</button>
-          </div>
-
-          <div>
-            <label for="planSummary">Selected plan summary</label>
-            <input id="planSummary" type="text" readonly />
-            <div class="note" style="margin-top:10px;">
-              Tip: For rescue, avoid repeating same class; choose a different mechanism when possible (context-dependent).
-            </div>
-          </div>
-        </div>
-
-        <details>
-          <summary>Common adult prophylaxis dose references</summary>
-          <p>
-            These are <b>reference reminders</b> only. Always check contraindications, QT risk, interactions, renal/hepatic status,
-            and local policies.
-          </p>
-          <ul>
-            <li><b>Dexamethasone</b>: commonly 4–8 mg IV (often after induction).</li>
-            <li><b>Ondansetron</b> (5‑HT3 class): commonly 4 mg IV near end of case.</li>
-            <li><b>Droperidol</b>: commonly small-dose IV (e.g., 0.625–1.25 mg) per local practice/QT policy.</li>
-            <li><b>Scopolamine patch</b>: typically applied pre-op with adequate lead time; avoid in susceptible patients.</li>
-            <li><b>NK1 antagonist</b> (e.g., aprepitant): dosing varies by protocol; used mainly for higher-risk cases.</li>
-          </ul>
-          <p><a href="https://doi.org/10.1213/ANE.0000000000007816" target="_blank" rel="noopener noreferrer">Fifth Consensus Guidelines for PONV (2026) ↗</a></p>
-        </details>
-        </div>
-      </details>
-    </div>
-    </main>
-
-    <div class="footer">
-      <div>© <span id="year"></span> PONV Helper • Available offline after first visit</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a class="linkpill" href="index.html">← Back to Home</a>
-        <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
       </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
 
-  <script>
-    // =============================
-    // PONV LOGIC
-    // =============================
-    const els = {
-      rfFemale: document.getElementById('rfFemale'),
-      rfNonsmoker: document.getElementById('rfNonsmoker'),
-      rfHx: document.getElementById('rfHx'),
-      rfOpioids: document.getElementById('rfOpioids'),
+    <script>
+      // =============================
+      // PONV LOGIC
+      // =============================
+      const els = {
+        rfFemale: document.getElementById('rfFemale'),
+        rfNonsmoker: document.getElementById('rfNonsmoker'),
+        rfHx: document.getElementById('rfHx'),
+        rfOpioids: document.getElementById('rfOpioids'),
 
-      anesthetic: document.getElementById('anesthetic'),
-      nitrous: document.getElementById('nitrous'),
-      duration: document.getElementById('duration'),
-      notes: document.getElementById('notes'),
+        anesthetic: document.getElementById('anesthetic'),
+        nitrous: document.getElementById('nitrous'),
+        duration: document.getElementById('duration'),
+        notes: document.getElementById('notes'),
 
-      scoreOut: document.getElementById('scoreOut'),
-      riskOut: document.getElementById('riskOut'),
-      riskSub: document.getElementById('riskSub'),
+        scoreOut: document.getElementById('scoreOut'),
+        riskOut: document.getElementById('riskOut'),
+        riskSub: document.getElementById('riskSub'),
 
-      tierOut: document.getElementById('tierOut'),
-      tierSub: document.getElementById('tierSub'),
-      tierBadge: document.getElementById('tierBadge'),
+        tierOut: document.getElementById('tierOut'),
+        tierSub: document.getElementById('tierSub'),
+        tierBadge: document.getElementById('tierBadge'),
 
-      modsRow: document.getElementById('modsRow'),
-      modsText: document.getElementById('modsText'),
+        modsRow: document.getElementById('modsRow'),
+        modsText: document.getElementById('modsText'),
 
-      copyPreview: document.getElementById('copyPreview'),
-      copyBtn: document.getElementById('copyBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      toast: document.getElementById('toast'),
+        copyPreview: document.getElementById('copyPreview'),
+        copyBtn: document.getElementById('copyBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        toast: document.getElementById('toast'),
 
-      // agents
-      agDex: document.getElementById('agDex'),
-      ag5ht3: document.getElementById('ag5ht3'),
-      agDroperidol: document.getElementById('agDroperidol'),
-      agScop: document.getElementById('agScop'),
-      agNK1: document.getElementById('agNK1'),
-      agTIVA: document.getElementById('agTIVA'),
+        // agents
+        agDex: document.getElementById('agDex'),
+        ag5ht3: document.getElementById('ag5ht3'),
+        agDroperidol: document.getElementById('agDroperidol'),
+        agScop: document.getElementById('agScop'),
+        agNK1: document.getElementById('agNK1'),
+        agTIVA: document.getElementById('agTIVA'),
 
-      clearAgentsBtn: document.getElementById('clearAgentsBtn'),
-      planSummary: document.getElementById('planSummary')
-    };
+        clearAgentsBtn: document.getElementById('clearAgentsBtn'),
+        planSummary: document.getElementById('planSummary')
+      };
 
-    function showToast(msg){
-      els.toast.textContent = msg;
-      els.toast.classList.add('show');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
-    }
-
-    function apfelScore(){
-      return window.AnesthesiaCalculations.apfelScore([
-        els.rfFemale.checked,
-        els.rfNonsmoker.checked,
-        els.rfHx.checked,
-        els.rfOpioids.checked
-      ]);
-    }
-
-    // Commonly cited simplified mapping (approximate)
-    const riskMap = window.AnesthesiaCalculations.apfelRisk;
-
-    function tierFor(score){
-      if (score === 0) return {tier: 'Low', sub: 'Use 2 prophylactic interventions; apply patient-specific contraindications.', cls: 'ok'};
-      if (score <= 2) return {tier: 'Medium', sub: 'Use 2 prophylactic interventions plus appropriate baseline-risk mitigation.', cls: 'warn'};
-      return {tier: 'High', sub: 'Use 2 prophylactic interventions and maximize baseline-risk mitigation; consider additional therapy per local protocol.', cls: 'danger'};
-    }
-
-    function modifiablePrompts(){
-      const pills = [];
-      const tips = [];
-
-      const an = els.anesthetic.value;
-      const n2o = els.nitrous.value;
-      const dur = els.duration.value;
-
-      // pills
-      if (an === 'tiva') pills.push({t:'TIVA/propofol-forward', on:true});
-      if (an === 'volatile') pills.push({t:'Volatile-based', on:false});
-      if (n2o === 'yes') pills.push({t:'Nitrous: Yes', on:false});
-      if (n2o === 'no') pills.push({t:'Nitrous: No', on:true});
-      if (dur !== 'unknown') pills.push({t:`Duration: ${dur}`, on: dur !== 'long'});
-
-      // tips (non-prescriptive prompts)
-      if (an === 'volatile') tips.push('Consider whether a propofol-forward technique is appropriate for higher-risk patients.');
-      if (n2o === 'yes') tips.push('Avoiding nitrous can reduce baseline risk in some settings.');
-      if (els.rfOpioids.checked) tips.push('Opioid-sparing multimodal analgesia may reduce PONV risk.');
-      if (dur === 'long') tips.push('Longer cases can increase risk—consider layering prophylaxis and rescue planning.');
-      if (!tips.length) tips.push('Use patient-specific factors and institutional protocols to tailor prophylaxis.');
-
-      return {pills, tips};
-    }
-
-    function agentNameList(){
-      const selected = [];
-      if (els.agDex.checked) selected.push('dexamethasone');
-      if (els.ag5ht3.checked) selected.push('5‑HT3 antagonist');
-      if (els.agDroperidol.checked) selected.push('butyrophenone');
-      if (els.agScop.checked) selected.push('scopolamine patch');
-      if (els.agNK1.checked) selected.push('NK1 antagonist');
-      if (els.agTIVA.checked) selected.push('TIVA/propofol-forward technique');
-      return selected;
-    }
-
-    function clearAgents(){
-      els.agDex.checked = false;
-      els.ag5ht3.checked = false;
-      els.agDroperidol.checked = false;
-      els.agScop.checked = false;
-      els.agNK1.checked = false;
-      els.agTIVA.checked = false;
-    }
-
-    function buildSummary(){
-      const score = apfelScore();
-      const risk = riskMap[score];
-      const tier = tierFor(score);
-
-      const mod = modifiablePrompts();
-      const plan = agentNameList();
-
-      const parts = [];
-      parts.push(`PONV: Apfel ${score}/4 (${risk.pct} approx; ${risk.label}).`);
-      parts.push(`Tier: ${tier.tier}.`);
-
-      // technique flags
-      const an = els.anesthetic.value;
-      const n2o = els.nitrous.value;
-      const dur = els.duration.value;
-
-      const techniqueBits = [];
-      if (an === 'tiva') techniqueBits.push('TIVA/propofol-forward');
-      if (an === 'volatile') techniqueBits.push('volatile-based');
-      if (n2o !== 'unknown') techniqueBits.push(`N2O ${n2o}`);
-      if (dur !== 'unknown') techniqueBits.push(`duration ${dur}`);
-      if (techniqueBits.length) parts.push(`Technique: ${techniqueBits.join(', ')}.`);
-
-      if (plan.length) parts.push(`Plan: ${plan.join(' + ')}.`);
-      else parts.push('Plan: (none selected).');
-
-      const notes = (els.notes.value || '').trim();
-      if (notes) parts.push(`Notes: ${notes}`);
-
-      return parts.join(' ');
-    }
-
-    function updateUI(){
-      const score = apfelScore();
-      const risk = riskMap[score];
-      const tier = tierFor(score);
-
-      els.scoreOut.textContent = `${score} / 4`;
-      els.riskOut.textContent = risk.pct;
-      els.riskSub.textContent = `Category: ${risk.label} (approximate)`;
-
-      els.tierOut.textContent = tier.tier;
-      els.tierSub.textContent = tier.sub;
-      els.tierBadge.className = `badge ${tier.cls}`.trim();
-      els.tierBadge.textContent = `Suggested intensity: ${tier.tier}`;
-
-      // modifiable prompts
-      const {pills, tips} = modifiablePrompts();
-      els.modsRow.innerHTML = '';
-      pills.forEach(p => {
-        const span = document.createElement('span');
-        span.className = `pill ${p.on ? 'on' : ''}`.trim();
-        span.textContent = p.t;
-        els.modsRow.appendChild(span);
-      });
-      els.modsText.textContent = tips.join(' ');
-
-      // plan summary
-      const plan = agentNameList();
-      els.planSummary.value = plan.length ? plan.join(' + ') : '';
-
-      // copy preview
-      const summary = buildSummary();
-      els.copyPreview.textContent = summary;
-      updateUI._summary = summary;
-    }
-
-    // Event wiring
-    const apfelInputs = [els.rfFemale, els.rfNonsmoker, els.rfHx, els.rfOpioids];
-    apfelInputs.forEach(cb => cb.addEventListener('change', () => {
-      updateUI();
-    }));
-
-    [els.anesthetic, els.nitrous, els.duration, els.notes].forEach(el => {
-      el.addEventListener('change', () => {
-        updateUI();
-      });
-      el.addEventListener('input', updateUI);
-    });
-
-    // Agent checkbox changes
-    [els.agDex, els.ag5ht3, els.agDroperidol, els.agScop, els.agNK1, els.agTIVA].forEach(cb => {
-      cb.addEventListener('change', updateUI);
-    });
-
-    els.clearAgentsBtn.addEventListener('click', () => {
-      clearAgents();
-      updateUI();
-      showToast('Cleared agents');
-    });
-
-    // Copy summary
-    els.copyBtn.addEventListener('click', async () => {
-      const text = updateUI._summary || els.copyPreview.textContent || '';
-      if (!text) { showToast('Nothing to copy'); return; }
-      try{
-        await navigator.clipboard.writeText(text);
-        showToast('Copied summary to clipboard');
-      } catch (e){
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('Copied (fallback)');
+      function showToast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add('show');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
       }
-    });
 
-    // Reset
-    els.resetBtn.addEventListener('click', () => {
-      els.rfFemale.checked = false;
-      els.rfNonsmoker.checked = false;
-      els.rfHx.checked = false;
-      els.rfOpioids.checked = false;
+      function apfelScore() {
+        return window.AnesthesiaCalculations.apfelScore([
+          els.rfFemale.checked,
+          els.rfNonsmoker.checked,
+          els.rfHx.checked,
+          els.rfOpioids.checked
+        ]);
+      }
 
-      els.anesthetic.value = 'mixed';
-      els.nitrous.value = 'unknown';
-      els.duration.value = 'unknown';
-      els.notes.value = '';
+      // Commonly cited simplified mapping (approximate)
+      const riskMap = window.AnesthesiaCalculations.apfelRisk;
 
-      clearAgents();
+      function tierFor(score) {
+        if (score === 0)
+          return {
+            tier: 'Low',
+            sub: 'Use 2 prophylactic interventions; apply patient-specific contraindications.',
+            cls: 'ok'
+          };
+        if (score <= 2)
+          return {
+            tier: 'Medium',
+            sub: 'Use 2 prophylactic interventions plus appropriate baseline-risk mitigation.',
+            cls: 'warn'
+          };
+        return {
+          tier: 'High',
+          sub: 'Use 2 prophylactic interventions and maximize baseline-risk mitigation; consider additional therapy per local protocol.',
+          cls: 'danger'
+        };
+      }
 
+      function modifiablePrompts() {
+        const pills = [];
+        const tips = [];
+
+        const an = els.anesthetic.value;
+        const n2o = els.nitrous.value;
+        const dur = els.duration.value;
+
+        // pills
+        if (an === 'tiva') pills.push({ t: 'TIVA/propofol-forward', on: true });
+        if (an === 'volatile') pills.push({ t: 'Volatile-based', on: false });
+        if (n2o === 'yes') pills.push({ t: 'Nitrous: Yes', on: false });
+        if (n2o === 'no') pills.push({ t: 'Nitrous: No', on: true });
+        if (dur !== 'unknown') pills.push({ t: `Duration: ${dur}`, on: dur !== 'long' });
+
+        // tips (non-prescriptive prompts)
+        if (an === 'volatile')
+          tips.push(
+            'Consider whether a propofol-forward technique is appropriate for higher-risk patients.'
+          );
+        if (n2o === 'yes') tips.push('Avoiding nitrous can reduce baseline risk in some settings.');
+        if (els.rfOpioids.checked)
+          tips.push('Opioid-sparing multimodal analgesia may reduce PONV risk.');
+        if (dur === 'long')
+          tips.push(
+            'Longer cases can increase risk—consider layering prophylaxis and rescue planning.'
+          );
+        if (!tips.length)
+          tips.push(
+            'Use patient-specific factors and institutional protocols to tailor prophylaxis.'
+          );
+
+        return { pills, tips };
+      }
+
+      function agentNameList() {
+        const selected = [];
+        if (els.agDex.checked) selected.push('dexamethasone');
+        if (els.ag5ht3.checked) selected.push('5‑HT3 antagonist');
+        if (els.agDroperidol.checked) selected.push('butyrophenone');
+        if (els.agScop.checked) selected.push('scopolamine patch');
+        if (els.agNK1.checked) selected.push('NK1 antagonist');
+        if (els.agTIVA.checked) selected.push('TIVA/propofol-forward technique');
+        return selected;
+      }
+
+      function clearAgents() {
+        els.agDex.checked = false;
+        els.ag5ht3.checked = false;
+        els.agDroperidol.checked = false;
+        els.agScop.checked = false;
+        els.agNK1.checked = false;
+        els.agTIVA.checked = false;
+      }
+
+      function buildSummary() {
+        const score = apfelScore();
+        const risk = riskMap[score];
+        const tier = tierFor(score);
+
+        const plan = agentNameList();
+
+        const parts = [];
+        parts.push(`PONV: Apfel ${score}/4 (${risk.pct} approx; ${risk.label}).`);
+        parts.push(`Tier: ${tier.tier}.`);
+
+        // technique flags
+        const an = els.anesthetic.value;
+        const n2o = els.nitrous.value;
+        const dur = els.duration.value;
+
+        const techniqueBits = [];
+        if (an === 'tiva') techniqueBits.push('TIVA/propofol-forward');
+        if (an === 'volatile') techniqueBits.push('volatile-based');
+        if (n2o !== 'unknown') techniqueBits.push(`N2O ${n2o}`);
+        if (dur !== 'unknown') techniqueBits.push(`duration ${dur}`);
+        if (techniqueBits.length) parts.push(`Technique: ${techniqueBits.join(', ')}.`);
+
+        if (plan.length) parts.push(`Plan: ${plan.join(' + ')}.`);
+        else parts.push('Plan: (none selected).');
+
+        const notes = (els.notes.value || '').trim();
+        if (notes) parts.push(`Notes: ${notes}`);
+
+        return parts.join(' ');
+      }
+
+      function updateUI() {
+        const score = apfelScore();
+        const risk = riskMap[score];
+        const tier = tierFor(score);
+
+        els.scoreOut.textContent = `${score} / 4`;
+        els.riskOut.textContent = risk.pct;
+        els.riskSub.textContent = `Category: ${risk.label} (approximate)`;
+
+        els.tierOut.textContent = tier.tier;
+        els.tierSub.textContent = tier.sub;
+        els.tierBadge.className = `badge ${tier.cls}`.trim();
+        els.tierBadge.textContent = `Suggested intensity: ${tier.tier}`;
+
+        // modifiable prompts
+        const { pills, tips } = modifiablePrompts();
+        els.modsRow.innerHTML = '';
+        pills.forEach((p) => {
+          const span = document.createElement('span');
+          span.className = `pill ${p.on ? 'on' : ''}`.trim();
+          span.textContent = p.t;
+          els.modsRow.appendChild(span);
+        });
+        els.modsText.textContent = tips.join(' ');
+
+        // plan summary
+        const plan = agentNameList();
+        els.planSummary.value = plan.length ? plan.join(' + ') : '';
+
+        // copy preview
+        const summary = buildSummary();
+        els.copyPreview.textContent = summary;
+        updateUI._summary = summary;
+      }
+
+      // Event wiring
+      const apfelInputs = [els.rfFemale, els.rfNonsmoker, els.rfHx, els.rfOpioids];
+      apfelInputs.forEach((cb) =>
+        cb.addEventListener('change', () => {
+          updateUI();
+        })
+      );
+
+      [els.anesthetic, els.nitrous, els.duration, els.notes].forEach((el) => {
+        el.addEventListener('change', () => {
+          updateUI();
+        });
+        el.addEventListener('input', updateUI);
+      });
+
+      // Agent checkbox changes
+      [els.agDex, els.ag5ht3, els.agDroperidol, els.agScop, els.agNK1, els.agTIVA].forEach((cb) => {
+        cb.addEventListener('change', updateUI);
+      });
+
+      els.clearAgentsBtn.addEventListener('click', () => {
+        clearAgents();
+        updateUI();
+        showToast('Cleared agents');
+      });
+
+      // Copy summary
+      els.copyBtn.addEventListener('click', async () => {
+        const text = updateUI._summary || els.copyPreview.textContent || '';
+        if (!text) {
+          showToast('Nothing to copy');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Copied summary to clipboard');
+        } catch (e) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('Copied (fallback)');
+        }
+      });
+
+      // Reset
+      els.resetBtn.addEventListener('click', () => {
+        els.rfFemale.checked = false;
+        els.rfNonsmoker.checked = false;
+        els.rfHx.checked = false;
+        els.rfOpioids.checked = false;
+
+        els.anesthetic.value = 'mixed';
+        els.nitrous.value = 'unknown';
+        els.duration.value = 'unknown';
+        els.notes.value = '';
+
+        clearAgents();
+
+        updateUI();
+        showToast('Reset');
+      });
+
+      // Footer helpers
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('scrollTop').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Initial state
       updateUI();
-      showToast('Reset');
-    });
-
-    // Footer helpers
-    document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('scrollTop').addEventListener('click', (e) => {
-      e.preventDefault();
-      window.scrollTo({top: 0, behavior: 'smooth'});
-    });
-
-    // Initial state
-    updateUI();
-  </script>
-</body>
+    </script>
+  </body>
 </html>

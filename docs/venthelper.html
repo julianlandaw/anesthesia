@@ -1,906 +1,1163 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f6f7fb" />
-  <title>Vent Settings Assistant</title>
-  <meta name="description" content="Adult-focused ventilator helper: PBW, tidal volume targets, and minute ventilation estimates." />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Vent Settings Assistant</title>
+    <meta
+      name="description"
+      content="Adult-focused ventilator helper: PBW, tidal volume targets, and minute ventilation estimates."
+    />
 
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <script src="theme.js"></script>
-  <script src="pwa.js" defer></script>
-  <script src="calculations.js"></script>
-  <link rel="stylesheet" href="theme.css" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <script src="theme.js"></script>
+    <script src="pwa.js" defer></script>
+    <script src="calculations.js"></script>
+    <link rel="stylesheet" href="theme.css" />
 
-  <style>
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: var(--font);
-      color: var(--text);
-      background:
-        radial-gradient(900px 400px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
-        radial-gradient(900px 400px at 90% 0%, rgba(22,194,161,.28), transparent 55%),
-        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.15), transparent 60%),
-        var(--bg);
-      line-height: 1.35;
-    }
-    a{color:inherit; text-decoration:none}
-    .container{max-width:var(--max); margin:0 auto; padding:22px 16px 44px;}
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--text);
+        background:
+          radial-gradient(900px 400px at 20% -10%, rgba(124, 92, 255, 0.35), transparent 60%),
+          radial-gradient(900px 400px at 90% 0%, rgba(22, 194, 161, 0.28), transparent 55%),
+          radial-gradient(900px 700px at 50% 120%, rgba(255, 204, 102, 0.15), transparent 60%),
+          var(--bg);
+        line-height: 1.35;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .container {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 22px 16px 44px;
+      }
 
-    /* Header */
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding:14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .left{
-      display:flex; align-items:center; gap:10px;
-      min-width: 220px;
-    }
-    .logo{
-      width:38px; height:38px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 10px 18px rgba(0,0,0,.18);
-      display:grid; place-items:center;
-      flex:0 0 auto;
-    }
-    .logo svg{opacity:.95}
-    .titles h1{font-size:15px; margin:0; letter-spacing:.2px}
-    .titles p{margin:2px 0 0; font-size:12px; color:var(--muted)}
+      /* Header */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      .left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 220px;
+      }
+      .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+      }
+      .logo svg {
+        opacity: 0.95;
+      }
+      .titles h1 {
+        font-size: 15px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .titles p {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
 
-    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
 
-    .btn{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 9px 12px;
-      cursor:pointer;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
-      display:flex; align-items:center; gap:8px;
-      white-space:nowrap;
-    }
-    .btn:hover{background: rgba(255,255,255,.06)}
-    .btn:active{transform: translateY(1px)}
-    .btn[data-mode]::after{
-      content: attr(data-mode);
-      margin-left: 2px;
-      font-size: 12px;
-      line-height: 1;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-    }
-    .ghost{
-      border:1px solid var(--border);
-      background:transparent;
-      color: var(--muted);
-    }
-    .ghost:hover{color: var(--text)}
-    .linkpill{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      padding: 9px 12px;
-      border-radius:999px;
-      color: var(--muted);
-      display:flex; align-items:center; gap:8px;
-    }
-    .linkpill:hover{color: var(--text); background: rgba(255,255,255,.06)}
+      .btn {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 9px 12px;
+        cursor: pointer;
+        transition:
+          transform 0.06s ease,
+          background 0.15s ease,
+          border-color 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn[data-mode]::after {
+        content: attr(data-mode);
+        margin-left: 2px;
+        font-size: 12px;
+        line-height: 1;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+      }
+      .ghost {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+      }
+      .ghost:hover {
+        color: var(--text);
+      }
+      .linkpill {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 9px 12px;
+        border-radius: 999px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .linkpill:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+      }
 
-    /* Layout blocks */
-    .hero{
-      margin-top:14px;
-      padding:18px 18px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-    }
-    .hero h2{margin:0; font-size: 18px;}
-    .hero p{margin:8px 0 0; color: var(--muted); max-width: 78ch; font-size: 13.5px;}
-    .note{
-      margin-top:10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px dashed var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-      font-size: 12.5px;
-    }
+      /* Layout blocks */
+      .hero {
+        margin-top: 14px;
+        padding: 18px 18px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        box-shadow: var(--shadow);
+      }
+      .hero h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .hero p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        max-width: 78ch;
+        font-size: 13.5px;
+      }
+      .note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-size: 12.5px;
+      }
 
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .panel{
-      grid-column: span 6;
-      padding: 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .panel.full{grid-column: span 12;}
-    @media (max-width: 900px){
-      .panel{grid-column: span 12;}
-      .left{min-width:unset}
-    }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .panel {
+        grid-column: span 6;
+        padding: 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      .panel.full {
+        grid-column: span 12;
+      }
+      @media (max-width: 900px) {
+        .panel {
+          grid-column: span 12;
+        }
+        .left {
+          min-width: unset;
+        }
+      }
 
-    .panel h3{
-      margin:0 0 10px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: .25px;
-      color: var(--muted);
-    }
+      .panel h3 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.25px;
+        color: var(--muted);
+      }
 
-    /* Form */
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .row.three{grid-template-columns: 1fr 1fr 1fr;}
-    @media (max-width: 680px){
-      .row, .row.three{grid-template-columns: 1fr;}
-    }
+      /* Form */
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      @media (max-width: 680px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 0 0 6px;
-    }
-    input, select{
-      width:100%;
-      padding: 10px 11px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--text);
-      outline: none;
-    }
-    input::placeholder{color: var(--muted)}
-    input:focus, select:focus{
-      border-color: rgba(124,92,255,.45);
-      box-shadow: 0 0 0 3px rgba(124,92,255,.12);
-    }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 6px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px 11px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        outline: none;
+      }
+      input::placeholder {
+        color: var(--muted);
+      }
+      input:focus,
+      select:focus {
+        border-color: rgba(124, 92, 255, 0.45);
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.12);
+      }
 
-    .inline{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .inline > *{flex:1}
-    .help{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 6px;
-    }
+      .inline {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .inline > * {
+        flex: 1;
+      }
+      .help {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
 
-    /* Results */
-    .results{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .metric{
-      grid-column: span 6;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      position:relative;
-      overflow:hidden;
-    }
-    .metric.full{grid-column: span 12;}
-    .metric h4{
-      margin:0;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-      letter-spacing: .2px;
-      text-transform: uppercase;
-    }
-    .metric .value{
-      margin-top:6px;
-      font-size: 18px;
-      font-weight: 700;
-    }
-    .metric .sub{
-      margin-top:4px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      margin-top: 10px;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-    }
-    .badge.ok{border-color: rgba(22,194,161,.35); color: var(--text)}
-    .badge.warn{border-color: rgba(255,204,102,.35); color: var(--text)}
-    .badge.danger{border-color: rgba(255,107,107,.35); color: var(--text)}
+      /* Results */
+      .results {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .metric {
+        grid-column: span 6;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        position: relative;
+        overflow: hidden;
+      }
+      .metric.full {
+        grid-column: span 12;
+      }
+      .metric h4 {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+      }
+      .metric .value {
+        margin-top: 6px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .metric .sub {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+      }
+      .badge.ok {
+        border-color: rgba(22, 194, 161, 0.35);
+        color: var(--text);
+      }
+      .badge.warn {
+        border-color: rgba(255, 204, 102, 0.35);
+        color: var(--text);
+      }
+      .badge.danger {
+        border-color: rgba(255, 107, 107, 0.35);
+        color: var(--text);
+      }
 
-    /* Slider block */
-    .sliderwrap{
-      margin-top: 10px;
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-    }
-    input[type="range"]{
-      width:100%;
-      padding: 0;
-      border: none;
-      background: transparent;
-      box-shadow: none;
-    }
-    .slidergrid{
-      display:grid;
-      grid-template-columns: 1fr 140px;
-      gap: 10px;
-      align-items:center;
-      margin-top: 6px;
-    }
-    @media (max-width: 680px){
-      .slidergrid{grid-template-columns: 1fr;}
-    }
+      /* Slider block */
+      .sliderwrap {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      input[type='range'] {
+        width: 100%;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+      }
+      .hr {
+        height: 1px;
+        background: var(--border);
+        margin: 14px 0;
+      }
 
-    .hr{
-      height: 1px;
-      background: var(--border);
-      margin: 14px 0;
-    }
+      details {
+        margin-top: 8px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 10px 12px;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 12.5px;
+        list-style: none;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      details p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
 
-    details{
-      margin-top: 8px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(255,255,255,.02);
-      padding: 10px 12px;
-    }
-    summary{
-      cursor:pointer;
-      color: var(--muted);
-      font-size: 12.5px;
-      list-style: none;
-    }
-    summary::-webkit-details-marker{display:none;}
-    details p{
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 12.5px;
-    }
+      .footer {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 0 2px;
+      }
 
-    .footer{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      display:flex;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-      padding: 0 2px;
-    }
+      .toast {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.55);
+        color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 12.5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+        backdrop-filter: blur(10px);
+      }
+      :root[data-theme='light'] .toast {
+        background: rgba(17, 24, 39, 0.75);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .toast.show {
+        opacity: 1;
+      }
+    </style>
+    <link rel="stylesheet" href="enhancements.css" />
+  </head>
 
-    .toast{
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.55);
-      color: rgba(255,255,255,.92);
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 10px 12px;
-      border-radius: 14px;
-      font-size: 12.5px;
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .18s ease;
-      backdrop-filter: blur(10px);
-    }
-    :root[data-theme="light"] .toast{
-      background: rgba(17,24,39,.75);
-      border-color: rgba(255,255,255,.12);
-    }
-    .toast.show{opacity:1;}
-  </style>
-  <link rel="stylesheet" href="enhancements.css" />
-</head>
-
-<body>
-  <a class="skip-link" href="#main">Skip to calculator</a>
-  <div class="container">
-    <header class="topbar">
-      <div class="left">
-        <div class="logo" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M6 14c0-4.5 3.6-8 8-8h3" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <path d="M6 14c0 3.3 2.7 6 6 6h5" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            <path d="M16.5 6.5h3v3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="6" cy="14" r="2" fill="white" opacity=".95"/>
-          </svg>
+  <body>
+    <a class="skip-link" href="#main">Skip to calculator</a>
+    <div class="container">
+      <header class="topbar">
+        <div class="left">
+          <div class="logo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 14c0-4.5 3.6-8 8-8h3"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M6 14c0 3.3 2.7 6 6 6h5"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                opacity=".9"
+              />
+              <path
+                d="M16.5 6.5h3v3"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="6" cy="14" r="2" fill="white" opacity=".95" />
+            </svg>
+          </div>
+          <div class="titles">
+            <h1>Vent Settings Assistant</h1>
+            <p>PBW, tidal volume targets, and minute ventilation (adult-focused)</p>
+          </div>
         </div>
-        <div class="titles">
-          <h1>Vent Settings Assistant</h1>
-          <p>PBW, tidal volume targets, and minute ventilation (adult-focused)</p>
+
+        <div class="actions">
+          <a class="linkpill" href="index.html" title="Back to Toolkit Home">← Home</a>
+          <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">
+            ↺ Reset
+          </button>
+          <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
+            <span data-theme-icon aria-hidden="true">🖥️</span> Theme
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div class="actions">
-        <a class="linkpill" href="index.html" title="Back to Toolkit Home">← Home</a>
-        <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
-        <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
-        </button>
-      </div>
-    </header>
-
-    <main id="main">
-    <section class="hero compact-hero" aria-label="Clinical-use note">
-      <p><b>Adult decision support.</b> Enter PBW inputs, choose a volume band, and adjust the resulting plan clinically.</p>
-      <details>
-        <summary>About this tool</summary>
-        <p>Verify against lung compliance, dead space, ARDS status, acid–base goals, delivered volumes and pressures, and local protocols. ARDS targets reflect the <a href="https://www.thoracic.org/statements/resources/cc/ards-guidelines.pdf" target="_blank" rel="noopener">ATS/ESICM/SCCM guideline</a>.</p>
-      </details>
-    </section>
-
-    <div class="grid">
-      <!-- Inputs -->
-      <section class="panel" aria-label="Inputs">
-        <h3>Inputs</h3>
-
-        <div class="row">
-          <div>
-            <label for="sex">Sex</label>
-            <select id="sex">
-              <option value="" selected>Choose…</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="strategy">TV Strategy (mL/kg PBW)</label>
-            <select id="strategy">
-              <option value="routine" selected>Routine protective: 6–8</option>
-              <option value="ards">ARDS: 4–8 (start at 6)</option>
-              <option value="custom">Custom band…</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label for="height">Height</label>
-            <div class="inline">
-              <input id="height" type="number" inputmode="decimal" placeholder="e.g., 175" step="0.1" />
-              <select id="heightUnit" aria-label="Height unit">
-                <option value="cm" selected>cm</option>
-                <option value="in">in</option>
-              </select>
-            </div>
-            <div class="help">If using inches, enter total inches (e.g., 70 for 5'10").</div>
-          </div>
-
-          <div>
-            <label for="rr">Respiratory rate (RR)</label>
-            <input id="rr" type="number" inputmode="numeric" placeholder="e.g., 14" min="4" max="40" step="1" value="14" />
-            <div class="help">Used to estimate minute ventilation (MV).</div>
-          </div>
-        </div>
-
-        <details class="secondary-details">
-          <summary>Add charting details</summary>
-        <p class="help details-body">These optional fields add context to the pressure check and copied summary; they do not set the tidal-volume target.</p>
-        <div class="row details-body">
-          <div>
-            <label for="peep">PEEP (optional)</label>
-            <input id="peep" type="number" inputmode="decimal" placeholder="e.g., 5" min="0" max="30" step="1" />
-          </div>
-          <div>
-            <label for="plateau">Plateau pressure (optional)</label>
-            <input id="plateau" type="number" inputmode="decimal" placeholder="e.g., 24" min="0" max="60" step="1" />
-          </div>
-          <div>
-            <label for="fio2">FiO₂ (optional)</label>
-            <input id="fio2" type="number" inputmode="decimal" placeholder="0.5 or 50" min="0.21" max="100" step="0.01" />
-            <div class="help">Fraction 0.21–1.0 or percent 21–100.</div>
-          </div>
-          <div>
-            <label for="mode">Mode (optional)</label>
-            <select id="mode">
-              <option value="" selected>—</option>
-              <option value="VC">VC</option>
-              <option value="PC">PC</option>
-              <option value="PSV">PSV</option>
-              <option value="SIMV">SIMV</option>
-            </select>
-          </div>
-        </div>
-        </details>
-
-        <details>
-          <summary>Custom TV band (optional)</summary>
-          <p style="margin-top:10px;">
-            If you select <b>Custom band</b>, set your preferred TV range (mL/kg PBW) here.
-          </p>
-          <div class="row">
-            <div>
-              <label for="customMin">Custom min (mL/kg PBW)</label>
-              <input id="customMin" type="number" inputmode="decimal" min="2" max="12" step="0.5" value="6" />
-            </div>
-            <div>
-              <label for="customMax">Custom max (mL/kg PBW)</label>
-              <input id="customMax" type="number" inputmode="decimal" min="2" max="12" step="0.5" value="8" />
-            </div>
-          </div>
-          <p>Tip: routine protective ventilation commonly uses 6–8 mL/kg PBW. For ARDS, use 4–8 mL/kg PBW, generally starting at 6 and titrating to plateau pressure and clinical goals.</p>
-        </details>
-
-        <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
-
-        <details>
-          <summary>Formulas used</summary>
+      <main id="main">
+        <section class="hero compact-hero" aria-label="Clinical-use note">
           <p>
-            <b>PBW</b> (kg): Male = 50 + 0.91×(height_cm − 152.4); Female = 45.5 + 0.91×(height_cm − 152.4).<br/>
-            <b>TV range</b> (mL): PBW×(mL/kg).<br/>
-            <b>Minute ventilation</b> (L/min): (TV_mL × RR)/1000.<br/>
-            <b>Driving pressure</b> (cm H₂O): plateau pressure − PEEP.
+            <b>Adult decision support.</b> Enter PBW inputs, choose a volume band, and adjust the
+            resulting plan clinically.
           </p>
-        </details>
-      </section>
+          <details>
+            <summary>About this tool</summary>
+            <p>
+              Verify against lung compliance, dead space, ARDS status, acid–base goals, delivered
+              volumes and pressures, and local protocols. ARDS targets reflect the
+              <a
+                href="https://www.thoracic.org/statements/resources/cc/ards-guidelines.pdf"
+                target="_blank"
+                rel="noopener"
+                >ATS/ESICM/SCCM guideline</a
+              >.
+            </p>
+          </details>
+        </section>
 
-      <!-- Outputs -->
-      <section class="panel" aria-label="Results">
-        <div class="panel-heading">
-          <h3>Ventilation plan</h3>
-          <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">📋 Copy</button>
-        </div>
+        <div class="grid">
+          <!-- Inputs -->
+          <section class="panel" aria-label="Inputs">
+            <h3>Inputs</h3>
 
-        <div class="results">
-          <div class="metric result-primary">
-            <h4>Predicted body weight (PBW)</h4>
-            <div class="value" id="pbwOut">—</div>
-            <div class="sub" id="heightCmOut">Height: —</div>
-          </div>
-
-          <div class="metric result-primary">
-            <h4>Recommended TV range</h4>
-            <div class="value" id="tvRangeOut">—</div>
-            <div class="sub" id="tvBandOut">Band: —</div>
-          </div>
-
-          <div class="metric full result-primary">
-            <h4>Selected tidal volume (TV)</h4>
-            <div class="value" id="tvOut">—</div>
-
-            <div class="sliderwrap">
-              <div class="help" id="sliderHelp">Enter formula sex and height to choose a tidal volume.</div>
-              <input id="tvSlider" type="hidden" value="" />
-              <input id="tvManual" type="number" aria-label="Selected tidal volume in milliliters" inputmode="numeric" min="50" max="2000" step="10" placeholder="TV (mL)" disabled />
-              <div class="preset-row" aria-label="Tidal-volume presets">
-                <button class="btn ghost" type="button" data-tv-preset="4">4 mL/kg</button>
-                <button class="btn ghost" type="button" data-tv-preset="6">6 mL/kg</button>
-                <button class="btn ghost" type="button" data-tv-preset="8">8 mL/kg</button>
+            <div class="row">
+              <div>
+                <label for="sex">Sex</label>
+                <select id="sex">
+                  <option value="" selected>Choose…</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </div>
-              <div class="help" id="tvPerKgOut">—</div>
-              <div class="badge" id="tvBadge">Awaiting inputs…</div>
+
+              <div>
+                <label for="strategy">TV Strategy (mL/kg PBW)</label>
+                <select id="strategy">
+                  <option value="routine" selected>Routine protective: 6–8</option>
+                  <option value="ards">ARDS: 4–8 (start at 6)</option>
+                  <option value="custom">Custom band…</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div class="metric result-primary">
-            <h4>Minute ventilation (MV)</h4>
-            <div class="value" id="mvOut">—</div>
-            <div class="sub">MV = TV × RR</div>
-          </div>
+            <div class="row">
+              <div>
+                <label for="height">Height</label>
+                <div class="inline">
+                  <input
+                    id="height"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="e.g., 175"
+                    step="0.1"
+                  />
+                  <select id="heightUnit" aria-label="Height unit">
+                    <option value="cm" selected>cm</option>
+                    <option value="in">in</option>
+                  </select>
+                </div>
+                <div class="help">If using inches, enter total inches (e.g., 70 for 5'10").</div>
+              </div>
 
-          <div class="metric">
-            <h4>Context</h4>
-            <div class="badge" id="contextBadge">—</div>
-          </div>
-          <div class="metric">
-            <h4>Pressure check</h4>
-            <div class="value" id="pressureOut">—</div>
-            <div class="sub" id="pressureSub">Add plateau pressure and PEEP for driving pressure.</div>
-          </div>
-          <span id="copyPreview" hidden></span>
+              <div>
+                <label for="rr">Respiratory rate (RR)</label>
+                <input
+                  id="rr"
+                  type="number"
+                  inputmode="numeric"
+                  placeholder="e.g., 14"
+                  min="4"
+                  max="40"
+                  step="1"
+                  value="14"
+                />
+                <div class="help">Used to estimate minute ventilation (MV).</div>
+              </div>
+            </div>
+
+            <details class="secondary-details">
+              <summary>Add charting details</summary>
+              <p class="help details-body">
+                These optional fields add context to the pressure check and copied summary; they do
+                not set the tidal-volume target.
+              </p>
+              <div class="row details-body">
+                <div>
+                  <label for="peep">PEEP (optional)</label>
+                  <input
+                    id="peep"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="e.g., 5"
+                    min="0"
+                    max="30"
+                    step="1"
+                  />
+                </div>
+                <div>
+                  <label for="plateau">Plateau pressure (optional)</label>
+                  <input
+                    id="plateau"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="e.g., 24"
+                    min="0"
+                    max="60"
+                    step="1"
+                  />
+                </div>
+                <div>
+                  <label for="fio2">FiO₂ (optional)</label>
+                  <input
+                    id="fio2"
+                    type="number"
+                    inputmode="decimal"
+                    placeholder="0.5 or 50"
+                    min="0.21"
+                    max="100"
+                    step="0.01"
+                  />
+                  <div class="help">Fraction 0.21–1.0 or percent 21–100.</div>
+                </div>
+                <div>
+                  <label for="mode">Mode (optional)</label>
+                  <select id="mode">
+                    <option value="" selected>—</option>
+                    <option value="VC">VC</option>
+                    <option value="PC">PC</option>
+                    <option value="PSV">PSV</option>
+                    <option value="SIMV">SIMV</option>
+                  </select>
+                </div>
+              </div>
+            </details>
+
+            <details>
+              <summary>Custom TV band (optional)</summary>
+              <p style="margin-top: 10px">
+                If you select <b>Custom band</b>, set your preferred TV range (mL/kg PBW) here.
+              </p>
+              <div class="row">
+                <div>
+                  <label for="customMin">Custom min (mL/kg PBW)</label>
+                  <input
+                    id="customMin"
+                    type="number"
+                    inputmode="decimal"
+                    min="2"
+                    max="12"
+                    step="0.5"
+                    value="6"
+                  />
+                </div>
+                <div>
+                  <label for="customMax">Custom max (mL/kg PBW)</label>
+                  <input
+                    id="customMax"
+                    type="number"
+                    inputmode="decimal"
+                    min="2"
+                    max="12"
+                    step="0.5"
+                    value="8"
+                  />
+                </div>
+              </div>
+              <p>
+                Tip: routine protective ventilation commonly uses 6–8 mL/kg PBW. For ARDS, use 4–8
+                mL/kg PBW, generally starting at 6 and titrating to plateau pressure and clinical
+                goals.
+              </p>
+            </details>
+
+            <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
+
+            <details>
+              <summary>Formulas used</summary>
+              <p>
+                <b>PBW</b> (kg): Male = 50 + 0.91×(height_cm − 152.4); Female = 45.5 +
+                0.91×(height_cm − 152.4).<br />
+                <b>TV range</b> (mL): PBW×(mL/kg).<br />
+                <b>Minute ventilation</b> (L/min): (TV_mL × RR)/1000.<br />
+                <b>Driving pressure</b> (cm H₂O): plateau pressure − PEEP.
+              </p>
+            </details>
+          </section>
+
+          <!-- Outputs -->
+          <section class="panel" aria-label="Results">
+            <div class="panel-heading">
+              <h3>Ventilation plan</h3>
+              <button class="btn" id="copyBtn" type="button" title="Copy a summary to clipboard">
+                📋 Copy
+              </button>
+            </div>
+
+            <div class="results">
+              <div class="metric result-primary">
+                <h4>Predicted body weight (PBW)</h4>
+                <div class="value" id="pbwOut">—</div>
+                <div class="sub" id="heightCmOut">Height: —</div>
+              </div>
+
+              <div class="metric result-primary">
+                <h4>Recommended TV range</h4>
+                <div class="value" id="tvRangeOut">—</div>
+                <div class="sub" id="tvBandOut">Band: —</div>
+              </div>
+
+              <div class="metric full result-primary">
+                <h4>Selected tidal volume (TV)</h4>
+                <div class="value" id="tvOut">—</div>
+
+                <div class="sliderwrap">
+                  <div class="help" id="sliderHelp">
+                    Enter formula sex and height to choose a tidal volume.
+                  </div>
+                  <input id="tvSlider" type="hidden" value="" />
+                  <input
+                    id="tvManual"
+                    type="number"
+                    aria-label="Selected tidal volume in milliliters"
+                    inputmode="numeric"
+                    min="50"
+                    max="2000"
+                    step="10"
+                    placeholder="TV (mL)"
+                    disabled
+                  />
+                  <div class="preset-row" aria-label="Tidal-volume presets">
+                    <button class="btn ghost" type="button" data-tv-preset="4">4 mL/kg</button>
+                    <button class="btn ghost" type="button" data-tv-preset="6">6 mL/kg</button>
+                    <button class="btn ghost" type="button" data-tv-preset="8">8 mL/kg</button>
+                  </div>
+                  <div class="help" id="tvPerKgOut">—</div>
+                  <div class="badge" id="tvBadge">Awaiting inputs…</div>
+                </div>
+              </div>
+
+              <div class="metric result-primary">
+                <h4>Minute ventilation (MV)</h4>
+                <div class="value" id="mvOut">—</div>
+                <div class="sub">MV = TV × RR</div>
+              </div>
+
+              <div class="metric">
+                <h4>Context</h4>
+                <div class="badge" id="contextBadge">—</div>
+              </div>
+              <div class="metric">
+                <h4>Pressure check</h4>
+                <div class="value" id="pressureOut">—</div>
+                <div class="sub" id="pressureSub">
+                  Add plateau pressure and PEEP for driving pressure.
+                </div>
+              </div>
+              <span id="copyPreview" hidden></span>
+            </div>
+          </section>
+
+          <details class="panel full workflow-step" aria-label="Clinical notes">
+            <summary>Clinical notes</summary>
+            <p style="margin: 0; color: var(--muted); font-size: 13px; max-width: 95ch">
+              • Consider lung-protective strategy for most general anesthetics (especially high-risk
+              lungs).<br />
+              • Reassess if high airway pressures, poor compliance, significant dead space, or
+              acid-base goals require deviation.<br />
+              • In obesity/recruitment issues, PEEP titration and positioning matter; avoid
+              over-distension.<br />
+              • Always confirm actual delivered TV (especially in PC/PS modes) and monitor
+              plateau/driving pressures when relevant.
+            </p>
+            <p>
+              <a
+                href="https://www.thoracic.org/statements/resources/cc/ards-guidelines.pdf"
+                target="_blank"
+                rel="noopener"
+                >Source: mechanical ventilation in adult ARDS guideline</a
+              >
+              — ARDS target 4–8 mL/kg PBW (initial 6) and plateau pressure &lt;30 cm H₂O.
+            </p>
+          </details>
         </div>
-      </section>
+      </main>
 
-      <details class="panel full workflow-step" aria-label="Clinical notes">
-        <summary>Clinical notes</summary>
-        <p style="margin:0;color:var(--muted);font-size:13px;max-width:95ch;">
-          • Consider lung-protective strategy for most general anesthetics (especially high-risk lungs).<br/>
-          • Reassess if high airway pressures, poor compliance, significant dead space, or acid-base goals require deviation.<br/>
-          • In obesity/recruitment issues, PEEP titration and positioning matter; avoid over-distension.<br/>
-          • Always confirm actual delivered TV (especially in PC/PS modes) and monitor plateau/driving pressures when relevant.
-        </p>
-        <p><a href="https://www.thoracic.org/statements/resources/cc/ards-guidelines.pdf" target="_blank" rel="noopener">Source: mechanical ventilation in adult ARDS guideline</a> — ARDS target 4–8 mL/kg PBW (initial 6) and plateau pressure &lt;30 cm H₂O.</p>
-      </details>
-    </div>
-    </main>
-
-    <div class="footer">
-      <div>© <span id="year"></span> Vent Settings Assistant • Available offline after first visit</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a class="linkpill" href="index.html">← Back to Home</a>
-        <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
+      <div class="footer">
+        <div>
+          © <span id="year"></span> Vent Settings Assistant • Available offline after first visit
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a class="linkpill" href="index.html">← Back to Home</a>
+          <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
 
-  <script>
-    // =============================
-    // VENT CALCULATIONS
-    // =============================
-    const els = {
-      sex: document.getElementById('sex'),
-      strategy: document.getElementById('strategy'),
-      height: document.getElementById('height'),
-      heightUnit: document.getElementById('heightUnit'),
-      rr: document.getElementById('rr'),
-      peep: document.getElementById('peep'),
-      plateau: document.getElementById('plateau'),
-      fio2: document.getElementById('fio2'),
-      mode: document.getElementById('mode'),
-      customMin: document.getElementById('customMin'),
-      customMax: document.getElementById('customMax'),
+    <script>
+      // =============================
+      // VENT CALCULATIONS
+      // =============================
+      const els = {
+        sex: document.getElementById('sex'),
+        strategy: document.getElementById('strategy'),
+        height: document.getElementById('height'),
+        heightUnit: document.getElementById('heightUnit'),
+        rr: document.getElementById('rr'),
+        peep: document.getElementById('peep'),
+        plateau: document.getElementById('plateau'),
+        fio2: document.getElementById('fio2'),
+        mode: document.getElementById('mode'),
+        customMin: document.getElementById('customMin'),
+        customMax: document.getElementById('customMax'),
 
-      pbwOut: document.getElementById('pbwOut'),
-      heightCmOut: document.getElementById('heightCmOut'),
-      tvRangeOut: document.getElementById('tvRangeOut'),
-      tvBandOut: document.getElementById('tvBandOut'),
+        pbwOut: document.getElementById('pbwOut'),
+        heightCmOut: document.getElementById('heightCmOut'),
+        tvRangeOut: document.getElementById('tvRangeOut'),
+        tvBandOut: document.getElementById('tvBandOut'),
 
-      tvOut: document.getElementById('tvOut'),
-      tvSlider: document.getElementById('tvSlider'),
-      tvManual: document.getElementById('tvManual'),
-      sliderHelp: document.getElementById('sliderHelp'),
-      tvPerKgOut: document.getElementById('tvPerKgOut'),
-      tvBadge: document.getElementById('tvBadge'),
-      mvOut: document.getElementById('mvOut'),
-      contextBadge: document.getElementById('contextBadge'),
-      pressureOut: document.getElementById('pressureOut'),
-      pressureSub: document.getElementById('pressureSub'),
-      copyPreview: document.getElementById('copyPreview'),
-      inputError: document.getElementById('inputError'),
-      presetButtons: Array.from(document.querySelectorAll('[data-tv-preset]')),
+        tvOut: document.getElementById('tvOut'),
+        tvSlider: document.getElementById('tvSlider'),
+        tvManual: document.getElementById('tvManual'),
+        sliderHelp: document.getElementById('sliderHelp'),
+        tvPerKgOut: document.getElementById('tvPerKgOut'),
+        tvBadge: document.getElementById('tvBadge'),
+        mvOut: document.getElementById('mvOut'),
+        contextBadge: document.getElementById('contextBadge'),
+        pressureOut: document.getElementById('pressureOut'),
+        pressureSub: document.getElementById('pressureSub'),
+        copyPreview: document.getElementById('copyPreview'),
+        inputError: document.getElementById('inputError'),
+        presetButtons: Array.from(document.querySelectorAll('[data-tv-preset]')),
 
-      copyBtn: document.getElementById('copyBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      toast: document.getElementById('toast')
-    };
+        copyBtn: document.getElementById('copyBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        toast: document.getElementById('toast')
+      };
 
-    function clamp(n, lo, hi){ return Math.min(hi, Math.max(lo, n)); }
-    function round1(x){ return Math.round(x * 10) / 10; }
-    function round0(x){ return Math.round(x); }
-    function isNum(x){ return Number.isFinite(x); }
-
-    function parseNum(el){
-      const v = parseFloat(el.value);
-      return Number.isFinite(v) ? v : NaN;
-    }
-
-    function heightToCm(h, unit){
-      if (!isNum(h)) return NaN;
-      return window.AnesthesiaCalculations.heightToCm(h, unit);
-    }
-
-    function pbwKg(sex, heightCm){
-      if (!sex || !isNum(heightCm)) return NaN;
-      return window.AnesthesiaCalculations.predictedBodyWeight(sex, heightCm);
-    }
-
-    function getBand(){
-      const strat = els.strategy.value;
-      if (strat === 'routine') return {min: 6, max: 8, label: 'Routine protective 6–8 mL/kg PBW'};
-      if (strat === 'ards') return {min: 4, max: 8, label: 'ARDS 4–8 mL/kg PBW (initial 6)'};
-      // custom
-      let mn = parseNum(els.customMin);
-      let mx = parseNum(els.customMax);
-      if (!isNum(mn)) mn = 6;
-      if (!isNum(mx)) mx = 8;
-      if (mx < mn) [mn, mx] = [mx, mn];
-      mn = clamp(mn, 2, 12);
-      mx = clamp(mx, 2, 12);
-      return {min: mn, max: mx, label: `Custom ${mn}–${mx} mL/kg PBW`};
-    }
-
-    function setTvControlsEnabled(enabled){
-      els.tvManual.disabled = !enabled;
-      els.presetButtons.forEach((button) => { button.disabled = !enabled; });
-    }
-
-    function tvBadgeFor(mlPerKg){
-      // Provide gentle “range” feedback; not prescriptive.
-      // Color guidance:
-      // 4–8: generally “in common lung-protective/standard adult bands”
-      // <4 or >10: more concerning
-      if (!isNum(mlPerKg)) return {cls: '', text: 'Awaiting inputs…'};
-      if (mlPerKg < 4) return {cls: 'danger', text: 'Low TV ( <4 mL/kg PBW ) — verify context'};
-      if (mlPerKg < 6) return {cls: 'ok', text: 'Lung-protective range (4–6)'}; // “ok”
-      if (mlPerKg <= 8) return {cls: 'ok', text: 'Common standard range (6–8)'}; // “ok”
-      if (mlPerKg <= 10) return {cls: 'warn', text: 'High TV (>8) — consider lung mechanics'};
-      return {cls: 'danger', text: 'Very high TV (>10) — verify and reassess'};
-    }
-
-    function formatFiO2(v){
-      if (!isNum(v)) return '';
-      // If user typed 50 instead of 0.5, gently interpret >1 as percent
-      if (v > 1) return (v/100).toFixed(2);
-      return v.toFixed(2);
-    }
-
-    function buildSummary({mode, sex, heightCm, pbw, tv, rr, mv, peep, plateau, fio2, bandLabel}){
-      const parts = [];
-      parts.push('Vent:');
-      if (mode) parts.push(`${mode}`);
-      parts.push(`PBW ${round1(pbw)} kg`);
-      parts.push(`TV ${round0(tv)} mL (${round1(tv/pbw)} mL/kg PBW)`);
-      parts.push(`RR ${round0(rr)}`);
-      parts.push(`MV ${round1(mv)} L/min`);
-      if (isNum(peep)) parts.push(`PEEP ${round0(peep)}`);
-      if (isNum(plateau)) parts.push(`Pplat ${round0(plateau)}`);
-      if (isNum(peep) && isNum(plateau)) parts.push(`driving pressure ${round0(window.AnesthesiaCalculations.drivingPressure(plateau, peep))}`);
-      if (isNum(fio2)) parts.push(`FiO₂ ${formatFiO2(fio2)}`);
-      parts.push(`[${bandLabel}]`);
-      return parts.join(' • ');
-    }
-
-    function showToast(msg){
-      els.toast.textContent = msg;
-      els.toast.classList.add('show');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
-    }
-
-    let lastPlanKey = '';
-    function markValidity(el, valid){
-      el.toggleAttribute('aria-invalid', !valid && el.value !== '');
-      return valid;
-    }
-
-    function recalc(){
-      const sex = els.sex.value;
-      const h = parseNum(els.height);
-      const unit = els.heightUnit.value;
-      const heightCm = heightToCm(h, unit);
-
-      const rr = parseNum(els.rr);
-      const peep = parseNum(els.peep);
-      const plateau = parseNum(els.plateau);
-      let fio2 = parseNum(els.fio2);
-      if (isNum(fio2) && fio2 > 1) fio2 = fio2 / 100; // interpret percent entry
-      const mode = els.mode.value;
-
-      const band = getBand();
-      const errors = [];
-      const heightValid = !els.height.value || (isNum(heightCm) && heightCm >= 80 && heightCm <= 250);
-      const rrValid = !els.rr.value || (isNum(rr) && rr >= 4 && rr <= 40);
-      const peepValid = !els.peep.value || (isNum(peep) && peep >= 0 && peep <= 30);
-      const plateauValid = !els.plateau.value || (isNum(plateau) && plateau >= 0 && plateau <= 60);
-      const rawFio2 = parseNum(els.fio2);
-      const fio2Valid = !els.fio2.value || (isNum(rawFio2) && ((rawFio2 >= 0.21 && rawFio2 <= 1) || (rawFio2 >= 21 && rawFio2 <= 100)));
-      markValidity(els.height, heightValid);
-      markValidity(els.rr, rrValid);
-      markValidity(els.peep, peepValid);
-      markValidity(els.plateau, plateauValid);
-      markValidity(els.fio2, fio2Valid);
-      if (!heightValid) errors.push('Height must be 80–250 cm (about 31–98 in).');
-      if (!rrValid) errors.push('RR must be 4–40/min.');
-      if (!peepValid) errors.push('PEEP must be 0–30 cm H₂O.');
-      if (!plateauValid) errors.push('Plateau pressure must be 0–60 cm H₂O.');
-      if (!fio2Valid) errors.push('FiO₂ must be 0.21–1.0 or 21–100%.');
-      els.inputError.textContent = errors.join(' ');
-
-      // Validate required inputs
-      const hasCore = (sex === 'male' || sex === 'female') && isNum(heightCm) && heightValid;
-
-      if (!hasCore){
-        els.pbwOut.textContent = '—';
-        els.heightCmOut.textContent = 'Height: —';
-        els.tvRangeOut.textContent = '—';
-        els.tvBandOut.textContent = 'Band: —';
-        els.tvOut.textContent = '—';
-        els.tvPerKgOut.textContent = '—';
-        els.mvOut.textContent = '—';
-        els.copyPreview.textContent = 'Fill inputs to generate a one-line summary.';
-        els.contextBadge.textContent = '—';
-        els.contextBadge.className = 'badge';
-        els.pressureOut.textContent = '—';
-        els.pressureSub.textContent = 'Add plateau pressure and PEEP for driving pressure.';
-        els.tvBadge.textContent = 'Awaiting inputs…';
-        els.tvBadge.className = 'badge';
-        setTvControlsEnabled(false);
-        els.sliderHelp.textContent = 'Enter formula sex and a valid height to choose a tidal volume.';
-        recalc._summary = '';
-        return;
+      function clamp(n, lo, hi) {
+        return Math.min(hi, Math.max(lo, n));
+      }
+      function round1(x) {
+        return Math.round(x * 10) / 10;
+      }
+      function round0(x) {
+        return Math.round(x);
+      }
+      function isNum(x) {
+        return Number.isFinite(x);
       }
 
-      // PBW
-      const pbw = pbwKg(sex, heightCm);
-
-      els.pbwOut.textContent = `${round1(pbw)} kg`;
-      els.heightCmOut.textContent = `Height: ${round1(heightCm)} cm`;
-
-      // TV range
-      const {min: tvMin, max: tvMax} = window.AnesthesiaCalculations.tidalVolumeRange(pbw, band.min, band.max);
-
-      els.tvRangeOut.textContent = `${round0(tvMin)}–${round0(tvMax)} mL`;
-      els.tvBandOut.textContent = `Band: ${band.label}`;
-
-      // Enable the selected-TV control. Reset to the band midpoint only when
-      // the patient or strategy changes; manual deviations remain visible.
-      setTvControlsEnabled(true);
-      const planKey = `${sex}|${round1(heightCm)}|${band.min}|${band.max}`;
-      if (planKey !== lastPlanKey || !els.tvManual.value) {
-        els.tvManual.value = Math.round(((tvMin + tvMax) / 2) / 10) * 10;
-        lastPlanKey = planKey;
-      }
-      let tv = parseNum(els.tvManual);
-      const tvValid = isNum(tv) && tv >= 50 && tv <= 2000;
-      markValidity(els.tvManual, tvValid);
-      if (!tvValid) {
-        els.tvOut.textContent = '—';
-        els.tvPerKgOut.textContent = 'Enter 50–2000 mL.';
-        els.mvOut.textContent = '—';
-        els.copyPreview.textContent = '';
-        recalc._summary = '';
-        return;
+      function parseNum(el) {
+        const v = parseFloat(el.value);
+        return Number.isFinite(v) ? v : NaN;
       }
 
-      // Outputs
-      els.tvOut.textContent = `${round0(tv)} mL`;
-
-      const mlPerKg = tv / pbw;
-      els.tvPerKgOut.textContent = `≈ ${round1(mlPerKg)} mL/kg PBW`;
-
-      // Badge on TV
-      const b = tvBadgeFor(mlPerKg);
-      els.tvBadge.className = `badge ${b.cls || ''}`.trim();
-      els.tvBadge.textContent = b.text;
-
-      // MV
-      const mv = (isNum(rr) && rrValid ? (tv * rr) / 1000 : NaN);
-      els.mvOut.textContent = isNum(mv) ? `${round1(mv)} L/min` : '—';
-
-      // Context badge (gentle prompts)
-      let cText = 'Monitor pressures/volumes; titrate clinically.';
-      let cCls = '';
-      if (isNum(mv) && mv < 4) { cText = 'Low MV — verify CO₂ goal / dead space.'; cCls = 'warn'; }
-      if (isNum(mv) && mv > 12) { cText = 'High MV — verify need / risk of air trapping.'; cCls = 'warn'; }
-      els.contextBadge.className = `badge ${cCls}`.trim();
-      els.contextBadge.textContent = cText;
-
-      if (isNum(plateau) && plateauValid) {
-        const driving = isNum(peep) && peepValid ? window.AnesthesiaCalculations.drivingPressure(plateau, peep) : NaN;
-        els.pressureOut.textContent = isNum(driving) ? `${round1(driving)} cm H₂O driving` : `Pplat ${round1(plateau)} cm H₂O`;
-        els.pressureSub.textContent = `${plateau < 30 ? 'Plateau below' : 'Plateau at/above'} 30 cm H₂O${isNum(driving) && driving < 0 ? ' • verify Pplat and PEEP entries' : ''}.`;
-      } else {
-        els.pressureOut.textContent = '—';
-        els.pressureSub.textContent = 'Add plateau pressure and PEEP for driving pressure.';
+      function heightToCm(h, unit) {
+        if (!isNum(h)) return NaN;
+        return window.AnesthesiaCalculations.heightToCm(h, unit);
       }
 
-      // Copy preview
-      const canCopy = isNum(rr) && rrValid && peepValid && plateauValid && fio2Valid;
-      const summary = canCopy ? buildSummary({
-        mode, sex, heightCm, pbw, tv,
+      function pbwKg(sex, heightCm) {
+        if (!sex || !isNum(heightCm)) return NaN;
+        return window.AnesthesiaCalculations.predictedBodyWeight(sex, heightCm);
+      }
+
+      function getBand() {
+        const strat = els.strategy.value;
+        if (strat === 'routine')
+          return { min: 6, max: 8, label: 'Routine protective 6–8 mL/kg PBW' };
+        if (strat === 'ards') return { min: 4, max: 8, label: 'ARDS 4–8 mL/kg PBW (initial 6)' };
+        // custom
+        let mn = parseNum(els.customMin);
+        let mx = parseNum(els.customMax);
+        if (!isNum(mn)) mn = 6;
+        if (!isNum(mx)) mx = 8;
+        if (mx < mn) [mn, mx] = [mx, mn];
+        mn = clamp(mn, 2, 12);
+        mx = clamp(mx, 2, 12);
+        return { min: mn, max: mx, label: `Custom ${mn}–${mx} mL/kg PBW` };
+      }
+
+      function setTvControlsEnabled(enabled) {
+        els.tvManual.disabled = !enabled;
+        els.presetButtons.forEach((button) => {
+          button.disabled = !enabled;
+        });
+      }
+
+      function tvBadgeFor(mlPerKg) {
+        // Provide gentle “range” feedback; not prescriptive.
+        // Color guidance:
+        // 4–8: generally “in common lung-protective/standard adult bands”
+        // <4 or >10: more concerning
+        if (!isNum(mlPerKg)) return { cls: '', text: 'Awaiting inputs…' };
+        if (mlPerKg < 4) return { cls: 'danger', text: 'Low TV ( <4 mL/kg PBW ) — verify context' };
+        if (mlPerKg < 6) return { cls: 'ok', text: 'Lung-protective range (4–6)' }; // “ok”
+        if (mlPerKg <= 8) return { cls: 'ok', text: 'Common standard range (6–8)' }; // “ok”
+        if (mlPerKg <= 10) return { cls: 'warn', text: 'High TV (>8) — consider lung mechanics' };
+        return { cls: 'danger', text: 'Very high TV (>10) — verify and reassess' };
+      }
+
+      function formatFiO2(v) {
+        if (!isNum(v)) return '';
+        // If user typed 50 instead of 0.5, gently interpret >1 as percent
+        if (v > 1) return (v / 100).toFixed(2);
+        return v.toFixed(2);
+      }
+
+      function buildSummary({
+        mode,
+        sex,
+        heightCm,
+        pbw,
+        tv,
         rr,
         mv,
-        peep: isNum(peep) ? peep : NaN,
-        plateau: isNum(plateau) ? plateau : NaN,
-        fio2: isNum(fio2) ? fio2 : NaN,
-        bandLabel: band.label
-      }) : '';
-      els.copyPreview.textContent = summary;
-      recalc._summary = summary;
-    }
+        peep,
+        plateau,
+        fio2,
+        bandLabel
+      }) {
+        const parts = [];
+        parts.push('Vent:');
+        if (mode) parts.push(`${mode}`);
+        parts.push(`PBW ${round1(pbw)} kg`);
+        parts.push(`TV ${round0(tv)} mL (${round1(tv / pbw)} mL/kg PBW)`);
+        parts.push(`RR ${round0(rr)}`);
+        parts.push(`MV ${round1(mv)} L/min`);
+        if (isNum(peep)) parts.push(`PEEP ${round0(peep)}`);
+        if (isNum(plateau)) parts.push(`Pplat ${round0(plateau)}`);
+        if (isNum(peep) && isNum(plateau))
+          parts.push(
+            `driving pressure ${round0(window.AnesthesiaCalculations.drivingPressure(plateau, peep))}`
+          );
+        if (isNum(fio2)) parts.push(`FiO₂ ${formatFiO2(fio2)}`);
+        parts.push(`[${bandLabel}]`);
+        return parts.join(' • ');
+      }
 
-    els.tvManual.addEventListener('input', recalc);
-    els.presetButtons.forEach((button) => {
-      button.addEventListener('click', () => {
+      function showToast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add('show');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
+      }
+
+      let lastPlanKey = '';
+      function markValidity(el, valid) {
+        el.toggleAttribute('aria-invalid', !valid && el.value !== '');
+        return valid;
+      }
+
+      function recalc() {
         const sex = els.sex.value;
-        const heightCm = heightToCm(parseNum(els.height), els.heightUnit.value);
+        const h = parseNum(els.height);
+        const unit = els.heightUnit.value;
+        const heightCm = heightToCm(h, unit);
+
+        const rr = parseNum(els.rr);
+        const peep = parseNum(els.peep);
+        const plateau = parseNum(els.plateau);
+        let fio2 = parseNum(els.fio2);
+        if (isNum(fio2) && fio2 > 1) fio2 = fio2 / 100; // interpret percent entry
+        const mode = els.mode.value;
+
+        const band = getBand();
+        const errors = [];
+        const heightValid =
+          !els.height.value || (isNum(heightCm) && heightCm >= 80 && heightCm <= 250);
+        const rrValid = !els.rr.value || (isNum(rr) && rr >= 4 && rr <= 40);
+        const peepValid = !els.peep.value || (isNum(peep) && peep >= 0 && peep <= 30);
+        const plateauValid =
+          !els.plateau.value || (isNum(plateau) && plateau >= 0 && plateau <= 60);
+        const rawFio2 = parseNum(els.fio2);
+        const fio2Valid =
+          !els.fio2.value ||
+          (isNum(rawFio2) &&
+            ((rawFio2 >= 0.21 && rawFio2 <= 1) || (rawFio2 >= 21 && rawFio2 <= 100)));
+        markValidity(els.height, heightValid);
+        markValidity(els.rr, rrValid);
+        markValidity(els.peep, peepValid);
+        markValidity(els.plateau, plateauValid);
+        markValidity(els.fio2, fio2Valid);
+        if (!heightValid) errors.push('Height must be 80–250 cm (about 31–98 in).');
+        if (!rrValid) errors.push('RR must be 4–40/min.');
+        if (!peepValid) errors.push('PEEP must be 0–30 cm H₂O.');
+        if (!plateauValid) errors.push('Plateau pressure must be 0–60 cm H₂O.');
+        if (!fio2Valid) errors.push('FiO₂ must be 0.21–1.0 or 21–100%.');
+        els.inputError.textContent = errors.join(' ');
+
+        // Validate required inputs
+        const hasCore = (sex === 'male' || sex === 'female') && isNum(heightCm) && heightValid;
+
+        if (!hasCore) {
+          els.pbwOut.textContent = '—';
+          els.heightCmOut.textContent = 'Height: —';
+          els.tvRangeOut.textContent = '—';
+          els.tvBandOut.textContent = 'Band: —';
+          els.tvOut.textContent = '—';
+          els.tvPerKgOut.textContent = '—';
+          els.mvOut.textContent = '—';
+          els.copyPreview.textContent = 'Fill inputs to generate a one-line summary.';
+          els.contextBadge.textContent = '—';
+          els.contextBadge.className = 'badge';
+          els.pressureOut.textContent = '—';
+          els.pressureSub.textContent = 'Add plateau pressure and PEEP for driving pressure.';
+          els.tvBadge.textContent = 'Awaiting inputs…';
+          els.tvBadge.className = 'badge';
+          setTvControlsEnabled(false);
+          els.sliderHelp.textContent =
+            'Enter formula sex and a valid height to choose a tidal volume.';
+          recalc._summary = '';
+          return;
+        }
+
+        // PBW
         const pbw = pbwKg(sex, heightCm);
-        if (!isNum(pbw)) return;
-        els.tvManual.value = Math.round((pbw * Number(button.dataset.tvPreset)) / 10) * 10;
-        recalc();
+
+        els.pbwOut.textContent = `${round1(pbw)} kg`;
+        els.heightCmOut.textContent = `Height: ${round1(heightCm)} cm`;
+
+        // TV range
+        const { min: tvMin, max: tvMax } = window.AnesthesiaCalculations.tidalVolumeRange(
+          pbw,
+          band.min,
+          band.max
+        );
+
+        els.tvRangeOut.textContent = `${round0(tvMin)}–${round0(tvMax)} mL`;
+        els.tvBandOut.textContent = `Band: ${band.label}`;
+
+        // Enable the selected-TV control. Reset to the band midpoint only when
+        // the patient or strategy changes; manual deviations remain visible.
+        setTvControlsEnabled(true);
+        const planKey = `${sex}|${round1(heightCm)}|${band.min}|${band.max}`;
+        if (planKey !== lastPlanKey || !els.tvManual.value) {
+          els.tvManual.value = Math.round((tvMin + tvMax) / 2 / 10) * 10;
+          lastPlanKey = planKey;
+        }
+        let tv = parseNum(els.tvManual);
+        const tvValid = isNum(tv) && tv >= 50 && tv <= 2000;
+        markValidity(els.tvManual, tvValid);
+        if (!tvValid) {
+          els.tvOut.textContent = '—';
+          els.tvPerKgOut.textContent = 'Enter 50–2000 mL.';
+          els.mvOut.textContent = '—';
+          els.copyPreview.textContent = '';
+          recalc._summary = '';
+          return;
+        }
+
+        // Outputs
+        els.tvOut.textContent = `${round0(tv)} mL`;
+
+        const mlPerKg = tv / pbw;
+        els.tvPerKgOut.textContent = `≈ ${round1(mlPerKg)} mL/kg PBW`;
+
+        // Badge on TV
+        const b = tvBadgeFor(mlPerKg);
+        els.tvBadge.className = `badge ${b.cls || ''}`.trim();
+        els.tvBadge.textContent = b.text;
+
+        // MV
+        const mv = isNum(rr) && rrValid ? (tv * rr) / 1000 : NaN;
+        els.mvOut.textContent = isNum(mv) ? `${round1(mv)} L/min` : '—';
+
+        // Context badge (gentle prompts)
+        let cText = 'Monitor pressures/volumes; titrate clinically.';
+        let cCls = '';
+        if (isNum(mv) && mv < 4) {
+          cText = 'Low MV — verify CO₂ goal / dead space.';
+          cCls = 'warn';
+        }
+        if (isNum(mv) && mv > 12) {
+          cText = 'High MV — verify need / risk of air trapping.';
+          cCls = 'warn';
+        }
+        els.contextBadge.className = `badge ${cCls}`.trim();
+        els.contextBadge.textContent = cText;
+
+        if (isNum(plateau) && plateauValid) {
+          const driving =
+            isNum(peep) && peepValid
+              ? window.AnesthesiaCalculations.drivingPressure(plateau, peep)
+              : NaN;
+          els.pressureOut.textContent = isNum(driving)
+            ? `${round1(driving)} cm H₂O driving`
+            : `Pplat ${round1(plateau)} cm H₂O`;
+          els.pressureSub.textContent = `${plateau < 30 ? 'Plateau below' : 'Plateau at/above'} 30 cm H₂O${isNum(driving) && driving < 0 ? ' • verify Pplat and PEEP entries' : ''}.`;
+        } else {
+          els.pressureOut.textContent = '—';
+          els.pressureSub.textContent = 'Add plateau pressure and PEEP for driving pressure.';
+        }
+
+        // Copy preview
+        const canCopy = isNum(rr) && rrValid && peepValid && plateauValid && fio2Valid;
+        const summary = canCopy
+          ? buildSummary({
+              mode,
+              sex,
+              heightCm,
+              pbw,
+              tv,
+              rr,
+              mv,
+              peep: isNum(peep) ? peep : NaN,
+              plateau: isNum(plateau) ? plateau : NaN,
+              fio2: isNum(fio2) ? fio2 : NaN,
+              bandLabel: band.label
+            })
+          : '';
+        els.copyPreview.textContent = summary;
+        recalc._summary = summary;
+      }
+
+      els.tvManual.addEventListener('input', recalc);
+      els.presetButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const sex = els.sex.value;
+          const heightCm = heightToCm(parseNum(els.height), els.heightUnit.value);
+          const pbw = pbwKg(sex, heightCm);
+          if (!isNum(pbw)) return;
+          els.tvManual.value = Math.round((pbw * Number(button.dataset.tvPreset)) / 10) * 10;
+          recalc();
+        });
       });
-    });
 
-    // Recalc on any relevant input
-    ['change','input'].forEach(evt => {
-      els.sex.addEventListener(evt, recalc);
-      els.strategy.addEventListener(evt, recalc);
-      els.height.addEventListener(evt, recalc);
-      els.heightUnit.addEventListener(evt, recalc);
-      els.rr.addEventListener(evt, recalc);
-      els.peep.addEventListener(evt, recalc);
-      els.plateau.addEventListener(evt, recalc);
-      els.fio2.addEventListener(evt, recalc);
-      els.mode.addEventListener(evt, recalc);
-      els.customMin.addEventListener(evt, recalc);
-      els.customMax.addEventListener(evt, recalc);
-    });
+      // Recalc on any relevant input
+      ['change', 'input'].forEach((evt) => {
+        els.sex.addEventListener(evt, recalc);
+        els.strategy.addEventListener(evt, recalc);
+        els.height.addEventListener(evt, recalc);
+        els.heightUnit.addEventListener(evt, recalc);
+        els.rr.addEventListener(evt, recalc);
+        els.peep.addEventListener(evt, recalc);
+        els.plateau.addEventListener(evt, recalc);
+        els.fio2.addEventListener(evt, recalc);
+        els.mode.addEventListener(evt, recalc);
+        els.customMin.addEventListener(evt, recalc);
+        els.customMax.addEventListener(evt, recalc);
+      });
 
-    // Copy summary
-    els.copyBtn.addEventListener('click', async () => {
-      const text = recalc._summary || els.copyPreview.textContent || '';
-      if (!text || text.includes('Fill inputs')) {
-        showToast('Nothing to copy yet.');
-        return;
-      }
-      try{
-        await navigator.clipboard.writeText(text);
-        showToast('Copied summary to clipboard');
-      } catch (e){
-        // Fallback
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('Copied (fallback)');
-      }
-    });
+      // Copy summary
+      els.copyBtn.addEventListener('click', async () => {
+        const text = recalc._summary || els.copyPreview.textContent || '';
+        if (!text || text.includes('Fill inputs')) {
+          showToast('Nothing to copy yet.');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Copied summary to clipboard');
+        } catch (e) {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('Copied (fallback)');
+        }
+      });
 
-    // Reset
-    els.resetBtn.addEventListener('click', () => {
-      els.sex.value = '';
-      els.strategy.value = 'routine';
-      els.height.value = '';
-      els.heightUnit.value = 'cm';
-      els.rr.value = 14;
-      els.peep.value = '';
-      els.plateau.value = '';
-      els.fio2.value = '';
-      els.mode.value = '';
-      els.customMin.value = 6;
-      els.customMax.value = 8;
-      els.tvSlider.value = 420;
-      els.tvManual.value = '';
-      lastPlanKey = '';
+      // Reset
+      els.resetBtn.addEventListener('click', () => {
+        els.sex.value = '';
+        els.strategy.value = 'routine';
+        els.height.value = '';
+        els.heightUnit.value = 'cm';
+        els.rr.value = 14;
+        els.peep.value = '';
+        els.plateau.value = '';
+        els.fio2.value = '';
+        els.mode.value = '';
+        els.customMin.value = 6;
+        els.customMax.value = 8;
+        els.tvSlider.value = 420;
+        els.tvManual.value = '';
+        lastPlanKey = '';
+        recalc();
+        els.height.focus();
+      });
+
+      // Footer helpers
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('scrollTop').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Initial compute
       recalc();
-      els.height.focus();
-    });
-
-    // Footer helpers
-    document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('scrollTop').addEventListener('click', (e) => {
-      e.preventDefault();
-      window.scrollTo({top: 0, behavior: 'smooth'});
-    });
-
-    // Initial compute
-    recalc();
-  </script>
-</body>
+    </script>
+  </body>
 </html>

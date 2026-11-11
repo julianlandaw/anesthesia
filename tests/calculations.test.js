@@ -3,7 +3,10 @@ const assert = require('node:assert/strict');
 const calc = require('../docs/calculations.js');
 
 const closeTo = (actual, expected, tolerance = 0.01) => {
-  assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not within ${tolerance} of ${expected}`);
+  assert.ok(
+    Math.abs(actual - expected) <= tolerance,
+    `${actual} was not within ${tolerance} of ${expected}`
+  );
 };
 
 test('body metrics reproduce standard male and female reference cases', () => {
@@ -55,7 +58,10 @@ test('alveolar gas equation accepts fraction and percentage FiO2', () => {
 
 test('anion gap includes optional albumin correction', () => {
   assert.deepEqual(calc.anionGap({ na: 140, cl: 104, hco3: 20 }), { value: 16, corrected: null });
-  assert.deepEqual(calc.anionGap({ na: 140, cl: 104, hco3: 20, albumin: 2 }), { value: 16, corrected: 21 });
+  assert.deepEqual(calc.anionGap({ na: 140, cl: 104, hco3: 20, albumin: 2 }), {
+    value: 16,
+    corrected: 21
+  });
 });
 
 test('respiratory compensation moves bicarbonate in the physiologic direction', () => {

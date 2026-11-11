@@ -1,959 +1,1292 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f6f7fb" />
-  <title>ABG Interpreter</title>
-  <meta name="description" content="ABG interpreter: primary disorder, compensation checks, and optional A–a gradient &amp; anion gap tools (decision-support only)." />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>ABG Interpreter</title>
+    <meta
+      name="description"
+      content="ABG interpreter: primary disorder, compensation checks, and optional A–a gradient &amp; anion gap tools (decision-support only)."
+    />
 
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <script src="theme.js"></script>
-  <script src="pwa.js" defer></script>
-  <script src="calculations.js"></script>
-  <link rel="stylesheet" href="theme.css" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <script src="theme.js"></script>
+    <script src="pwa.js" defer></script>
+    <script src="calculations.js"></script>
+    <link rel="stylesheet" href="theme.css" />
 
-  <style>
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: var(--font);
-      color: var(--text);
-      background:
-        radial-gradient(900px 400px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
-        radial-gradient(900px 400px at 90% 0%, rgba(22,194,161,.28), transparent 55%),
-        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.15), transparent 60%),
-        var(--bg);
-      line-height: 1.35;
-    }
-    a{color:inherit; text-decoration:none}
-    .container{max-width:var(--max); margin:0 auto; padding:22px 16px 44px;}
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--text);
+        background:
+          radial-gradient(900px 400px at 20% -10%, rgba(124, 92, 255, 0.35), transparent 60%),
+          radial-gradient(900px 400px at 90% 0%, rgba(22, 194, 161, 0.28), transparent 55%),
+          radial-gradient(900px 700px at 50% 120%, rgba(255, 204, 102, 0.15), transparent 60%),
+          var(--bg);
+        line-height: 1.35;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .container {
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 22px 16px 44px;
+      }
 
-    /* Header */
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px; padding:14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .left{display:flex; align-items:center; gap:10px; min-width: 220px;}
-    .logo{
-      width:38px; height:38px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 10px 18px rgba(0,0,0,.18);
-      display:grid; place-items:center;
-      flex:0 0 auto;
-    }
-    .logo svg{opacity:.95}
-    .titles h1{font-size:15px; margin:0; letter-spacing:.2px}
-    .titles p{margin:2px 0 0; font-size:12px; color:var(--muted)}
-    .actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+      /* Header */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      .left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 220px;
+      }
+      .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+      }
+      .logo svg {
+        opacity: 0.95;
+      }
+      .titles h1 {
+        font-size: 15px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      .titles p {
+        margin: 2px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
 
-    .btn{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 9px 12px;
-      cursor:pointer;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
-      display:flex; align-items:center; gap:8px;
-      white-space:nowrap;
-    }
-    .btn:hover{background: rgba(255,255,255,.06)}
-    .btn:active{transform: translateY(1px)}
-    .btn[data-mode]::after{
-      content: attr(data-mode);
-      margin-left: 2px;
-      font-size: 12px;
-      line-height: 1;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-    }
-    .ghost{
-      border:1px solid var(--border);
-      background:transparent;
-      color: var(--muted);
-    }
-    .ghost:hover{color: var(--text)}
-    .linkpill{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      padding: 9px 12px;
-      border-radius:999px;
-      color: var(--muted);
-      display:flex; align-items:center; gap:8px;
-    }
-    .linkpill:hover{color: var(--text); background: rgba(255,255,255,.06)}
+      .btn {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 9px 12px;
+        cursor: pointer;
+        transition:
+          transform 0.06s ease,
+          background 0.15s ease,
+          border-color 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn[data-mode]::after {
+        content: attr(data-mode);
+        margin-left: 2px;
+        font-size: 12px;
+        line-height: 1;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+      }
+      .ghost {
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+      }
+      .ghost:hover {
+        color: var(--text);
+      }
+      .linkpill {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 9px 12px;
+        border-radius: 999px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .linkpill:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+      }
 
-    /* Hero */
-    .hero{
-      margin-top:14px;
-      padding:18px 18px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-    }
-    .hero h2{margin:0; font-size: 18px;}
-    .hero p{margin:8px 0 0; color: var(--muted); max-width: 95ch; font-size: 13.5px;}
-    .note{
-      margin-top:10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px dashed var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-      font-size: 12.5px;
-    }
+      /* Hero */
+      .hero {
+        margin-top: 14px;
+        padding: 18px 18px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+        box-shadow: var(--shadow);
+      }
+      .hero h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .hero p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        max-width: 95ch;
+        font-size: 13.5px;
+      }
+      .note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px dashed var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-size: 12.5px;
+      }
 
-    /* Layout */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .panel{
-      grid-column: span 6;
-      padding: 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .panel.full{grid-column: span 12;}
-    @media (max-width: 900px){
-      .panel{grid-column: span 12;}
-      .left{min-width:unset}
-    }
-    .panel h3{
-      margin:0 0 10px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: .25px;
-      color: var(--muted);
-    }
+      /* Layout */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .panel {
+        grid-column: span 6;
+        padding: 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      .panel.full {
+        grid-column: span 12;
+      }
+      @media (max-width: 900px) {
+        .panel {
+          grid-column: span 12;
+        }
+        .left {
+          min-width: unset;
+        }
+      }
+      .panel h3 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.25px;
+        color: var(--muted);
+      }
 
-    /* Form */
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .row.three{grid-template-columns: 1fr 1fr 1fr;}
-    @media (max-width: 680px){
-      .row, .row.three{grid-template-columns: 1fr;}
-    }
-    label{
-      display:block;
-      font-size: 12px;
-      color: var(--muted);
-      margin: 0 0 6px;
-    }
-    input, select{
-      width:100%;
-      padding: 10px 11px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--text);
-      outline: none;
-    }
-    input::placeholder{color: var(--muted)}
-    input:focus, select:focus{
-      border-color: rgba(124,92,255,.45);
-      box-shadow: 0 0 0 3px rgba(124,92,255,.12);
-    }
-    .help{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 6px;
-      line-height: 1.35;
-    }
+      /* Form */
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .row.three {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      @media (max-width: 680px) {
+        .row,
+        .row.three {
+          grid-template-columns: 1fr;
+        }
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 6px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px 11px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        outline: none;
+      }
+      input::placeholder {
+        color: var(--muted);
+      }
+      input:focus,
+      select:focus {
+        border-color: rgba(124, 92, 255, 0.45);
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.12);
+      }
+      .help {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+        line-height: 1.35;
+      }
 
-    /* Results */
-    .results{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .metric{
-      grid-column: span 6;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      position:relative;
-      overflow:hidden;
-    }
-    .metric.full{grid-column: span 12;}
-    .metric h4{
-      margin:0;
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 800;
-      letter-spacing: .2px;
-      text-transform: uppercase;
-    }
-    .metric .value{
-      margin-top:6px;
-      font-size: 18px;
-      font-weight: 800;
-    }
-    .metric .sub{
-      margin-top:4px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.4;
-      white-space: pre-line;
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      margin-top: 10px;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
-      color: var(--muted);
-      width: fit-content;
-    }
-    .badge.ok{border-color: rgba(22,194,161,.35); color: var(--text)}
-    .badge.warn{border-color: rgba(255,204,102,.35); color: var(--text)}
-    .badge.danger{border-color: rgba(255,107,107,.35); color: var(--text)}
+      /* Results */
+      .results {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .metric {
+        grid-column: span 6;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        position: relative;
+        overflow: hidden;
+      }
+      .metric.full {
+        grid-column: span 12;
+      }
+      .metric h4 {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+      }
+      .metric .value {
+        margin-top: 6px;
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .metric .sub {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.4;
+        white-space: pre-line;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        width: fit-content;
+      }
+      .badge.ok {
+        border-color: rgba(22, 194, 161, 0.35);
+        color: var(--text);
+      }
+      .badge.warn {
+        border-color: rgba(255, 204, 102, 0.35);
+        color: var(--text);
+      }
+      .badge.danger {
+        border-color: rgba(255, 107, 107, 0.35);
+        color: var(--text);
+      }
 
-    .hr{
-      height: 1px;
-      background: var(--border);
-      margin: 14px 0;
-    }
+      .hr {
+        height: 1px;
+        background: var(--border);
+        margin: 14px 0;
+      }
 
-    details{
-      margin-top: 10px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: rgba(255,255,255,.02);
-      padding: 10px 12px;
-    }
-    summary{
-      cursor:pointer;
-      color: var(--muted);
-      font-size: 12.5px;
-      list-style: none;
-    }
-    summary::-webkit-details-marker{display:none;}
-    details p, details li{
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 12.5px;
-      line-height: 1.45;
-    }
-    ul{margin: 6px 0 0 18px; padding:0;}
+      details {
+        margin-top: 10px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 10px 12px;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 12.5px;
+        list-style: none;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      details p,
+      details li {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.45;
+      }
+      ul {
+        margin: 6px 0 0 18px;
+        padding: 0;
+      }
 
-    .footer{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 12px;
-      display:flex;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-      padding: 0 2px;
-    }
+      .footer {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 0 2px;
+      }
 
-    .toast{
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.55);
-      color: rgba(255,255,255,.92);
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 10px 12px;
-      border-radius: 14px;
-      font-size: 12.5px;
-      opacity: 0;
-      pointer-events:none;
-      transition: opacity .18s ease;
-      backdrop-filter: blur(10px);
-    }
-    :root[data-theme="light"] .toast{
-      background: rgba(17,24,39,.75);
-      border-color: rgba(255,255,255,.12);
-    }
-    .toast.show{opacity:1;}
-  </style>
-  <link rel="stylesheet" href="enhancements.css" />
-</head>
+      .toast {
+        position: fixed;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.55);
+        color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 12.5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+        backdrop-filter: blur(10px);
+      }
+      :root[data-theme='light'] .toast {
+        background: rgba(17, 24, 39, 0.75);
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .toast.show {
+        opacity: 1;
+      }
+    </style>
+    <link rel="stylesheet" href="enhancements.css" />
+  </head>
 
-<body>
-  <a class="skip-link" href="#main">Skip to calculator</a>
-  <div class="container">
-    <header class="topbar">
-      <div class="left">
-        <div class="logo" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M6 14c0-4.5 3.6-8 8-8h3" stroke="white" stroke-width="2" stroke-linecap="round"/>
-            <path d="M6 14c0 3.3 2.7 6 6 6h5" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            <path d="M16.5 6.5h3v3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="6" cy="14" r="2" fill="white" opacity=".95"/>
-          </svg>
+  <body>
+    <a class="skip-link" href="#main">Skip to calculator</a>
+    <div class="container">
+      <header class="topbar">
+        <div class="left">
+          <div class="logo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 14c0-4.5 3.6-8 8-8h3"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M6 14c0 3.3 2.7 6 6 6h5"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                opacity=".9"
+              />
+              <path
+                d="M16.5 6.5h3v3"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="6" cy="14" r="2" fill="white" opacity=".95" />
+            </svg>
+          </div>
+          <div class="titles">
+            <h1>ABG Interpreter</h1>
+            <p>Primary disorder, compensation, and optional A–a gradient / anion gap</p>
+          </div>
         </div>
-        <div class="titles">
-          <h1>ABG Interpreter</h1>
-          <p>Primary disorder, compensation, and optional A–a gradient / anion gap</p>
+
+        <div class="actions">
+          <a class="linkpill" href="index.html">← Home</a>
+          <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">
+            ↺ Reset
+          </button>
+          <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
+            <span data-theme-icon aria-hidden="true">🖥️</span> Theme
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div class="actions">
-        <a class="linkpill" href="index.html">← Home</a>
-        <button class="btn ghost" id="resetBtn" type="button" title="Reset inputs">↺ Reset</button>
-        <button class="btn" id="themeBtn" type="button" title="Theme: System (click to change)">
-          <span data-theme-icon aria-hidden="true">🖥️</span> Theme
-        </button>
-      </div>
-    </header>
-
-    <main id="main">
-    <section class="hero compact-hero" aria-label="Clinical-use note">
-      <p><b>Adult decision support.</b> Enter the three core acid–base values; add oxygenation or chemistry only when needed.</p>
-      <details>
-        <summary>About this tool</summary>
-        <p>Rules are approximations and may not apply to mixed disorders, acute ventilator changes, chronic CO₂ retention, altitude, or other complex contexts.</p>
-      </details>
-    </section>
-
-    <div class="grid">
-      <!-- Inputs -->
-      <section class="panel" aria-label="Inputs">
-        <h3>Core inputs</h3>
-
-        <div class="row three">
-          <div>
-            <label for="ph">pH</label>
-            <input id="ph" type="number" inputmode="decimal" step="0.01" min="6.8" max="7.8" placeholder="e.g., 7.32" />
-          </div>
-          <div>
-            <label for="paco2">PaCO₂ (mmHg)</label>
-            <input id="paco2" type="number" inputmode="decimal" step="1" min="10" max="120" placeholder="e.g., 52" />
-          </div>
-          <div>
-            <label for="hco3">HCO₃⁻ (mEq/L)</label>
-            <input id="hco3" type="number" inputmode="decimal" step="0.1" min="2" max="60" placeholder="e.g., 24.0" />
-          </div>
-        </div>
-
-        <details class="secondary-details">
-          <summary>Advanced mode: oxygenation analysis</summary>
-        <div class="row three details-body">
-          <div>
-            <label for="pao2">PaO₂ (mmHg)</label>
-            <input id="pao2" type="number" inputmode="decimal" step="1" min="10" max="600" placeholder="e.g., 90" />
-          </div>
-          <div>
-            <label for="fio2">FiO₂</label>
-            <input id="fio2" type="number" inputmode="decimal" step="0.01" min="0.21" max="100" placeholder="0.50 or 50" />
-            <div class="help">Fraction 0.21–1.0 or percent 21–100.</div>
-          </div>
-          <div>
-            <label for="age">Age (optional, years)</label>
-            <input id="age" type="number" inputmode="numeric" step="1" min="0" max="120" placeholder="e.g., 65" />
-          </div>
-        </div>
-        </details>
-
-        <details>
-          <summary>Advanced mode: oxygenation assumptions</summary>
-          <div class="row three" style="margin-top:10px;">
-            <div>
-              <label for="pb">Barometric pressure Pb (mmHg)</label>
-              <input id="pb" type="number" inputmode="decimal" step="1" min="500" max="800" value="760" />
-            </div>
-            <div>
-              <label for="ph2o">Water vapor PH₂O (mmHg)</label>
-              <input id="ph2o" type="number" inputmode="decimal" step="1" min="0" max="80" value="47" />
-            </div>
-            <div>
-              <label for="rq">Respiratory quotient RQ</label>
-              <input id="rq" type="number" inputmode="decimal" step="0.01" min="0.6" max="1.2" value="0.80" />
-            </div>
-          </div>
-          <p>Defaults assume sea level and typical RQ. Adjust if needed for your context.</p>
-        </details>
-
-        <details>
-          <summary>Advanced mode: anion gap &amp; delta ratio</summary>
-          <p style="margin-top:10px;">
-            Enter sodium and chloride to calculate anion gap: <b>AG = Na − (Cl + HCO₃)</b>.
-            Albumin can provide an albumin-corrected AG (rule-of-thumb correction).
-          </p>
-          <div class="row three">
-            <div>
-              <label for="na">Na (mEq/L)</label>
-              <input id="na" type="number" inputmode="decimal" step="1" min="90" max="190" placeholder="e.g., 140" />
-            </div>
-            <div>
-              <label for="cl">Cl (mEq/L)</label>
-              <input id="cl" type="number" inputmode="decimal" step="1" min="50" max="140" placeholder="e.g., 104" />
-            </div>
-            <div>
-              <label for="alb">Albumin (g/dL)</label>
-              <input id="alb" type="number" inputmode="decimal" step="0.1" min="0" max="6" placeholder="e.g., 3.0" />
-            </div>
-          </div>
+      <main id="main">
+        <section class="hero compact-hero" aria-label="Clinical-use note">
           <p>
-            Albumin correction (rule-of-thumb): <b>AG<sub>corr</sub> ≈ AG + 2.5 × (4.0 − albumin)</b>.
-            Delta ratio (when an elevated-gap metabolic acidosis is present): <b>(AG − 12) / (24 − HCO₃)</b>.
+            <b>Adult decision support.</b> Enter the three core acid–base values; add oxygenation or
+            chemistry only when needed.
           </p>
-        </details>
-
-        <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
-        <p class="input-error" id="consistencyWarning" role="status" aria-live="polite"></p>
-
-        <details>
-          <summary>Compensation formulas used</summary>
-          <ul>
-            <li><b>Metabolic acidosis:</b> Winter’s expected PaCO₂ ≈ 1.5×HCO₃ + 8 (±2).</li>
-            <li><b>Metabolic alkalosis:</b> expected PaCO₂ ≈ 0.7×(HCO₃−24)+40 (±5).</li>
-            <li><b>Respiratory acidosis:</b> expected HCO₃ change per +10 PaCO₂:
-              acute +1; chronic +3.5 (rule-of-thumb).</li>
-            <li><b>Respiratory alkalosis:</b> expected HCO₃ change per −10 PaCO₂:
-              acute −2; chronic −4 (rule-of-thumb).</li>
-            <li><b>A–a gradient:</b> PAO₂ = FiO₂×(Pb−PH₂O) − (PaCO₂/RQ); A–a = PAO₂ − PaO₂.</li>
-            <li><b>Expected A–a (age rule-of-thumb):</b> ≈ age/4 + 4 (mmHg).</li>
-          </ul>
-          <p>Clinical formula reference: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5260542/" target="_blank" rel="noopener noreferrer">review of expected acid–base compensation ↗</a>. Anion-gap limitations and albumin correction: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3817910/" target="_blank" rel="noopener noreferrer">serum anion-gap review ↗</a>.</p>
-        </details>
-      </section>
-
-      <!-- Outputs -->
-      <section class="panel" aria-label="Results">
-        <div class="panel-heading">
-          <h3>Interpretation</h3>
-          <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">📋 Copy</button>
-        </div>
-
-        <div class="results">
-          <div class="metric full result-primary">
-            <h4>Acid–base interpretation</h4>
-            <div class="value" id="primaryOut">—</div>
-            <div class="sub" id="primarySub">—</div>
-            <div class="sub"><strong id="statusOut">—</strong> <span id="statusSub">Enter values to interpret.</span></div>
-            <div class="value" id="compOut" style="font-size:16px;margin-top:10px;">—</div>
-            <div class="sub" id="compSub">—</div>
-            <div class="badge" id="compBadge">Awaiting inputs…</div>
-          </div>
-
-          <details class="metric full secondary-details">
-            <summary>Optional oxygenation and chemistry results</summary>
-            <div class="result-inline details-body">
-          <div>
-            <h4>Oxygenation</h4>
-            <strong id="pfOut">—</strong>
-            <div class="sub" id="oxySub">P/F ratio (PaO₂/FiO₂) shown when both entered.</div>
-          </div>
-
-          <div>
-            <h4>A–a gradient (optional)</h4>
-            <strong id="aaOut">—</strong>
-            <div class="sub" id="aaSub">Requires PaO₂, PaCO₂, FiO₂.</div>
-          </div>
-
-          <div>
-            <h4>Anion gap (optional)</h4>
-            <strong id="agOut">—</strong>
-            <div class="sub" id="agSub">Requires Na, Cl, HCO₃.</div>
-          </div>
-            </div>
+          <details>
+            <summary>About this tool</summary>
+            <p>
+              Rules are approximations and may not apply to mixed disorders, acute ventilator
+              changes, chronic CO₂ retention, altitude, or other complex contexts.
+            </p>
           </details>
-          <span id="copyPreview" hidden></span>
+        </section>
+
+        <div class="grid">
+          <!-- Inputs -->
+          <section class="panel" aria-label="Inputs">
+            <h3>Core inputs</h3>
+
+            <div class="row three">
+              <div>
+                <label for="ph">pH</label>
+                <input
+                  id="ph"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.01"
+                  min="6.8"
+                  max="7.8"
+                  placeholder="e.g., 7.32"
+                />
+              </div>
+              <div>
+                <label for="paco2">PaCO₂ (mmHg)</label>
+                <input
+                  id="paco2"
+                  type="number"
+                  inputmode="decimal"
+                  step="1"
+                  min="10"
+                  max="120"
+                  placeholder="e.g., 52"
+                />
+              </div>
+              <div>
+                <label for="hco3">HCO₃⁻ (mEq/L)</label>
+                <input
+                  id="hco3"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.1"
+                  min="2"
+                  max="60"
+                  placeholder="e.g., 24.0"
+                />
+              </div>
+            </div>
+
+            <details class="secondary-details">
+              <summary>Advanced mode: oxygenation analysis</summary>
+              <div class="row three details-body">
+                <div>
+                  <label for="pao2">PaO₂ (mmHg)</label>
+                  <input
+                    id="pao2"
+                    type="number"
+                    inputmode="decimal"
+                    step="1"
+                    min="10"
+                    max="600"
+                    placeholder="e.g., 90"
+                  />
+                </div>
+                <div>
+                  <label for="fio2">FiO₂</label>
+                  <input
+                    id="fio2"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.01"
+                    min="0.21"
+                    max="100"
+                    placeholder="0.50 or 50"
+                  />
+                  <div class="help">Fraction 0.21–1.0 or percent 21–100.</div>
+                </div>
+                <div>
+                  <label for="age">Age (optional, years)</label>
+                  <input
+                    id="age"
+                    type="number"
+                    inputmode="numeric"
+                    step="1"
+                    min="0"
+                    max="120"
+                    placeholder="e.g., 65"
+                  />
+                </div>
+              </div>
+            </details>
+
+            <details>
+              <summary>Advanced mode: oxygenation assumptions</summary>
+              <div class="row three" style="margin-top: 10px">
+                <div>
+                  <label for="pb">Barometric pressure Pb (mmHg)</label>
+                  <input
+                    id="pb"
+                    type="number"
+                    inputmode="decimal"
+                    step="1"
+                    min="500"
+                    max="800"
+                    value="760"
+                  />
+                </div>
+                <div>
+                  <label for="ph2o">Water vapor PH₂O (mmHg)</label>
+                  <input
+                    id="ph2o"
+                    type="number"
+                    inputmode="decimal"
+                    step="1"
+                    min="0"
+                    max="80"
+                    value="47"
+                  />
+                </div>
+                <div>
+                  <label for="rq">Respiratory quotient RQ</label>
+                  <input
+                    id="rq"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.01"
+                    min="0.6"
+                    max="1.2"
+                    value="0.80"
+                  />
+                </div>
+              </div>
+              <p>Defaults assume sea level and typical RQ. Adjust if needed for your context.</p>
+            </details>
+
+            <details>
+              <summary>Advanced mode: anion gap &amp; delta ratio</summary>
+              <p style="margin-top: 10px">
+                Enter sodium and chloride to calculate anion gap: <b>AG = Na − (Cl + HCO₃)</b>.
+                Albumin can provide an albumin-corrected AG (rule-of-thumb correction).
+              </p>
+              <div class="row three">
+                <div>
+                  <label for="na">Na (mEq/L)</label>
+                  <input
+                    id="na"
+                    type="number"
+                    inputmode="decimal"
+                    step="1"
+                    min="90"
+                    max="190"
+                    placeholder="e.g., 140"
+                  />
+                </div>
+                <div>
+                  <label for="cl">Cl (mEq/L)</label>
+                  <input
+                    id="cl"
+                    type="number"
+                    inputmode="decimal"
+                    step="1"
+                    min="50"
+                    max="140"
+                    placeholder="e.g., 104"
+                  />
+                </div>
+                <div>
+                  <label for="alb">Albumin (g/dL)</label>
+                  <input
+                    id="alb"
+                    type="number"
+                    inputmode="decimal"
+                    step="0.1"
+                    min="0"
+                    max="6"
+                    placeholder="e.g., 3.0"
+                  />
+                </div>
+              </div>
+              <p>
+                Albumin correction (rule-of-thumb):
+                <b>AG<sub>corr</sub> ≈ AG + 2.5 × (4.0 − albumin)</b>. Delta ratio (when an
+                elevated-gap metabolic acidosis is present): <b>(AG − 12) / (24 − HCO₃)</b>.
+              </p>
+            </details>
+
+            <p class="input-error" id="inputError" role="alert" aria-live="polite"></p>
+            <p class="input-error" id="consistencyWarning" role="status" aria-live="polite"></p>
+
+            <details>
+              <summary>Compensation formulas used</summary>
+              <ul>
+                <li><b>Metabolic acidosis:</b> Winter’s expected PaCO₂ ≈ 1.5×HCO₃ + 8 (±2).</li>
+                <li><b>Metabolic alkalosis:</b> expected PaCO₂ ≈ 0.7×(HCO₃−24)+40 (±5).</li>
+                <li>
+                  <b>Respiratory acidosis:</b> expected HCO₃ change per +10 PaCO₂: acute +1; chronic
+                  +3.5 (rule-of-thumb).
+                </li>
+                <li>
+                  <b>Respiratory alkalosis:</b> expected HCO₃ change per −10 PaCO₂: acute −2;
+                  chronic −4 (rule-of-thumb).
+                </li>
+                <li><b>A–a gradient:</b> PAO₂ = FiO₂×(Pb−PH₂O) − (PaCO₂/RQ); A–a = PAO₂ − PaO₂.</li>
+                <li><b>Expected A–a (age rule-of-thumb):</b> ≈ age/4 + 4 (mmHg).</li>
+              </ul>
+              <p>
+                Clinical formula reference:
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5260542/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >review of expected acid–base compensation ↗</a
+                >. Anion-gap limitations and albumin correction:
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3817910/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >serum anion-gap review ↗</a
+                >.
+              </p>
+            </details>
+          </section>
+
+          <!-- Outputs -->
+          <section class="panel" aria-label="Results">
+            <div class="panel-heading">
+              <h3>Interpretation</h3>
+              <button class="btn" id="copyBtn" type="button" title="Copy a one-line summary">
+                📋 Copy
+              </button>
+            </div>
+
+            <div class="results">
+              <div class="metric full result-primary">
+                <h4>Acid–base interpretation</h4>
+                <div class="value" id="primaryOut">—</div>
+                <div class="sub" id="primarySub">—</div>
+                <div class="sub">
+                  <strong id="statusOut">—</strong>
+                  <span id="statusSub">Enter values to interpret.</span>
+                </div>
+                <div class="value" id="compOut" style="font-size: 16px; margin-top: 10px">—</div>
+                <div class="sub" id="compSub">—</div>
+                <div class="badge" id="compBadge">Awaiting inputs…</div>
+              </div>
+
+              <details class="metric full secondary-details">
+                <summary>Optional oxygenation and chemistry results</summary>
+                <div class="result-inline details-body">
+                  <div>
+                    <h4>Oxygenation</h4>
+                    <strong id="pfOut">—</strong>
+                    <div class="sub" id="oxySub">
+                      P/F ratio (PaO₂/FiO₂) shown when both entered.
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4>A–a gradient (optional)</h4>
+                    <strong id="aaOut">—</strong>
+                    <div class="sub" id="aaSub">Requires PaO₂, PaCO₂, FiO₂.</div>
+                  </div>
+
+                  <div>
+                    <h4>Anion gap (optional)</h4>
+                    <strong id="agOut">—</strong>
+                    <div class="sub" id="agSub">Requires Na, Cl, HCO₃.</div>
+                  </div>
+                </div>
+              </details>
+              <span id="copyPreview" hidden></span>
+            </div>
+          </section>
+
+          <details class="panel full workflow-step" aria-label="Clinical notes">
+            <summary>Clinical notes</summary>
+            <p style="margin: 0; color: var(--muted); font-size: 13px; max-width: 105ch">
+              • Compensation rules are approximations; acute ventilator changes and chronic
+              respiratory disease can mislead “best fit” logic.<br />
+              • Consider lactate, ketones, toxidromes, renal function, and clinical trajectory for
+              metabolic processes.<br />
+              • On high FiO₂, A–a can be large even with modest shunt; interpret with clinical
+              context and ventilation/perfusion factors.
+            </p>
+          </details>
         </div>
-      </section>
+      </main>
 
-      <details class="panel full workflow-step" aria-label="Clinical notes">
-        <summary>Clinical notes</summary>
-        <p style="margin:0;color:var(--muted);font-size:13px;max-width:105ch;">
-          • Compensation rules are approximations; acute ventilator changes and chronic respiratory disease can mislead “best fit” logic.<br/>
-          • Consider lactate, ketones, toxidromes, renal function, and clinical trajectory for metabolic processes.<br/>
-          • On high FiO₂, A–a can be large even with modest shunt; interpret with clinical context and ventilation/perfusion factors.
-        </p>
-      </details>
-    </div>
-    </main>
-
-    <div class="footer">
-      <div>© <span id="year"></span> ABG Interpreter • Available offline after first visit</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a class="linkpill" href="index.html">← Back to Home</a>
-        <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
+      <div class="footer">
+        <div>© <span id="year"></span> ABG Interpreter • Available offline after first visit</div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a class="linkpill" href="index.html">← Back to Home</a>
+          <a class="linkpill" href="#" id="scrollTop">↑ Top</a>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">Copied!</div>
 
-  <script>
-    // =============================
-    // ABG LOGIC
-    // =============================
-    const els = {
-      ph: document.getElementById('ph'),
-      paco2: document.getElementById('paco2'),
-      hco3: document.getElementById('hco3'),
-      pao2: document.getElementById('pao2'),
-      fio2: document.getElementById('fio2'),
-      age: document.getElementById('age'),
+    <script>
+      // =============================
+      // ABG LOGIC
+      // =============================
+      const els = {
+        ph: document.getElementById('ph'),
+        paco2: document.getElementById('paco2'),
+        hco3: document.getElementById('hco3'),
+        pao2: document.getElementById('pao2'),
+        fio2: document.getElementById('fio2'),
+        age: document.getElementById('age'),
 
-      pb: document.getElementById('pb'),
-      ph2o: document.getElementById('ph2o'),
-      rq: document.getElementById('rq'),
+        pb: document.getElementById('pb'),
+        ph2o: document.getElementById('ph2o'),
+        rq: document.getElementById('rq'),
 
-      na: document.getElementById('na'),
-      cl: document.getElementById('cl'),
-      alb: document.getElementById('alb'),
+        na: document.getElementById('na'),
+        cl: document.getElementById('cl'),
+        alb: document.getElementById('alb'),
 
-      statusOut: document.getElementById('statusOut'),
-      statusSub: document.getElementById('statusSub'),
-      primaryOut: document.getElementById('primaryOut'),
-      primarySub: document.getElementById('primarySub'),
-      compOut: document.getElementById('compOut'),
-      compSub: document.getElementById('compSub'),
-      compBadge: document.getElementById('compBadge'),
+        statusOut: document.getElementById('statusOut'),
+        statusSub: document.getElementById('statusSub'),
+        primaryOut: document.getElementById('primaryOut'),
+        primarySub: document.getElementById('primarySub'),
+        compOut: document.getElementById('compOut'),
+        compSub: document.getElementById('compSub'),
+        compBadge: document.getElementById('compBadge'),
 
-      pfOut: document.getElementById('pfOut'),
-      oxySub: document.getElementById('oxySub'),
-      aaOut: document.getElementById('aaOut'),
-      aaSub: document.getElementById('aaSub'),
+        pfOut: document.getElementById('pfOut'),
+        oxySub: document.getElementById('oxySub'),
+        aaOut: document.getElementById('aaOut'),
+        aaSub: document.getElementById('aaSub'),
 
-      agOut: document.getElementById('agOut'),
-      agSub: document.getElementById('agSub'),
+        agOut: document.getElementById('agOut'),
+        agSub: document.getElementById('agSub'),
 
-      copyPreview: document.getElementById('copyPreview'),
-      inputError: document.getElementById('inputError'),
-      consistencyWarning: document.getElementById('consistencyWarning'),
-      copyBtn: document.getElementById('copyBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      toast: document.getElementById('toast')
-    };
+        copyPreview: document.getElementById('copyPreview'),
+        inputError: document.getElementById('inputError'),
+        consistencyWarning: document.getElementById('consistencyWarning'),
+        copyBtn: document.getElementById('copyBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        toast: document.getElementById('toast')
+      };
 
-    function isNum(x){ return Number.isFinite(x); }
-    let validationErrors = [];
-    const fieldNames = {ph:'pH', paco2:'PaCO₂', hco3:'HCO₃⁻', pao2:'PaO₂', fio2:'FiO₂', age:'Age', pb:'Barometric pressure', ph2o:'Water-vapor pressure', rq:'Respiratory quotient', na:'Sodium', cl:'Chloride', alb:'Albumin'};
-    function n(el){
-      if (el.value.trim() === '') {
-        el.removeAttribute('aria-invalid');
-        return NaN;
+      function isNum(x) {
+        return Number.isFinite(x);
       }
-      const v = parseFloat(el.value);
-      let valid = Number.isFinite(v);
-      if (el.id === 'fio2') valid = valid && ((v >= 0.21 && v <= 1) || (v >= 21 && v <= 100));
-      else {
-        if (el.min !== '') valid = valid && v >= Number(el.min);
-        if (el.max !== '') valid = valid && v <= Number(el.max);
-      }
-      el.toggleAttribute('aria-invalid', !valid);
-      if (!valid) validationErrors.push(`${fieldNames[el.id] || el.id} is outside the accepted range.`);
-      return valid ? v : NaN;
-    }
-    function round(x, d=1){
-      const p = Math.pow(10,d);
-      return Math.round(x*p)/p;
-    }
-    function clamp(v, lo, hi){ return Math.min(hi, Math.max(lo, v)); }
-
-    function fmtFiO2(v){
-      if (!isNum(v)) return '';
-      if (v > 1) v = v/100; // interpret percent
-      return round(v,2).toFixed(2);
-    }
-
-    function showToast(msg){
-      els.toast.textContent = msg;
-      els.toast.classList.add('show');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
-    }
-
-    function acidBaseStatus(ph){
-      if (!isNum(ph)) return {label:'—', sub:'Enter values to interpret.'};
-      if (ph < 7.35) return {label:'Acidemia', sub:'pH < 7.35'};
-      if (ph > 7.45) return {label:'Alkalemia', sub:'pH > 7.45'};
-      return {label:'Near-normal pH', sub:'pH 7.35–7.45 (mixed disorder possible)'};
-    }
-
-    function bestFitPrimary(ph, paco2, hco3){
-      // Determine "best fit" using directionality vs normal values (40, 24).
-      if (!isNum(ph) || !isNum(paco2) || !isNum(hco3)) {
-        return {primary:'—', sub:'Enter pH, PaCO₂, and HCO₃⁻.'};
-      }
-      const acid = ph < 7.35;
-      const alk = ph > 7.45;
-
-      const dCO2 = paco2 - 40;
-      const dHCO3 = hco3 - 24;
-
-      // Helper: which component aligns with pH?
-      // In acidemia: high CO2 supports respiratory acidosis; low HCO3 supports metabolic acidosis
-      // In alkalemia: low CO2 supports respiratory alkalosis; high HCO3 supports metabolic alkalosis
-      const respSupports = acid ? (dCO2 > 0) : alk ? (dCO2 < 0) : null;
-      const metSupports  = acid ? (dHCO3 < 0) : alk ? (dHCO3 > 0) : null;
-
-      // A near-normal pH with abnormal components should not be assigned a
-      // primary process by comparing unlike PaCO2 and bicarbonate units.
-      if (!acid && !alk){
-        if (Math.abs(dCO2) <= 2 && Math.abs(dHCO3) <= 2) return {primary:'No major acid–base disturbance identified', sub:'Values are near common reference points.'};
-        return {primary:'Mixed or compensated process — review required', sub:'Near-normal pH with abnormal PaCO₂ or HCO₃⁻ cannot be assigned reliably by a simple heuristic.'};
-      }
-
-      if (respSupports && metSupports){
-        return {primary:'Mixed process likely', sub:'Both PaCO₂ and HCO₃⁻ changes support the pH direction.'};
-      }
-      if (respSupports){
-        return {primary: acid ? 'Primary respiratory acidosis' : 'Primary respiratory alkalosis', sub:'PaCO₂ change aligns with pH.'};
-      }
-      if (metSupports){
-        return {primary: acid ? 'Primary metabolic acidosis' : 'Primary metabolic alkalosis', sub:'HCO₃⁻ change aligns with pH.'};
-      }
-
-      // If neither supports, then it's strongly suggestive of mixed.
-      return {primary:'Mixed/complex', sub:'PaCO₂ and HCO₃⁻ directions do not match pH; mixed disorder likely.'};
-    }
-
-    function compensationCheck(primaryText, paco2, hco3){
-      if (!isNum(paco2) || !isNum(hco3)) {
-        return {title:'—', sub:'Enter PaCO₂ and HCO₃⁻.', cls:''};
-      }
-
-      // Ranges / rules-of-thumb
-      const out = {title:'—', sub:'—', cls:''};
-
-      // Determine by keywords
-      const t = (primaryText || '').toLowerCase();
-
-      // Metabolic acidosis: Winter’s formula
-      if (t.includes('metabolic acidosis')){
-        const winter = window.AnesthesiaCalculations.winterExpectedPaco2(hco3);
-        const exp = winter.expected;
-        const lo = winter.min, hi = winter.max;
-        const ok = paco2 >= lo && paco2 <= hi;
-        if (ok){
-          out.title = 'Respiratory compensation appears appropriate (Winter’s)';
-          out.sub = `Expected PaCO₂ ≈ ${round(exp,1)} (range ${round(lo,1)}–${round(hi,1)}), observed ${round(paco2,1)}.`;
-          out.cls = 'ok';
-        } else if (paco2 > hi){
-          out.title = 'Additional respiratory acidosis likely';
-          out.sub = `Expected PaCO₂ ${round(lo,1)}–${round(hi,1)}, observed ${round(paco2,1)} (higher than expected).`;
-          out.cls = 'danger';
-        } else {
-          out.title = 'Additional respiratory alkalosis likely';
-          out.sub = `Expected PaCO₂ ${round(lo,1)}–${round(hi,1)}, observed ${round(paco2,1)} (lower than expected).`;
-          out.cls = 'danger';
+      let validationErrors = [];
+      const fieldNames = {
+        ph: 'pH',
+        paco2: 'PaCO₂',
+        hco3: 'HCO₃⁻',
+        pao2: 'PaO₂',
+        fio2: 'FiO₂',
+        age: 'Age',
+        pb: 'Barometric pressure',
+        ph2o: 'Water-vapor pressure',
+        rq: 'Respiratory quotient',
+        na: 'Sodium',
+        cl: 'Chloride',
+        alb: 'Albumin'
+      };
+      function n(el) {
+        if (el.value.trim() === '') {
+          el.removeAttribute('aria-invalid');
+          return NaN;
         }
-        return out;
-      }
-
-      // Metabolic alkalosis
-      if (t.includes('metabolic alkalosis')){
-        const exp = 0.7*(hco3 - 24) + 40;
-        const lo = exp - 5, hi = exp + 5;
-        const ok = paco2 >= lo && paco2 <= hi;
-        if (ok){
-          out.title = 'Respiratory compensation appears appropriate';
-          out.sub = `Expected PaCO₂ ≈ ${round(exp,1)} (range ${round(lo,1)}–${round(hi,1)}), observed ${round(paco2,1)}.`;
-          out.cls = 'ok';
-        } else if (paco2 > hi){
-          out.title = 'Additional respiratory acidosis likely';
-          out.sub = `Expected PaCO₂ ${round(lo,1)}–${round(hi,1)}, observed ${round(paco2,1)} (higher than expected).`;
-          out.cls = 'warn';
-        } else {
-          out.title = 'Additional respiratory alkalosis likely';
-          out.sub = `Expected PaCO₂ ${round(lo,1)}–${round(hi,1)}, observed ${round(paco2,1)} (lower than expected).`;
-          out.cls = 'warn';
+        const v = parseFloat(el.value);
+        let valid = Number.isFinite(v);
+        if (el.id === 'fio2') valid = valid && ((v >= 0.21 && v <= 1) || (v >= 21 && v <= 100));
+        else {
+          if (el.min !== '') valid = valid && v >= Number(el.min);
+          if (el.max !== '') valid = valid && v <= Number(el.max);
         }
-        return out;
+        el.toggleAttribute('aria-invalid', !valid);
+        if (!valid)
+          validationErrors.push(`${fieldNames[el.id] || el.id} is outside the accepted range.`);
+        return valid ? v : NaN;
+      }
+      function round(x, d = 1) {
+        const p = Math.pow(10, d);
+        return Math.round(x * p) / p;
       }
 
-      // Respiratory disorders: compute expected HCO3 for acute and chronic
-      if (t.includes('respiratory acidosis') || t.includes('respiratory alkalosis')){
-        let acuteExp, chronicExp, label;
-        if (t.includes('acidosis')){
-          ({acute: acuteExp, chronic: chronicExp} = window.AnesthesiaCalculations.respiratoryCompensation(paco2, 'acidosis'));
-          label = 'Respiratory acidosis';
-        } else {
-          ({acute: acuteExp, chronic: chronicExp} = window.AnesthesiaCalculations.respiratoryCompensation(paco2, 'alkalosis'));
-          label = 'Respiratory alkalosis';
+      function fmtFiO2(v) {
+        if (!isNum(v)) return '';
+        if (v > 1) v = v / 100; // interpret percent
+        return round(v, 2).toFixed(2);
+      }
+
+      function showToast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add('show');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => els.toast.classList.remove('show'), 900);
+      }
+
+      function acidBaseStatus(ph) {
+        if (!isNum(ph)) return { label: '—', sub: 'Enter values to interpret.' };
+        if (ph < 7.35) return { label: 'Acidemia', sub: 'pH < 7.35' };
+        if (ph > 7.45) return { label: 'Alkalemia', sub: 'pH > 7.45' };
+        return { label: 'Near-normal pH', sub: 'pH 7.35–7.45 (mixed disorder possible)' };
+      }
+
+      function bestFitPrimary(ph, paco2, hco3) {
+        // Determine "best fit" using directionality vs normal values (40, 24).
+        if (!isNum(ph) || !isNum(paco2) || !isNum(hco3)) {
+          return { primary: '—', sub: 'Enter pH, PaCO₂, and HCO₃⁻.' };
+        }
+        const acid = ph < 7.35;
+        const alk = ph > 7.45;
+
+        const dCO2 = paco2 - 40;
+        const dHCO3 = hco3 - 24;
+
+        // Helper: which component aligns with pH?
+        // In acidemia: high CO2 supports respiratory acidosis; low HCO3 supports metabolic acidosis
+        // In alkalemia: low CO2 supports respiratory alkalosis; high HCO3 supports metabolic alkalosis
+        const respSupports = acid ? dCO2 > 0 : alk ? dCO2 < 0 : null;
+        const metSupports = acid ? dHCO3 < 0 : alk ? dHCO3 > 0 : null;
+
+        // A near-normal pH with abnormal components should not be assigned a
+        // primary process by comparing unlike PaCO2 and bicarbonate units.
+        if (!acid && !alk) {
+          if (Math.abs(dCO2) <= 2 && Math.abs(dHCO3) <= 2)
+            return {
+              primary: 'No major acid–base disturbance identified',
+              sub: 'Values are near common reference points.'
+            };
+          return {
+            primary: 'Mixed or compensated process — review required',
+            sub: 'Near-normal pH with abnormal PaCO₂ or HCO₃⁻ cannot be assigned reliably by a simple heuristic.'
+          };
         }
 
-        // Provide “closeness” and mixed process hint
-        const da = Math.abs(hco3 - acuteExp);
-        const dc = Math.abs(hco3 - chronicExp);
+        if (respSupports && metSupports) {
+          return {
+            primary: 'Mixed process likely',
+            sub: 'Both PaCO₂ and HCO₃⁻ changes support the pH direction.'
+          };
+        }
+        if (respSupports) {
+          return {
+            primary: acid ? 'Primary respiratory acidosis' : 'Primary respiratory alkalosis',
+            sub: 'PaCO₂ change aligns with pH.'
+          };
+        }
+        if (metSupports) {
+          return {
+            primary: acid ? 'Primary metabolic acidosis' : 'Primary metabolic alkalosis',
+            sub: 'HCO₃⁻ change aligns with pH.'
+          };
+        }
 
-        // Allow a small tolerance
-        const tol = 2.0;
-        const acuteClose = da <= tol;
-        const chronicClose = dc <= tol;
+        // If neither supports, then it's strongly suggestive of mixed.
+        return {
+          primary: 'Mixed/complex',
+          sub: 'PaCO₂ and HCO₃⁻ directions do not match pH; mixed disorder likely.'
+        };
+      }
 
-        if (acuteClose && !chronicClose){
-          out.title = `${label}: closer to acute compensation (rule-of-thumb)`;
-          out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp,1)} (±${tol}), chronic ≈ ${round(chronicExp,1)}. Observed ${round(hco3,1)}.`;
-          out.cls = 'ok';
-        } else if (chronicClose && !acuteClose){
-          out.title = `${label}: closer to chronic compensation (rule-of-thumb)`;
-          out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp,1)} (±${tol}), chronic ≈ ${round(chronicExp,1)}. Observed ${round(hco3,1)}.`;
-          out.cls = 'ok';
-        } else if (acuteClose && chronicClose){
-          out.title = `${label}: within both acute and chronic bands`;
-          out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp,1)} and chronic ≈ ${round(chronicExp,1)} (±${tol}). Observed ${round(hco3,1)}.`;
-          out.cls = 'ok';
-        } else {
-          // Direction: if HCO3 higher than both expected, suggests concurrent metabolic alkalosis; if lower, concurrent metabolic acidosis
-          const minExp = Math.min(acuteExp, chronicExp);
-          const maxExp = Math.max(acuteExp, chronicExp);
-          if (hco3 > maxExp + tol){
-            out.title = `${label}: HCO₃⁻ higher than expected → concurrent metabolic alkalosis likely`;
-            out.sub = `Expected HCO₃⁻ ~ ${round(minExp,1)}–${round(maxExp,1)} (±${tol}), observed ${round(hco3,1)}.`;
-            out.cls = 'warn';
-          } else if (hco3 < minExp - tol){
-            out.title = `${label}: HCO₃⁻ lower than expected → concurrent metabolic acidosis likely`;
-            out.sub = `Expected HCO₃⁻ ~ ${round(minExp,1)}–${round(maxExp,1)} (±${tol}), observed ${round(hco3,1)}.`;
+      function compensationCheck(primaryText, paco2, hco3) {
+        if (!isNum(paco2) || !isNum(hco3)) {
+          return { title: '—', sub: 'Enter PaCO₂ and HCO₃⁻.', cls: '' };
+        }
+
+        // Ranges / rules-of-thumb
+        const out = { title: '—', sub: '—', cls: '' };
+
+        // Determine by keywords
+        const t = (primaryText || '').toLowerCase();
+
+        // Metabolic acidosis: Winter’s formula
+        if (t.includes('metabolic acidosis')) {
+          const winter = window.AnesthesiaCalculations.winterExpectedPaco2(hco3);
+          const exp = winter.expected;
+          const lo = winter.min,
+            hi = winter.max;
+          const ok = paco2 >= lo && paco2 <= hi;
+          if (ok) {
+            out.title = 'Respiratory compensation appears appropriate (Winter’s)';
+            out.sub = `Expected PaCO₂ ≈ ${round(exp, 1)} (range ${round(lo, 1)}–${round(hi, 1)}), observed ${round(paco2, 1)}.`;
+            out.cls = 'ok';
+          } else if (paco2 > hi) {
+            out.title = 'Additional respiratory acidosis likely';
+            out.sub = `Expected PaCO₂ ${round(lo, 1)}–${round(hi, 1)}, observed ${round(paco2, 1)} (higher than expected).`;
+            out.cls = 'danger';
+          } else {
+            out.title = 'Additional respiratory alkalosis likely';
+            out.sub = `Expected PaCO₂ ${round(lo, 1)}–${round(hi, 1)}, observed ${round(paco2, 1)} (lower than expected).`;
+            out.cls = 'danger';
+          }
+          return out;
+        }
+
+        // Metabolic alkalosis
+        if (t.includes('metabolic alkalosis')) {
+          const exp = 0.7 * (hco3 - 24) + 40;
+          const lo = exp - 5,
+            hi = exp + 5;
+          const ok = paco2 >= lo && paco2 <= hi;
+          if (ok) {
+            out.title = 'Respiratory compensation appears appropriate';
+            out.sub = `Expected PaCO₂ ≈ ${round(exp, 1)} (range ${round(lo, 1)}–${round(hi, 1)}), observed ${round(paco2, 1)}.`;
+            out.cls = 'ok';
+          } else if (paco2 > hi) {
+            out.title = 'Additional respiratory acidosis likely';
+            out.sub = `Expected PaCO₂ ${round(lo, 1)}–${round(hi, 1)}, observed ${round(paco2, 1)} (higher than expected).`;
             out.cls = 'warn';
           } else {
-            out.title = `${label}: compensation atypical`;
-            out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp,1)} and chronic ≈ ${round(chronicExp,1)} (±${tol}), observed ${round(hco3,1)}.`;
+            out.title = 'Additional respiratory alkalosis likely';
+            out.sub = `Expected PaCO₂ ${round(lo, 1)}–${round(hi, 1)}, observed ${round(paco2, 1)} (lower than expected).`;
             out.cls = 'warn';
           }
+          return out;
         }
+
+        // Respiratory disorders: compute expected HCO3 for acute and chronic
+        if (t.includes('respiratory acidosis') || t.includes('respiratory alkalosis')) {
+          let acuteExp, chronicExp, label;
+          if (t.includes('acidosis')) {
+            ({ acute: acuteExp, chronic: chronicExp } =
+              window.AnesthesiaCalculations.respiratoryCompensation(paco2, 'acidosis'));
+            label = 'Respiratory acidosis';
+          } else {
+            ({ acute: acuteExp, chronic: chronicExp } =
+              window.AnesthesiaCalculations.respiratoryCompensation(paco2, 'alkalosis'));
+            label = 'Respiratory alkalosis';
+          }
+
+          // Provide “closeness” and mixed process hint
+          const da = Math.abs(hco3 - acuteExp);
+          const dc = Math.abs(hco3 - chronicExp);
+
+          // Allow a small tolerance
+          const tol = 2.0;
+          const acuteClose = da <= tol;
+          const chronicClose = dc <= tol;
+
+          if (acuteClose && !chronicClose) {
+            out.title = `${label}: closer to acute compensation (rule-of-thumb)`;
+            out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp, 1)} (±${tol}), chronic ≈ ${round(chronicExp, 1)}. Observed ${round(hco3, 1)}.`;
+            out.cls = 'ok';
+          } else if (chronicClose && !acuteClose) {
+            out.title = `${label}: closer to chronic compensation (rule-of-thumb)`;
+            out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp, 1)} (±${tol}), chronic ≈ ${round(chronicExp, 1)}. Observed ${round(hco3, 1)}.`;
+            out.cls = 'ok';
+          } else if (acuteClose && chronicClose) {
+            out.title = `${label}: within both acute and chronic bands`;
+            out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp, 1)} and chronic ≈ ${round(chronicExp, 1)} (±${tol}). Observed ${round(hco3, 1)}.`;
+            out.cls = 'ok';
+          } else {
+            // Direction: if HCO3 higher than both expected, suggests concurrent metabolic alkalosis; if lower, concurrent metabolic acidosis
+            const minExp = Math.min(acuteExp, chronicExp);
+            const maxExp = Math.max(acuteExp, chronicExp);
+            if (hco3 > maxExp + tol) {
+              out.title = `${label}: HCO₃⁻ higher than expected → concurrent metabolic alkalosis likely`;
+              out.sub = `Expected HCO₃⁻ ~ ${round(minExp, 1)}–${round(maxExp, 1)} (±${tol}), observed ${round(hco3, 1)}.`;
+              out.cls = 'warn';
+            } else if (hco3 < minExp - tol) {
+              out.title = `${label}: HCO₃⁻ lower than expected → concurrent metabolic acidosis likely`;
+              out.sub = `Expected HCO₃⁻ ~ ${round(minExp, 1)}–${round(maxExp, 1)} (±${tol}), observed ${round(hco3, 1)}.`;
+              out.cls = 'warn';
+            } else {
+              out.title = `${label}: compensation atypical`;
+              out.sub = `Expected HCO₃⁻ acute ≈ ${round(acuteExp, 1)} and chronic ≈ ${round(chronicExp, 1)} (±${tol}), observed ${round(hco3, 1)}.`;
+              out.cls = 'warn';
+            }
+          }
+          return out;
+        }
+
+        // Mixed/complex: provide generic note
+        out.title = 'Compensation uncertain (mixed/complex pattern)';
+        out.sub =
+          'Primary process unclear or mixed; use clinical context and consider additional labs.';
+        out.cls = 'warn';
         return out;
       }
 
-      // Mixed/complex: provide generic note
-      out.title = 'Compensation uncertain (mixed/complex pattern)';
-      out.sub = 'Primary process unclear or mixed; use clinical context and consider additional labs.';
-      out.cls = 'warn';
-      return out;
-    }
-
-    function oxygenation(pao2, fio2){
-      if (!isNum(pao2) || !isNum(fio2)) return {pfText:'—', sub:'P/F ratio shown when both entered.'};
-      let f = fio2;
-      if (f > 1) f = f/100;
-      if (f <= 0) return {pfText:'—', sub:'Invalid FiO₂.'};
-      const pf = pao2 / f;
-      const pfText = `${round(pf,0)} (P/F)`;
-      return {pfText, sub:`PaO₂ ${round(pao2,0)} / FiO₂ ${fmtFiO2(fio2)}.`};
-    }
-
-    function aaGradient(pao2, paco2, fio2, pb, ph2o, rq, age){
-      if (!isNum(pao2) || !isNum(paco2) || !isNum(fio2)) {
-        return {val:'—', sub:'Requires PaO₂, PaCO₂, FiO₂.'};
+      function oxygenation(pao2, fio2) {
+        if (!isNum(pao2) || !isNum(fio2))
+          return { pfText: '—', sub: 'P/F ratio shown when both entered.' };
+        let f = fio2;
+        if (f > 1) f = f / 100;
+        if (f <= 0) return { pfText: '—', sub: 'Invalid FiO₂.' };
+        const pf = pao2 / f;
+        const pfText = `${round(pf, 0)} (P/F)`;
+        return { pfText, sub: `PaO₂ ${round(pao2, 0)} / FiO₂ ${fmtFiO2(fio2)}.` };
       }
-      let f = fio2;
-      if (f > 1) f = f/100;
-      pb = isNum(pb) ? pb : 760;
-      ph2o = isNum(ph2o) ? ph2o : 47;
-      rq = isNum(rq) ? rq : 0.8;
 
-      const gas = window.AnesthesiaCalculations.alveolarGas({pao2, paco2, fio2: f, pb, ph2o, rq});
-      const PAO2 = gas.PAO2;
-      const Aa = gas.Aa;
-
-      let sub = `PAO₂ ≈ ${round(PAO2,0)} mmHg; A–a ≈ ${round(Aa,0)} mmHg.`;
-      if (isNum(age)){
-        const exp = age/4 + 4;
-        sub += ` Expected (rule-of-thumb) ≈ ${round(exp,0)} mmHg.`;
-      }
-      return {val: `${round(Aa,0)} mmHg`, sub};
-    }
-
-    function anionGap(na, cl, hco3, alb){
-      if (!isNum(na) || !isNum(cl) || !isNum(hco3)) return {val:'—', sub:'Requires Na, Cl, HCO₃.'};
-      const calculated = window.AnesthesiaCalculations.anionGap({na, cl, hco3, albumin: alb});
-      const ag = calculated.value;
-
-      let sub = `AG = Na − (Cl + HCO₃) = ${round(ag,1)}.`;
-      let val = `${round(ag,1)}`;
-
-      if (isNum(alb)){
-        const agc = calculated.corrected;
-        sub += ` AGcorr ≈ ${round(agc,1)} (albumin ${round(alb,1)} g/dL).`;
-        val = `${round(ag,1)} (corr ${round(agc,1)})`;
-
-        const delta = window.AnesthesiaCalculations.deltaRatio({anionGap: ag, correctedAnionGap: agc, hco3});
-        if (isNum(delta)){
-          sub += ` Delta ratio ≈ ${round(delta,2)} (using corrected AG).`;
+      function aaGradient(pao2, paco2, fio2, pb, ph2o, rq, age) {
+        if (!isNum(pao2) || !isNum(paco2) || !isNum(fio2)) {
+          return { val: '—', sub: 'Requires PaO₂, PaCO₂, FiO₂.' };
         }
-      } else {
-        const delta = window.AnesthesiaCalculations.deltaRatio({anionGap: ag, hco3});
-        if (isNum(delta)) sub += ` Delta ratio ≈ ${round(delta,2)}.`;
-      }
-      return {val, sub};
-    }
+        let f = fio2;
+        if (f > 1) f = f / 100;
+        pb = isNum(pb) ? pb : 760;
+        ph2o = isNum(ph2o) ? ph2o : 47;
+        rq = isNum(rq) ? rq : 0.8;
 
-    function buildSummary(ph, paco2, hco3, pao2, fio2, status, primary, comp, pf, aa, ag){
-      const parts = [];
-      parts.push(`ABG: pH ${round(ph,2)}, PaCO₂ ${round(paco2,0)}, HCO₃ ${round(hco3,1)}`);
-      if (isNum(pao2) && isNum(fio2)) parts.push(`PaO₂ ${round(pao2,0)} on FiO₂ ${fmtFiO2(fio2)}`);
-      parts.push(`${status.label}`);
-      parts.push(`${primary.primary}`);
-      if (comp && comp.title && comp.title !== '—') parts.push(comp.title);
-      if (pf && pf.pfText && pf.pfText !== '—') parts.push(`P/F ${pf.pfText.replace(' (P/F)','')}`);
-      if (aa && aa.val && aa.val !== '—') parts.push(`A–a ${aa.val.replace(' mmHg','')}`);
-      if (ag && ag.val && ag.val !== '—') parts.push(`AG ${ag.val}`);
-      return parts.join(' • ');
-    }
+        const gas = window.AnesthesiaCalculations.alveolarGas({
+          pao2,
+          paco2,
+          fio2: f,
+          pb,
+          ph2o,
+          rq
+        });
+        const PAO2 = gas.PAO2;
+        const Aa = gas.Aa;
 
-    function recalc(){
-      validationErrors = [];
-      const ph = n(els.ph);
-      const paco2 = n(els.paco2);
-      const hco3 = n(els.hco3);
-      const pao2 = n(els.pao2);
-      let fio2 = n(els.fio2);
-      if (isNum(fio2) && fio2 > 1) fio2 = fio2/100;
-
-      const age = n(els.age);
-      const pb = n(els.pb);
-      const ph2o = n(els.ph2o);
-      const rq = n(els.rq);
-
-      const na = n(els.na);
-      const cl = n(els.cl);
-      const alb = n(els.alb);
-      els.inputError.textContent = [...new Set(validationErrors)].join(' ');
-      if (isNum(ph) && isNum(paco2) && isNum(hco3)) {
-        const calculatedPh = window.AnesthesiaCalculations.hendersonHasselbalchPh({paco2, hco3});
-        const difference = Math.abs(calculatedPh - ph);
-        els.consistencyWarning.textContent = difference > 0.05
-          ? `Input consistency check: pH calculated from PaCO₂ and HCO₃⁻ is approximately ${round(calculatedPh, 2)}. Confirm that all three values came from the same sample and that bicarbonate type is appropriate.`
-          : '';
-      } else {
-        els.consistencyWarning.textContent = '';
+        let sub = `PAO₂ ≈ ${round(PAO2, 0)} mmHg; A–a ≈ ${round(Aa, 0)} mmHg.`;
+        if (isNum(age)) {
+          const exp = age / 4 + 4;
+          sub += ` Expected (rule-of-thumb) ≈ ${round(exp, 0)} mmHg.`;
+        }
+        return { val: `${round(Aa, 0)} mmHg`, sub };
       }
 
-      // Status
-      const status = acidBaseStatus(ph);
-      els.statusOut.textContent = status.label;
-      els.statusSub.textContent = status.sub;
+      function anionGap(na, cl, hco3, alb) {
+        if (!isNum(na) || !isNum(cl) || !isNum(hco3))
+          return { val: '—', sub: 'Requires Na, Cl, HCO₃.' };
+        const calculated = window.AnesthesiaCalculations.anionGap({ na, cl, hco3, albumin: alb });
+        const ag = calculated.value;
 
-      // Primary
-      const primary = bestFitPrimary(ph, paco2, hco3);
-      els.primaryOut.textContent = primary.primary;
-      els.primarySub.textContent = primary.sub;
+        let sub = `AG = Na − (Cl + HCO₃) = ${round(ag, 1)}.`;
+        let val = `${round(ag, 1)}`;
 
-      // Compensation
-      const comp = compensationCheck(primary.primary, paco2, hco3);
-      els.compOut.textContent = comp.title;
-      els.compSub.textContent = comp.sub;
-      els.compBadge.className = `badge ${comp.cls || ''}`.trim();
-      els.compBadge.textContent = comp.cls ? (comp.cls === 'ok' ? 'Compensation: within expected band' :
-                                            comp.cls === 'warn' ? 'Compensation: outside band (mixed possible)' :
-                                            'Compensation: mixed process likely') : 'Awaiting inputs…';
+        if (isNum(alb)) {
+          const agc = calculated.corrected;
+          sub += ` AGcorr ≈ ${round(agc, 1)} (albumin ${round(alb, 1)} g/dL).`;
+          val = `${round(ag, 1)} (corr ${round(agc, 1)})`;
 
-      // Oxygenation
-      const pf = oxygenation(pao2, fio2);
-      els.pfOut.textContent = pf.pfText;
-      els.oxySub.textContent = pf.sub;
-
-      const aa = aaGradient(pao2, paco2, fio2, pb, ph2o, rq, age);
-      els.aaOut.textContent = aa.val;
-      els.aaSub.textContent = aa.sub;
-
-      const ag = anionGap(na, cl, hco3, alb);
-      els.agOut.textContent = ag.val;
-      els.agSub.textContent = ag.sub;
-
-      // Copy preview
-      const hasCore = isNum(ph) && isNum(paco2) && isNum(hco3);
-      if (!hasCore || validationErrors.length){
-        els.copyPreview.textContent = validationErrors.length
-          ? 'Correct the highlighted input before copying a summary.'
-          : 'Fill in pH, PaCO₂, and HCO₃⁻ to generate a summary.';
-        recalc._summary = '';
-        return;
+          const delta = window.AnesthesiaCalculations.deltaRatio({
+            anionGap: ag,
+            correctedAnionGap: agc,
+            hco3
+          });
+          if (isNum(delta)) {
+            sub += ` Delta ratio ≈ ${round(delta, 2)} (using corrected AG).`;
+          }
+        } else {
+          const delta = window.AnesthesiaCalculations.deltaRatio({ anionGap: ag, hco3 });
+          if (isNum(delta)) sub += ` Delta ratio ≈ ${round(delta, 2)}.`;
+        }
+        return { val, sub };
       }
-      const summary = buildSummary(ph, paco2, hco3, pao2, fio2, status, primary, comp, pf, aa, ag);
-      els.copyPreview.textContent = summary;
-      recalc._summary = summary;
-    }
 
-    // Wire events
-    const allInputs = [
-      els.ph, els.paco2, els.hco3, els.pao2, els.fio2, els.age,
-      els.pb, els.ph2o, els.rq,
-      els.na, els.cl, els.alb
-    ];
-    allInputs.forEach(el => {
-      el.addEventListener('input', recalc);
-      el.addEventListener('change', recalc);
-    });
-
-    // Copy summary
-    els.copyBtn.addEventListener('click', async () => {
-      const text = recalc._summary || els.copyPreview.textContent || '';
-      if (!text || text.startsWith('Fill in') || text.startsWith('Correct the')){
-        showToast('Nothing to copy yet.');
-        return;
+      function buildSummary(ph, paco2, hco3, pao2, fio2, status, primary, comp, pf, aa, ag) {
+        const parts = [];
+        parts.push(`ABG: pH ${round(ph, 2)}, PaCO₂ ${round(paco2, 0)}, HCO₃ ${round(hco3, 1)}`);
+        if (isNum(pao2) && isNum(fio2))
+          parts.push(`PaO₂ ${round(pao2, 0)} on FiO₂ ${fmtFiO2(fio2)}`);
+        parts.push(`${status.label}`);
+        parts.push(`${primary.primary}`);
+        if (comp && comp.title && comp.title !== '—') parts.push(comp.title);
+        if (pf && pf.pfText && pf.pfText !== '—')
+          parts.push(`P/F ${pf.pfText.replace(' (P/F)', '')}`);
+        if (aa && aa.val && aa.val !== '—') parts.push(`A–a ${aa.val.replace(' mmHg', '')}`);
+        if (ag && ag.val && ag.val !== '—') parts.push(`AG ${ag.val}`);
+        return parts.join(' • ');
       }
-      try{
-        await navigator.clipboard.writeText(text);
-        showToast('Copied summary to clipboard');
-      } catch (e){
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('Copied (fallback)');
+
+      function recalc() {
+        validationErrors = [];
+        const ph = n(els.ph);
+        const paco2 = n(els.paco2);
+        const hco3 = n(els.hco3);
+        const pao2 = n(els.pao2);
+        let fio2 = n(els.fio2);
+        if (isNum(fio2) && fio2 > 1) fio2 = fio2 / 100;
+
+        const age = n(els.age);
+        const pb = n(els.pb);
+        const ph2o = n(els.ph2o);
+        const rq = n(els.rq);
+
+        const na = n(els.na);
+        const cl = n(els.cl);
+        const alb = n(els.alb);
+        els.inputError.textContent = [...new Set(validationErrors)].join(' ');
+        if (isNum(ph) && isNum(paco2) && isNum(hco3)) {
+          const calculatedPh = window.AnesthesiaCalculations.hendersonHasselbalchPh({
+            paco2,
+            hco3
+          });
+          const difference = Math.abs(calculatedPh - ph);
+          els.consistencyWarning.textContent =
+            difference > 0.05
+              ? `Input consistency check: pH calculated from PaCO₂ and HCO₃⁻ is approximately ${round(calculatedPh, 2)}. Confirm that all three values came from the same sample and that bicarbonate type is appropriate.`
+              : '';
+        } else {
+          els.consistencyWarning.textContent = '';
+        }
+
+        // Status
+        const status = acidBaseStatus(ph);
+        els.statusOut.textContent = status.label;
+        els.statusSub.textContent = status.sub;
+
+        // Primary
+        const primary = bestFitPrimary(ph, paco2, hco3);
+        els.primaryOut.textContent = primary.primary;
+        els.primarySub.textContent = primary.sub;
+
+        // Compensation
+        const comp = compensationCheck(primary.primary, paco2, hco3);
+        els.compOut.textContent = comp.title;
+        els.compSub.textContent = comp.sub;
+        els.compBadge.className = `badge ${comp.cls || ''}`.trim();
+        els.compBadge.textContent = comp.cls
+          ? comp.cls === 'ok'
+            ? 'Compensation: within expected band'
+            : comp.cls === 'warn'
+              ? 'Compensation: outside band (mixed possible)'
+              : 'Compensation: mixed process likely'
+          : 'Awaiting inputs…';
+
+        // Oxygenation
+        const pf = oxygenation(pao2, fio2);
+        els.pfOut.textContent = pf.pfText;
+        els.oxySub.textContent = pf.sub;
+
+        const aa = aaGradient(pao2, paco2, fio2, pb, ph2o, rq, age);
+        els.aaOut.textContent = aa.val;
+        els.aaSub.textContent = aa.sub;
+
+        const ag = anionGap(na, cl, hco3, alb);
+        els.agOut.textContent = ag.val;
+        els.agSub.textContent = ag.sub;
+
+        // Copy preview
+        const hasCore = isNum(ph) && isNum(paco2) && isNum(hco3);
+        if (!hasCore || validationErrors.length) {
+          els.copyPreview.textContent = validationErrors.length
+            ? 'Correct the highlighted input before copying a summary.'
+            : 'Fill in pH, PaCO₂, and HCO₃⁻ to generate a summary.';
+          recalc._summary = '';
+          return;
+        }
+        const summary = buildSummary(
+          ph,
+          paco2,
+          hco3,
+          pao2,
+          fio2,
+          status,
+          primary,
+          comp,
+          pf,
+          aa,
+          ag
+        );
+        els.copyPreview.textContent = summary;
+        recalc._summary = summary;
       }
-    });
 
-    // Reset
-    els.resetBtn.addEventListener('click', () => {
-      els.ph.value = '';
-      els.paco2.value = '';
-      els.hco3.value = '';
-      els.pao2.value = '';
-      els.fio2.value = '';
-      els.age.value = '';
+      // Wire events
+      const allInputs = [
+        els.ph,
+        els.paco2,
+        els.hco3,
+        els.pao2,
+        els.fio2,
+        els.age,
+        els.pb,
+        els.ph2o,
+        els.rq,
+        els.na,
+        els.cl,
+        els.alb
+      ];
+      allInputs.forEach((el) => {
+        el.addEventListener('input', recalc);
+        el.addEventListener('change', recalc);
+      });
 
-      els.pb.value = 760;
-      els.ph2o.value = 47;
-      els.rq.value = 0.80;
+      // Copy summary
+      els.copyBtn.addEventListener('click', async () => {
+        const text = recalc._summary || els.copyPreview.textContent || '';
+        if (!text || text.startsWith('Fill in') || text.startsWith('Correct the')) {
+          showToast('Nothing to copy yet.');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Copied summary to clipboard');
+        } catch (e) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('Copied (fallback)');
+        }
+      });
 
-      els.na.value = '';
-      els.cl.value = '';
-      els.alb.value = '';
+      // Reset
+      els.resetBtn.addEventListener('click', () => {
+        els.ph.value = '';
+        els.paco2.value = '';
+        els.hco3.value = '';
+        els.pao2.value = '';
+        els.fio2.value = '';
+        els.age.value = '';
 
+        els.pb.value = 760;
+        els.ph2o.value = 47;
+        els.rq.value = 0.8;
+
+        els.na.value = '';
+        els.cl.value = '';
+        els.alb.value = '';
+
+        recalc();
+        els.ph.focus();
+        showToast('Reset');
+      });
+
+      // Footer helpers
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('scrollTop').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Init
       recalc();
-      els.ph.focus();
-      showToast('Reset');
-    });
-
-    // Footer helpers
-    document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('scrollTop').addEventListener('click', (e) => {
-      e.preventDefault();
-      window.scrollTo({top: 0, behavior: 'smooth'});
-    });
-
-    // Init
-    recalc();
-  </script>
-</body>
+    </script>
+  </body>
 </html>
